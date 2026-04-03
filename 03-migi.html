@@ -1,248 +1,123 @@
-/* ===========================
-   03-migi.css
-=========================== */
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>目次（右）</title>
+  <link rel="stylesheet" href="01-css/00-style.css" />
+  <link rel="stylesheet" href="01-css/03-migi.css" />
+</head>
+<body>
+  <h3>目次（右）</h3>
 
-body {
-  margin: 0;
-  padding: 12px;
-  font-family: sans-serif;
-  font-size: 14px;
-}
+  <div class="menu">
+    <a href="00-main.html" target="center">トップ（00-main.html）</a>
 
-h3 {
-  margin: 0 0 10px;
-  font-size: 14px;
-}
+    <a class="dual-link"
+       href="31-csv/01-chara/index.html"
+       data-center="31-csv/01-chara/index.html"
+       data-left="31-csv/01-chara/navi.html"
+       target="center">いあきゃら変換</a>
 
-/* ── 通常メニューリンク ── */
-.menu a {
-  display: block;
-  padding: 8px 10px;
-  margin: 6px 0;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  color: #222;
-  text-decoration: none;
-}
-.menu a:hover {
-  background: #f3f7ff;
-  border-color: #bcd3ff;
-}
+    <a class="dual-link"
+       href="31-csv/02-txt.bun/index.html"
+       data-center="31-csv/02-txt.bun/index.html"
+       data-left="31-csv/02-txt.bun/navi.html"
+       target="center">文字分割</a>
 
-/* ── アコーディオン ── */
-.acc {
-  margin: 8px 0;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  overflow: hidden;
-}
-.acc-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 7px 10px;
-  background: #f5f5f5;
-  cursor: pointer;
-  user-select: none;
-  font-weight: 600;
-  font-size: 13px;
-}
-.acc-header::after {
-  content: "▶";
-  font-size: 10px;
-  transition: transform .2s;
-}
-.acc.open .acc-header::after {
-  transform: rotate(90deg);
-}
-.acc-body {
-  display: none;
-  padding: 6px 6px 8px;
-}
-.acc.open .acc-body {
-  display: block;
-}
+    <a class="dual-link"
+       href="31-csv/05-kkbn/index.html"
+       data-center="31-csv/05-kkbn/index.html"
+       data-left="31-csv/05-kkbn/navi.html"
+       target="center">黒板文章</a>
 
-/* ── エフェクトボタン共通 ── */
-.btn-list {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
+    <a class="dual-link"
+       href="31-csv/06-hnkn/index.html"
+       data-center="31-csv/06-hnkn/index.html"
+       data-left="31-csv/06-hnkn/navi.html"
+       target="center">✖文章変換✖</a>
 
-.eff-btn {
-  position: relative;
-  display: block;
-  overflow: hidden;
-  padding: 0;
-  height: 36px;
-  line-height: 36px;
-  text-align: center;
-  border-radius: 5px;
-  border: 1.5px solid currentColor;
-  text-decoration: none;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  background: transparent;
-}
-.eff-btn span.label {
-  position: relative;
-  z-index: 1;
-  user-select: text;
-}
-.eff-btn::before,
-.eff-btn::after {
-  content: '';
-  position: absolute;
-  z-index: 0;
-  pointer-events: none;
-}
+    <!-- ▼ アコーディオン：SVGボタンエフェクト集 -->
+    <div class="acc" id="acc-btn">
+      <div class="acc-header" onclick="this.parentElement.classList.toggle('open')">
+        SVG ボタンエフェクト
+      </div>
+      <div class="acc-body">
+        <div class="btn-list">
 
-/* ===== 00 Fade ===== */
-.e-fade { color: #9a4fbf; }
-.e-fade::before {
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: #9a4fbf;
-  opacity: 0;
-  animation: fade-anim 2.4s ease-in-out infinite;
-}
-.e-fade .label { color: #9a4fbf; animation: fade-txt 2.4s ease-in-out infinite; }
-@keyframes fade-anim {
-  0%,10%  { opacity: 0; }
-  40%,60% { opacity: 1; }
-  90%,100%{ opacity: 0; }
-}
-@keyframes fade-txt {
-  0%,10%  { color: #9a4fbf; }
-  40%,60% { color: #fff; }
-  90%,100%{ color: #9a4fbf; }
-}
+          <a class="dual-link eff-btn e-fade"
+             href="31-csv/03-btn/00-fade-in.html"
+             data-center="31-csv/03-btn/00-fade-in.html"
+             data-left="31-csv/03-btn/00-fade-nv.html"
+             target="center"><span class="label">Fade</span></a>
 
-/* ===== 01 Swipe ===== */
-.e-swipe { color: #2a7fd4; }
-.e-swipe::before {
-  top: 0; left: 0; bottom: 0;
-  width: 100%;
-  background: #2a7fd4;
-  transform: translateX(-100%);
-  animation: swipe-anim 2.4s ease-in-out infinite;
-}
-.e-swipe .label { color: #2a7fd4; animation: swipe-txt 2.4s ease-in-out infinite; }
-@keyframes swipe-anim {
-  0%,10%  { transform: translateX(-100%); }
-  40%,60% { transform: translateX(0); }
-  90%,100%{ transform: translateX(-100%); }
-}
-@keyframes swipe-txt {
-  0%,10%  { color: #2a7fd4; }
-  40%,60% { color: #fff; }
-  90%,100%{ color: #2a7fd4; }
-}
+          <a class="dual-link eff-btn e-swipe"
+             href="31-csv/03-btn/01-swipe-in.html"
+             data-center="31-csv/03-btn/01-swipe-in.html"
+             data-left="31-csv/03-btn/01-swipe-nv.html"
+             target="center"><span class="label">Swipe</span></a>
 
-/* ===== 02 Smoosh ===== */
-.e-smoosh { color: #c0533a; }
-.e-smoosh::before {
-  top: 0; left: 0; right: 0; height: 0;
-  background: #c0533a;
-  animation: smoosh-top 2.4s ease-in-out infinite;
-}
-.e-smoosh::after {
-  bottom: 0; left: 0; right: 0; height: 0;
-  background: #c0533a;
-  animation: smoosh-bot 2.4s ease-in-out infinite;
-}
-.e-smoosh .label { color: #c0533a; animation: smoosh-txt 2.4s ease-in-out infinite; }
-@keyframes smoosh-top  { 0%,10%{height:0} 40%,60%{height:50%} 90%,100%{height:0} }
-@keyframes smoosh-bot  { 0%,10%{height:0} 40%,60%{height:50%} 90%,100%{height:0} }
-@keyframes smoosh-txt  { 0%,10%{color:#c0533a} 40%,60%{color:#fff} 90%,100%{color:#c0533a} }
+          <a class="dual-link eff-btn e-smoosh"
+             href="31-csv/03-btn/02-smoosh-in.html"
+             data-center="31-csv/03-btn/02-smoosh-in.html"
+             data-left="31-csv/03-btn/02-smoosh-nv.html"
+             target="center"><span class="label">Smoosh</span></a>
 
-/* ===== 03 Double Swipe ===== */
-.e-double { color: #7a5bbf; }
-.e-double::before {
-  top: 0; left: 0; bottom: 0; width: 0;
-  background: #7a5bbf;
-  clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);
-  animation: dbl-l 2.4s ease-in-out infinite;
-}
-.e-double::after {
-  top: 0; right: 0; bottom: 0; width: 0;
-  background: #7a5bbf;
-  clip-path: polygon(15% 0, 100% 0, 100% 100%, 0 100%);
-  animation: dbl-r 2.4s ease-in-out infinite;
-}
-.e-double .label { color: #7a5bbf; animation: dbl-txt 2.4s ease-in-out infinite; }
-@keyframes dbl-l  { 0%,10%{width:0} 40%,60%{width:58%} 90%,100%{width:0} }
-@keyframes dbl-r  { 0%,10%{width:0} 40%,60%{width:58%} 90%,100%{width:0} }
-@keyframes dbl-txt { 0%,10%{color:#7a5bbf} 40%,60%{color:#fff} 90%,100%{color:#7a5bbf} }
+          <a class="dual-link eff-btn e-double"
+             href="31-csv/03-btn/03-double-in.html"
+             data-center="31-csv/03-btn/03-double-in.html"
+             data-left="31-csv/03-btn/03-double-nv.html"
+             target="center"><span class="label">Double Swipe</span></a>
 
-/* ===== 04 4 Corners ===== */
-.e-corners { color: #2d9e5f; }
-.e-corners::before {
-  top: 0; left: 0; width: 0; height: 0;
-  background: #2d9e5f;
-  animation: corn-tl 2.4s ease-in-out infinite;
-}
-.e-corners::after {
-  bottom: 0; right: 0; width: 0; height: 0;
-  background: #2d9e5f;
-  animation: corn-br 2.4s ease-in-out infinite;
-}
-.e-corners .label { color: #2d9e5f; animation: corn-txt 2.4s ease-in-out infinite; }
-@keyframes corn-tl  { 0%,10%{width:0;height:0} 40%,60%{width:51%;height:100%} 90%,100%{width:0;height:0} }
-@keyframes corn-br  { 0%,10%{width:0;height:0} 40%,60%{width:51%;height:100%} 90%,100%{width:0;height:0} }
-@keyframes corn-txt { 0%,10%{color:#2d9e5f} 40%,60%{color:#fff} 90%,100%{color:#2d9e5f} }
+          <a class="dual-link eff-btn e-corners"
+             href="31-csv/03-btn/04-corners-in.html"
+             data-center="31-csv/03-btn/04-corners-in.html"
+             data-left="31-csv/03-btn/04-corners-nv.html"
+             target="center"><span class="label">4 Corners</span></a>
 
-/* ===== 05 Diagonal Swipe ===== */
-.e-diag { color: #bf7a2a; }
-.e-diag::before {
-  top: 0; left: -14%; bottom: 0; width: 120%;
-  background: #bf7a2a;
-  clip-path: polygon(0 0, 88% 0, 100% 100%, 0 100%);
-  transform: translateX(-110%);
-  animation: diag-anim 2.4s ease-in-out infinite;
-}
-.e-diag .label { color: #bf7a2a; animation: diag-txt 2.4s ease-in-out infinite; }
-@keyframes diag-anim { 0%,10%{transform:translateX(-110%)} 40%,60%{transform:translateX(0)} 90%,100%{transform:translateX(-110%)} }
-@keyframes diag-txt  { 0%,10%{color:#bf7a2a} 40%,60%{color:#fff} 90%,100%{color:#bf7a2a} }
+          <a class="dual-link eff-btn e-diag"
+             href="31-csv/03-btn/05-diag-in.html"
+             data-center="31-csv/03-btn/05-diag-in.html"
+             data-left="31-csv/03-btn/05-diag-nv.html"
+             target="center"><span class="label">Diagonal Swipe</span></a>
 
-/* ===== 07 Slice ===== */
-.e-slice { color: #3a7a9e; }
-.e-slice::before {
-  top: 0; left: 0; bottom: 0; width: 0;
-  background: #3a7a9e;
-  clip-path: polygon(0 0, 100% 0, 80% 100%, 0 100%);
-  animation: slice-l 2.4s ease-in-out infinite;
-}
-.e-slice::after {
-  top: 0; right: 0; bottom: 0; width: 0;
-  background: #3a7a9e;
-  clip-path: polygon(20% 0, 100% 0, 100% 100%, 0 100%);
-  animation: slice-r 2.4s ease-in-out infinite;
-}
-.e-slice .label { color: #3a7a9e; animation: slice-txt 2.4s ease-in-out infinite; }
-@keyframes slice-l  { 0%,10%{width:0} 40%,60%{width:55%} 90%,100%{width:0} }
-@keyframes slice-r  { 0%,10%{width:0} 40%,60%{width:55%} 90%,100%{width:0} }
-@keyframes slice-txt { 0%,10%{color:#3a7a9e} 40%,60%{color:#fff} 90%,100%{color:#3a7a9e} }
+          <a class="dual-link eff-btn e-slice"
+             href="31-csv/03-btn/07-slice-in.html"
+             data-center="31-csv/03-btn/07-slice-in.html"
+             data-left="31-csv/03-btn/07-slice-nv.html"
+             target="center"><span class="label">Slice</span></a>
 
-/* ===== 08 Zoning In ===== */
-.e-zone { color: #5a8a2a; }
-.e-zone::before {
-  top: 50%; left: 50%; width: 0; height: 0;
-  background: #5a8a2a;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  animation: zone-anim 2.4s ease-in-out infinite;
-}
-.e-zone .label { color: #5a8a2a; animation: zone-txt 2.4s ease-in-out infinite; }
-@keyframes zone-anim { 0%,10%{width:0;height:0} 40%,60%{width:300%;height:300%} 90%,100%{width:0;height:0} }
-@keyframes zone-txt  { 0%,10%{color:#5a8a2a} 40%,60%{color:#fff} 90%,100%{color:#5a8a2a} }
+          <a class="dual-link eff-btn e-zone"
+             href="31-csv/03-btn/08-zone-in.html"
+             data-center="31-csv/03-btn/08-zone-in.html"
+             data-left="31-csv/03-btn/08-zone-nv.html"
+             target="center"><span class="label">Zoning In</span></a>
 
-/* ── 注記 ── */
-.note {
-  margin-top: 10px;
-  font-size: 12px;
-  color: #666;
-  line-height: 1.5;
-}
+        </div>
+      </div>
+    </div>
+    <!-- ▲ アコーディオンここまで -->
+
+  </div>
+
+  <p class="note">
+    ※ dual-link：left + center を同時切替<br>
+    ※ トップは center のみ切替
+  </p>
+
+  <script>
+    document.addEventListener("click", (e) => {
+      const a = e.target.closest("a.dual-link");
+      if (!a) return;
+      const leftUrl = a.dataset.left;
+      const centerUrl = a.dataset.center;
+      if (!leftUrl || !centerUrl) return;
+      e.preventDefault();
+      if (parent && parent.frames) {
+        if (parent.frames["left"])   parent.frames["left"].location.href = leftUrl;
+        if (parent.frames["center"]) parent.frames["center"].location.href = centerUrl;
+      }
+    });
+  </script>
+</body>
+</html>
