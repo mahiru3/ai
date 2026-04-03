@@ -37,18 +37,18 @@
 <button class="navi-btn" id="applyBtn">▶ 設定を反映</button>
 
 <section>
-  <b>文字</b>
+  <b>へんかまえ・変化後</b>
 
-  <label>文字色</label>
+  <label style="display:none">文字色</label>
   <div class="color-row">
     <input type="color" id="fontColorPicker" value="#000000">
     <input type="text"  id="fontColorHex"    value="#000000" class="hex-input">
   </div>
 
-  <label>文字サイズ（px）: <span id="fontSizeVal">32</span></label>
+  <label style="display:none">文字サイズ（px）: <span id="fontSizeVal">32</span></label>
   <input id="fontSize" type="range" min="8" max="100" value="32" oninput="upd('fontSizeVal',this.value); sendCfg();">
 
-  <label>フォント</label>
+  <label style="display:none">フォント</label>
   <select id="fontFamily" onchange="sendCfg()">
     <option value="'Noto Sans JP',sans-serif"           style="font-family:'Noto Sans JP',sans-serif"  selected>Noto Sans JP</option>
     <option value="'Yu Gothic','Meiryo',sans-serif"     style="font-family:'Yu Gothic'"               >Yu Gothic</option>
@@ -67,7 +67,7 @@
 <section>
   <b>背景色</b>
 
-  <label>背景色</label>
+  <label style="display:none">背景色</label>
   <div class="color-row">
     <input type="color" id="bgColorPicker" value="#ffffff">
     <input type="text"  id="bgColorHex"    value="#ffffff" class="hex-input">
