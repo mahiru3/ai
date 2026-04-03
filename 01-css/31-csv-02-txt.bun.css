@@ -189,3 +189,31 @@ body.navi button:hover {
   background: #f3f7ff;
   border-color: #bcd3ff;
 }
+
+/* カラーピッカー行 */
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+input[type="color"] {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  padding: 1px;
+  cursor: pointer;
+  background: none;
+}
+
+.hex-input {
+  width: 80px;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  padding: 4px 6px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
