@@ -45,13 +45,6 @@ select {
   gap: 12px;
 }
 
-.actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
-
 .preview {
   border: 1px dashed #bbb;
   border-radius: 8px;
@@ -77,6 +70,72 @@ textarea {
 .hint {
   font-size: 12px;
   color: #555;
+}
+
+/* 入力欄 + インラインプレビュー */
+.input-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.input-preview-row input[type="text"] {
+  flex: 0 0 240px;
+  width: 240px;
+}
+
+.text-preview {
+  flex: 1;
+  min-height: 1.4em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+/* ボタンエリア */
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
+/* アニメーションボタン（左からスライド） */
+.svg-btn {
+  padding: 10px 20px;
+  border: 2px solid #333;
+  color: #333;
+  background: #fff;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  border-radius: 0;
+  transition: color 0.4s;
+  display: inline-block;
+}
+
+.svg-btn::before {
+  content: '';
+  width: 100%;
+  height: 100%;
+  background-color: #e0e0e0;
+  position: absolute;
+  left: -100%;
+  top: 0;
+  transition: left 0.4s;
+  z-index: -1;
+}
+
+.svg-btn:hover::before {
+  left: 0;
+}
+
+.svg-btn:active {
+  transform: translateY(1px);
 }
 
 /* navi.html 用 */
@@ -129,48 +188,4 @@ body.navi button {
 body.navi button:hover {
   background: #f3f7ff;
   border-color: #bcd3ff;
-}
-
-/* 入力欄 + インラインプレビュー */
-.input-preview-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.input-preview-row input[type="text"] {
-  flex: 0 0 240px;
-  width: 240px;
-}
-
-.text-preview {
-  flex: 1;
-  min-height: 1.4em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.4;
-}
-
-/* ボタン */
-.svg-btn {
-  padding: 8px 18px;
-  border-radius: 8px;
-  border: 1px solid #bbb;
-  cursor: pointer;
-  background: #fff;
-  font: inherit;
-  font-size: 13px;
-  transition: background 0.12s, box-shadow 0.1s, transform 0.08s;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-}
-
-.svg-btn:hover {
-  background: #ebebeb;
-}
-
-.svg-btn:active {
-  background: #ddd;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.10);
-  transform: translateY(1px);
 }
