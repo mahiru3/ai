@@ -17,46 +17,50 @@
       <th>へんかまえ（かな）</th>
       <th>変化後（漢字）</th>
       <th>改行</th>
-      <th>開始位置</th>
+      <th class="th-start">開始位置</th>
+      <th class="th-add"></th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><input type="text" class="before" value="れいとなる" oninput="updateInlinePreview(this)"><div class="inline-preview"></div></td>
-      <td><input type="text" class="after"  value="例となる"></td>
-      <td><input type="checkbox" class="break"></td>
       <td>
-        <div class="start-wrap">
-          <input type="range" class="start" value="1" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value">
-          <span class="start-val">1</span>
-        </div>
+        <input type="text" class="before" value="れいとなる" oninput="updateInlinePreview(this)">
+        <div class="inline-preview"></div>
       </td>
+      <td><input type="text" class="after" value="例となる"></td>
+      <td><input type="checkbox" class="break"></td>
+      <td class="td-start">
+        <input type="range" class="start" value="1" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value">
+        <span class="start-val">1</span>
+      </td>
+      <td class="td-add"></td>
     </tr>
     <tr>
-      <td><input type="text" class="before" value="ぶんしょう" oninput="updateInlinePreview(this)"><div class="inline-preview"></div></td>
-      <td><input type="text" class="after"  value="文章"></td>
-      <td><input type="checkbox" class="break" checked></td>
       <td>
-        <div class="start-wrap">
-          <input type="range" class="start" value="5" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value">
-          <span class="start-val">5</span>
-          <button class="add-btn svg-btn" onclick="addRow(this)">＋</button>
-        </div>
+        <input type="text" class="before" value="ぶんしょう" oninput="updateInlinePreview(this)">
+        <div class="inline-preview"></div>
+      </td>
+      <td><input type="text" class="after" value="文章"></td>
+      <td><input type="checkbox" class="break" checked></td>
+      <td class="td-start">
+        <input type="range" class="start" value="5" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value">
+        <span class="start-val">5</span>
+      </td>
+      <td class="td-add">
+        <button class="add-btn svg-btn" onclick="addRow(this)">＋</button>
       </td>
     </tr>
   </tbody>
 </table>
 
-<div class="controls">
-  <label>文字サイズ</label>
-  <input type="number" id="fontSize" value="32" min="8" max="100">
-  <label>文字色</label>
-  <input type="color" id="fontColor" value="#000000">
-  <label>背景色</label>
-  <input type="color" id="bgColor" value="#ffffff">
-  <label>速度</label>
-  <input type="range" id="speed" min="20" max="500" value="120" step="10">
-</div>
+<!-- へんかまえのリアルタイムプレビューエリア -->
+<div id="kanaPreviewArea"></div>
+
+<!-- hidden controls（navi.htmlから値を受け取るためDOMは残す） -->
+<input type="number" id="fontSize"  value="32"      style="display:none">
+<input type="color"  id="fontColor" value="#000000" style="display:none">
+<input type="color"  id="bgColor"   value="#ffffff" style="display:none">
+<input type="range"  id="speed" min="20" max="500" value="120" step="10" style="display:none">
 
 <div class="actions">
   <button class="svg-btn" onclick="generateSVG()">SVGを生成</button>
@@ -74,44 +78,77 @@
 <script src="../../03-js/31-csv-06-hnkn.js"></script>
 
 <script>
-  // 入力欄直下のインラインプレビュー更新
+  // 入力欄直下のインラインプレビュー更新 + kanaPreviewAreaも更新
   function updateInlinePreview(input) {
     const prev = input.nextElementSibling;
     if (prev && prev.classList.contains('inline-preview')) {
-      prev.textContent = input.value;
-      const fontSize   = document.getElementById('fontSize').value || 32;
-      const fontColor  = document.getElementById('fontColor').value || '#000';
-      prev.style.fontSize   = Math.min(fontSize, 18) + 'px';
-      prev.style.color      = fontColor;
+      prev.textContent  = input.value;
+      prev.style.color  = document.getElementById('fontColor').value || '#333';
       prev.style.fontFamily = document.body.dataset.fontFamily || "'Noto Sans JP',sans-serif";
     }
+    updateKanaPreview();
+  }
+
+  // kanaPreviewArea：全行のへんかまえを結合して表示
+  function updateKanaPreview() {
+    const area     = document.getElementById('kanaPreviewArea');
+    const fontSize = parseInt(document.getElementById('fontSize').value) || 32;
+    const color    = document.getElementById('fontColor').value || '#000';
+    const family   = document.body.dataset.fontFamily || "'Noto Sans JP',sans-serif";
+
+    area.innerHTML = '';
+    document.querySelectorAll('#inputTable tbody tr').forEach(row => {
+      const before   = row.querySelector('.before');
+      const hasBreak = row.querySelector('.break').checked;
+      if (!before || !before.value) return;
+
+      const span = document.createElement('span');
+      span.textContent  = before.value;
+      span.style.fontSize   = fontSize + 'px';
+      span.style.color      = color;
+      span.style.fontFamily = family;
+      span.style.display    = 'inline-block';
+      area.appendChild(span);
+      if (hasBreak) area.appendChild(document.createElement('br'));
+    });
   }
 
   // 全行のインラインプレビューを更新
   function updateAllPreviews() {
-    document.querySelectorAll('#inputTable .before').forEach(input => updateInlinePreview(input));
+    document.querySelectorAll('#inputTable .before').forEach(input => {
+      const prev = input.nextElementSibling;
+      if (prev && prev.classList.contains('inline-preview')) {
+        prev.textContent  = input.value;
+        prev.style.color  = document.getElementById('fontColor').value || '#333';
+        prev.style.fontFamily = document.body.dataset.fontFamily || "'Noto Sans JP',sans-serif";
+      }
+    });
+    updateKanaPreview();
   }
 
-  // ＋ボタンで行追加（押した行の直後に追加し、＋ボタンを新しい最終行に移動）
+  // ＋ボタンで行追加
   function addRow(btn) {
-    // 既存の＋ボタンを全削除
     document.querySelectorAll('.add-btn').forEach(b => b.remove());
 
     const tbody = document.querySelector('#inputTable tbody');
-    const row = document.createElement('tr');
+    const row   = document.createElement('tr');
     row.innerHTML = `
-      <td><input type="text" class="before" oninput="updateInlinePreview(this)"><div class="inline-preview"></div></td>
+      <td>
+        <input type="text" class="before" oninput="updateInlinePreview(this)">
+        <div class="inline-preview"></div>
+      </td>
       <td><input type="text" class="after"></td>
       <td><input type="checkbox" class="break"></td>
-      <td>
-        <div class="start-wrap">
-          <input type="range" class="start" value="1" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value">
-          <span class="start-val">1</span>
-          <button class="add-btn svg-btn" onclick="addRow(this)">＋</button>
-        </div>
+      <td class="td-start">
+        <input type="range" class="start" value="1" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value">
+        <span class="start-val">1</span>
+      </td>
+      <td class="td-add">
+        <button class="add-btn svg-btn" onclick="addRow(this)">＋</button>
       </td>
     `;
     tbody.appendChild(row);
+    updateKanaPreview();
   }
 
   // navi.htmlからpostMessageで設定を受け取り反映
@@ -125,6 +162,9 @@
     if (c.fontFamily != null) document.body.dataset.fontFamily = c.fontFamily;
     updateAllPreviews();
   });
+
+  // 初期プレビュー
+  updateAllPreviews();
 </script>
 </body>
 </html>
