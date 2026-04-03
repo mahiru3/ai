@@ -241,20 +241,26 @@ function updateKanaPreview() {
   wrapper.style.color      = color;
   wrapper.style.lineHeight = '1';
   area.appendChild(wrapper);
-  document.querySelectorAll('#inputTable tbody tr.input-row').forEach(row => {
+  const previewRows = Array.from(document.querySelectorAll('#inputTable tbody tr.input-row'));
+  previewRows.forEach(row => {
     const before      = row.querySelector('.before');
     const startBefore = row.querySelector('.start-before');
-    if (!before || !before.value) { y += lineH; return; }
-    const start = startBefore ? (parseInt(startBefore.value) || 1) : 1;
-    const x     = (start - 1) * charW + MARGIN_X;
-    const span  = document.createElement('span');
-    span.textContent    = before.value;
-    span.style.position = 'absolute';
-    span.style.left     = x + 'px';
-    span.style.top      = (y - fontSize) + 'px';
-    wrapper.appendChild(span);
-    y += lineH;
+    const breakEl     = row.querySelector('.break');
+    const doBreak     = breakEl ? breakEl.checked : false;
+
+    if (before && before.value) {
+      const start = startBefore ? (parseInt(startBefore.value) || 1) : 1;
+      const x     = (start - 1) * charW + MARGIN_X;
+      const span  = document.createElement('span');
+      span.textContent    = before.value;
+      span.style.position = 'absolute';
+      span.style.left     = x + 'px';
+      span.style.top      = (y - fontSize) + 'px';
+      wrapper.appendChild(span);
+    }
+    if (doBreak) y += lineH;
   });
+  if (y === fontSize * 1.5) y += lineH;
   wrapper.style.height = y + 'px';
   area.style.minHeight = y + 'px';
 }
