@@ -14,16 +14,16 @@
 <section>
   <b>① 手書きテキスト</b>
 
-  <label>色①</label>
+  <label style="display:none">色①</label>
   <div class="color-row">
     <input type="color" id="color1picker" value="#000000">
     <input type="text"  id="color1hex"    value="#000000" class="hex-input">
   </div>
 
-  <label>サイズ①（px）: <span id="size1val">72</span></label>
+  <label style="display:none">サイズ①（px）: <span id="size1val">72</span></label>
   <input id="size1" type="range" min="8" max="120" value="72" oninput="upd('size1val',this.value); sendCfg();">
 
-  <label>フォント①</label>
+  <label style="display:none">フォント①</label>
   <select id="font1sel" onchange="sendCfg()">
     <option value="serif"                        style="font-family:serif"                         selected>serif（明朝系）</option>
     <option value="sans-serif"                   style="font-family:sans-serif"                   >sans-serif（ゴシック系）</option>
@@ -41,8 +41,8 @@
     <option value="Noto Sans JP, sans-serif"     style="font-family:'Noto Sans JP',sans-serif"    >Noto Sans JP</option>
   </select>
 
-  <label>任意フォント①（空なら上を使用）</label>
-  <input id="font1free" type="text" placeholder="例）'Yu Mincho',serif" oninput="sendCfg()">
+  <label style="display:none">任意フォント①（空なら上を使用）</label>
+  <input id="font1free" type="text" placeholder="例）'Yu Mincho',serif" oninput="sendCfg()" style="display:none">
 
   <label>文字間①（px）: <span id="letter1val">2</span></label>
   <input id="letter1" type="range" min="-10" max="40" value="2" step="0.5" oninput="upd('letter1val',this.value); sendCfg();">
@@ -58,16 +58,16 @@
 <section>
   <b>② 浮かび上がるテキスト</b>
 
-  <label>色②</label>
+  <label style="display:none">色②</label>
   <div class="color-row">
     <input type="color" id="color2picker" value="#000000">
     <input type="text"  id="color2hex"    value="#000000" class="hex-input">
   </div>
 
-  <label>サイズ②（px）: <span id="size2val">56</span></label>
+  <label style="display:none">サイズ②（px）: <span id="size2val">56</span></label>
   <input id="size2" type="range" min="8" max="120" value="56" oninput="upd('size2val',this.value); sendCfg();">
 
-  <label>フォント②</label>
+  <label style="display:none">フォント②</label>
   <select id="font2sel" onchange="sendCfg()">
     <option value="serif"                        style="font-family:serif"                         selected>serif（明朝系）</option>
     <option value="sans-serif"                   style="font-family:sans-serif"                   >sans-serif（ゴシック系）</option>
@@ -85,8 +85,8 @@
     <option value="Noto Sans JP, sans-serif"     style="font-family:'Noto Sans JP',sans-serif"    >Noto Sans JP</option>
   </select>
 
-  <label>任意フォント②（空なら上を使用）</label>
-  <input id="font2free" type="text" placeholder="例）'Yu Gothic',sans-serif" oninput="sendCfg()">
+  <label style="display:none">任意フォント②（空なら上を使用）</label>
+  <input id="font2free" type="text" placeholder="例）'Yu Gothic',sans-serif" oninput="sendCfg()" style="display:none">
 
   <label>文字間②（px）: <span id="letter2val">1</span></label>
   <input id="letter2" type="range" min="-10" max="40" value="1" step="0.5" oninput="upd('letter2val',this.value); sendCfg();">
