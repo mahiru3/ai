@@ -22,21 +22,30 @@
   </thead>
   <tbody>
     <tr>
-      <td><input type="text"   class="before" value="れいとなる"></td>
-      <td><input type="text"   class="after"  value="例となる"></td>
+      <td><input type="text" class="before" value="れいとなる" oninput="updateInlinePreview(this)"><div class="inline-preview"></div></td>
+      <td><input type="text" class="after"  value="例となる"></td>
       <td><input type="checkbox" class="break"></td>
-      <td><input type="number" class="start"  value="1" min="1"></td>
+      <td>
+        <div class="start-wrap">
+          <input type="range" class="start" value="1" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value">
+          <span class="start-val">1</span>
+        </div>
+      </td>
     </tr>
     <tr>
-      <td><input type="text"   class="before" value="ぶんしょう"></td>
-      <td><input type="text"   class="after"  value="文章"></td>
+      <td><input type="text" class="before" value="ぶんしょう" oninput="updateInlinePreview(this)"><div class="inline-preview"></div></td>
+      <td><input type="text" class="after"  value="文章"></td>
       <td><input type="checkbox" class="break" checked></td>
-      <td><input type="number" class="start"  value="5" min="1"></td>
+      <td>
+        <div class="start-wrap">
+          <input type="range" class="start" value="5" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value">
+          <span class="start-val">5</span>
+          <button class="add-btn svg-btn" onclick="addRow(this)">＋</button>
+        </div>
+      </td>
     </tr>
   </tbody>
 </table>
-
-<button class="svg-btn" onclick="addRow()">行を追加</button>
 
 <div class="controls">
   <label>文字サイズ</label>
@@ -64,25 +73,57 @@
 
 <script src="../../03-js/31-csv-06-hnkn.js"></script>
 
-
 <script>
-  // navi.htmlからpostMessageで設定を受け取り、各コントロールに反映
+  // 入力欄直下のインラインプレビュー更新
+  function updateInlinePreview(input) {
+    const prev = input.nextElementSibling;
+    if (prev && prev.classList.contains('inline-preview')) {
+      prev.textContent = input.value;
+      const fontSize   = document.getElementById('fontSize').value || 32;
+      const fontColor  = document.getElementById('fontColor').value || '#000';
+      prev.style.fontSize   = Math.min(fontSize, 18) + 'px';
+      prev.style.color      = fontColor;
+      prev.style.fontFamily = document.body.dataset.fontFamily || "'Noto Sans JP',sans-serif";
+    }
+  }
+
+  // 全行のインラインプレビューを更新
+  function updateAllPreviews() {
+    document.querySelectorAll('#inputTable .before').forEach(input => updateInlinePreview(input));
+  }
+
+  // ＋ボタンで行追加（押した行の直後に追加し、＋ボタンを新しい最終行に移動）
+  function addRow(btn) {
+    // 既存の＋ボタンを全削除
+    document.querySelectorAll('.add-btn').forEach(b => b.remove());
+
+    const tbody = document.querySelector('#inputTable tbody');
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td><input type="text" class="before" oninput="updateInlinePreview(this)"><div class="inline-preview"></div></td>
+      <td><input type="text" class="after"></td>
+      <td><input type="checkbox" class="break"></td>
+      <td>
+        <div class="start-wrap">
+          <input type="range" class="start" value="1" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value">
+          <span class="start-val">1</span>
+          <button class="add-btn svg-btn" onclick="addRow(this)">＋</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(row);
+  }
+
+  // navi.htmlからpostMessageで設定を受け取り反映
   window.addEventListener('message', e => {
     if (!e.data || e.data.type !== 'hnknCfg') return;
     const c = e.data.cfg;
-    if (c.fontColor  != null) document.getElementById('fontColor').value  = c.fontColor;
-    if (c.fontSize   != null) document.getElementById('fontSize').value   = c.fontSize;
-    if (c.bgColor    != null) document.getElementById('bgColor').value    = c.bgColor;
-    if (c.speed      != null) document.getElementById('speed').value      = c.speed;
-    if (c.fontFamily != null) {
-      const sel = document.getElementById('fontFamily');
-      if (!sel) {
-        // fontFamilyセレクトがない場合はdata属性で保持
-        document.body.dataset.fontFamily = c.fontFamily;
-      } else {
-        sel.value = c.fontFamily;
-      }
-    }
+    if (c.fontColor  != null) document.getElementById('fontColor').value = c.fontColor;
+    if (c.fontSize   != null) document.getElementById('fontSize').value  = c.fontSize;
+    if (c.bgColor    != null) document.getElementById('bgColor').value   = c.bgColor;
+    if (c.speed      != null) document.getElementById('speed').value     = c.speed;
+    if (c.fontFamily != null) document.body.dataset.fontFamily = c.fontFamily;
+    updateAllPreviews();
   });
 </script>
 </body>
