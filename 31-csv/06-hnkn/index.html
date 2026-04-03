@@ -90,40 +90,51 @@
     updateKanaPreview();
   }
 
-  // kanaPreviewArea：開始位置をpaddingで反映して表示
+  // kanaPreviewArea：SVG生成と同じ座標計算で表示
   function updateKanaPreview() {
     const area     = document.getElementById('kanaPreviewArea');
     const fontSize = parseInt(document.getElementById('fontSize').value) || 32;
     const color    = document.getElementById('fontColor').value || '#000';
     const family   = document.body.dataset.fontFamily || "'Noto Sans JP',sans-serif";
-    const charW    = fontSize * 0.6; // 1文字あたりの幅の目安
+    const charW    = fontSize * 0.6;
+    const lineH    = fontSize * 1.6;
+    const MARGIN_X = 20; // SVGと同じ左余白
 
     area.innerHTML = '';
-    const lineDiv = document.createElement('div');
-    lineDiv.style.position = 'relative';
-    lineDiv.style.minHeight = (fontSize * 1.6) + 'px';
-    area.appendChild(lineDiv);
+    // SVGと同じ：y=fontSize*1.5からスタート、改行時にlineH加算
+    let y = fontSize * 1.5;
 
-    document.querySelectorAll('#inputTable tbody tr').forEach(row => {
-      const before   = row.querySelector('.before');
-      const startEl  = row.querySelector('.start');
+    const wrapper = document.createElement('div');
+    wrapper.style.position   = 'relative';
+    wrapper.style.fontFamily = family;
+    wrapper.style.fontSize   = fontSize + 'px';
+    wrapper.style.color      = color;
+    wrapper.style.lineHeight = '1';
+    area.appendChild(wrapper);
+
+    const rows = document.querySelectorAll('#inputTable tbody tr');
+    rows.forEach((row, i) => {
+      const before  = row.querySelector('.before');
+      const startEl = row.querySelector('.start');
       const hasBreak = row.querySelector('.break').checked;
-      if (!before || !before.value) return;
+      if (!before || !before.value) { if (hasBreak) y += lineH; return; }
 
-      const start = startEl ? (parseInt(startEl.value) || 1) : 1;
-      const indent = (start - 1) * charW;
+      const start  = startEl ? (parseInt(startEl.value) || 1) : 1;
+      const x      = (start - 1) * charW + MARGIN_X;
 
       const span = document.createElement('span');
-      span.textContent       = before.value;
-      span.style.fontSize    = fontSize + 'px';
-      span.style.color       = color;
-      span.style.fontFamily  = family;
-      span.style.paddingLeft = indent + 'px';
-      span.style.display     = 'inline';
-      lineDiv.appendChild(span);
+      span.textContent      = before.value;
+      span.style.position   = 'absolute';
+      span.style.left       = x + 'px';
+      span.style.top        = (y - fontSize) + 'px'; // baselineをtopに変換
+      wrapper.appendChild(span);
 
-      if (hasBreak) lineDiv.appendChild(document.createElement('br'));
+      if (hasBreak) y += lineH;
     });
+
+    // wrapperの高さをyに合わせる
+    wrapper.style.height = y + 'px';
+    area.style.minHeight = y + 'px';
   }
 
   // 全行のインラインプレビューを更新
