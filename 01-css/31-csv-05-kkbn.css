@@ -1,1 +1,27 @@
-31-csv-05-kkbn.css
+body {
+  font-family: sans-serif;
+  background: #202020;
+  color: white;
+  text-align: center;
+  padding: 2em;
+  margin: 0;
+}
+
+textarea {
+  width: 90%;
+  height: 6em;
+  font-size: 1.2em;
+}
+
+button {
+  margin: 1em;
+  padding: 0.8em 1.5em;
+  font-size: 1em;
+  cursor: pointer;
+}
+
+#preview {
+  margin-top: 2em;
+  background: #111;
+  display: inline-block;
+}
