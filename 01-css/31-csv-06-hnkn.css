@@ -220,3 +220,20 @@ textarea#svgCode {
   line-height: 1.8;
   word-break: break-all;
 }
+
+/* ＋－ボタン縦並び */
+.td-add {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+}
+
+.del-btn {
+  padding: 4px 8px;
+  font-size: 16px;
+  line-height: 1;
+  border-color: #999;
+  color: #666;
+}
