@@ -8,8 +8,10 @@ function getInputData() {
     const startAfterEl  = row.querySelector('.start-after');
     const startBefore   = startBeforeEl ? (parseInt(startBeforeEl.value, 10) || 1) : 1;
     const startAfter    = startAfterEl  ? (parseInt(startAfterEl.value,  10) || 1) : 1;
+    const breakEl       = row.querySelector('.break');
+    const breakLine     = breakEl ? breakEl.checked : false;
     if (before || after) {
-      result.push({ before, after: after || before, startBefore, startAfter });
+      result.push({ before, after: after || before, startBefore, startAfter, break: breakLine });
     }
   });
   return result;
@@ -51,7 +53,7 @@ function generateSVG() {
         <text id="text${i}" x="0" y="0"></text>
         <line id="underline${i}" y1="${underlineY}" y2="${underlineY}" x1="0" x2="0" class="dash"/>
       </g>`);
-    y += lineHeight;
+    if (item.break) y += lineHeight;
   });
 
   const svgScript = `
