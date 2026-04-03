@@ -1,1 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Typing SVG Generator + APNG Export</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../01-css/31-csv-06-hnkn.css">
+</head>
+<body>
 
+<h1>Typing SVG Generator</h1>
+
+<table id="inputTable">
+  <thead>
+    <tr>
+      <th>へんかまえ（かな）</th>
+      <th>変化後（漢字）</th>
+      <th>改行</th>
+      <th>開始位置</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><input type="text"   class="before" value="れいとなる"></td>
+      <td><input type="text"   class="after"  value="例となる"></td>
+      <td><input type="checkbox" class="break"></td>
+      <td><input type="number" class="start"  value="1" min="1"></td>
+    </tr>
+    <tr>
+      <td><input type="text"   class="before" value="ぶんしょう"></td>
+      <td><input type="text"   class="after"  value="文章"></td>
+      <td><input type="checkbox" class="break" checked></td>
+      <td><input type="number" class="start"  value="5" min="1"></td>
+    </tr>
+  </tbody>
+</table>
+
+<button onclick="addRow()">行を追加</button>
+
+<div class="controls">
+  <label>文字サイズ</label>
+  <input type="number" id="fontSize" value="32" min="8" max="100">
+  <label>文字色</label>
+  <input type="color" id="fontColor" value="#000000">
+  <label>背景色</label>
+  <input type="color" id="bgColor" value="#ffffff">
+  <label>速度</label>
+  <input type="range" id="speed" min="20" max="500" value="120" step="10">
+</div>
+
+<div class="actions">
+  <button onclick="generateSVG()">SVGを生成</button>
+  <button onclick="copyCode()">コードをコピー</button>
+  <button onclick="downloadSVG()">SVGを保存</button>
+  <button onclick="generateAPNG()">APNGを保存</button>
+</div>
+
+<div id="previewWrap">
+  <div id="preview"></div>
+</div>
+
+<textarea id="svgCode" readonly></textarea>
+
+<script src="type.js"></script>
+
+<script>
+  // プレビューをウィンドウ幅に合わせてスケール
+  function scalePreview() {
+    const wrap = document.getElementById('previewWrap');
+    const prev = document.getElementById('preview');
+    const svg  = prev.querySelector('svg');
+    if (!svg) return;
+    const svgW = Number(svg.getAttribute('width'))  || 720;
+    const svgH = Number(svg.getAttribute('height')) || 400;
+    const scale = Math.min(1, (wrap.offsetWidth - 4) / svgW);
+    prev.style.transformOrigin = 'top left';
+    prev.style.transform       = `scale(${scale})`;
+    prev.style.width           = svgW + 'px';
+    prev.style.height          = svgH + 'px';
+    wrap.style.height          = (svgH * scale) + 'px';
+    wrap.style.overflow        = 'hidden';
+  }
+
+  // generateSVG完了後にscalePreviewを呼ぶ
+  const _origGenerate = window.generateSVG;
+  window.generateSVG = function() {
+    if (typeof _origGenerate === 'function') _origGenerate();
+    setTimeout(scalePreview, 50);
+  };
+
+  window.addEventListener('resize', scalePreview);
+</script>
+</body>
+</html>
