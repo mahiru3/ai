@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<h1>Typing SVG Generator</h1>
+<h1>タイピング風やつ</h1>
 
 <table id="inputTable">
   <thead>
@@ -23,11 +23,11 @@
     <tr class="input-row">
       <td>
         <input type="text" class="before" value="れいとなる" oninput="updateKanaPreview()">
-        <div class="start-wrap"><input type="range" class="start-before" value="1" min="1" max="40" oninput="this.nextElementSibling.value=this.value; updateKanaPreview();"><input type="number" class="start-num" value="1" min="1" max="40" oninput="this.previousElementSibling.value=this.value; updateKanaPreview();"></div>
+        <div class="start-wrap"><input type="range" class="start-before" value="1" min="1" max="40" step="0.1" oninput="this.nextElementSibling.value=this.value; updateKanaPreview();"><input type="number" class="start-num" value="1" min="1" max="40" step="0.1" oninput="this.previousElementSibling.value=this.value; updateKanaPreview();"></div>
       </td>
       <td>
         <input type="text" class="after" value="例となる" oninput="updateKanaPreview()">
-        <div class="start-wrap"><input type="range" class="start-after" value="1" min="1" max="40" oninput="this.nextElementSibling.value=this.value; updateKanaPreview();"><input type="number" class="start-num" value="1" min="1" max="40" oninput="this.previousElementSibling.value=this.value; updateKanaPreview();"></div>
+        <div class="start-wrap"><input type="range" class="start-after" value="1" min="1" max="40" step="0.1" oninput="this.nextElementSibling.value=this.value; updateKanaPreview();"><input type="number" class="start-num" value="1" min="1" max="40" step="0.1" oninput="this.previousElementSibling.value=this.value; updateKanaPreview();"></div>
         <label class="break-label"><input type="checkbox" class="break" onchange="updateKanaPreview()"> 改行</label>
       </td>
       <td class="td-del"><button class="row-del-btn" onclick="delRow(this)" title="削除"><span class="chev-sp1"></span><span class="chev-sp2"></span></button></td>
@@ -35,11 +35,11 @@
     <tr class="input-row">
       <td>
         <input type="text" class="before" value="ぶんしょう" oninput="updateKanaPreview()">
-        <div class="start-wrap"><input type="range" class="start-before" value="1" min="1" max="40" oninput="this.nextElementSibling.value=this.value; updateKanaPreview();"><input type="number" class="start-num" value="1" min="1" max="40" oninput="this.previousElementSibling.value=this.value; updateKanaPreview();"></div>
+        <div class="start-wrap"><input type="range" class="start-before" value="1" min="1" max="40" step="0.1" oninput="this.nextElementSibling.value=this.value; updateKanaPreview();"><input type="number" class="start-num" value="1" min="1" max="40" step="0.1" oninput="this.previousElementSibling.value=this.value; updateKanaPreview();"></div>
       </td>
       <td>
         <input type="text" class="after" value="文章" oninput="updateKanaPreview()">
-        <div class="start-wrap"><input type="range" class="start-after" value="5" min="1" max="40" oninput="this.nextElementSibling.value=this.value; updateKanaPreview();"><input type="number" class="start-num" value="5" min="1" max="40" oninput="this.previousElementSibling.value=this.value; updateKanaPreview();"></div>
+        <div class="start-wrap"><input type="range" class="start-after" value="5" min="1" max="40" step="0.1" oninput="this.nextElementSibling.value=this.value; updateKanaPreview();"><input type="number" class="start-num" value="5" min="1" max="40" step="0.1" oninput="this.previousElementSibling.value=this.value; updateKanaPreview();"></div>
         <label class="break-label"><input type="checkbox" class="break" onchange="updateKanaPreview()"> 改行</label>
       </td>
       <td class="td-del"><button class="row-del-btn" onclick="delRow(this)" title="削除"><span class="chev-sp1"></span><span class="chev-sp2"></span></button></td>
@@ -278,77 +278,54 @@ function updateKanaPreview() {
   const MARGIN_X = 20;
   area.innerHTML = '';
 
-  // ── へんかまえ ──
+  function makeWrap(selector, startSelector) {
+    const wrap = document.createElement('div');
+    wrap.style.position   = 'relative';
+    wrap.style.fontFamily = family;
+    wrap.style.fontSize   = fontSize + 'px';
+    wrap.style.color      = color;
+    wrap.style.lineHeight = String(lineH / fontSize);
+    wrap.style.whiteSpace = 'nowrap';
+
+    let maxX = MARGIN_X;
+    let lines = 1;
+    let curLine = 0;
+
+    document.querySelectorAll('#inputTable tbody tr.input-row').forEach(row => {
+      const el      = row.querySelector(selector);
+      const startEl = row.querySelector(startSelector);
+      const breakEl = row.querySelector('.break');
+      const doBreak = breakEl ? breakEl.checked : false;
+      if (el && el.value) {
+        const start = startEl ? (parseFloat(startEl.value) || 1) : 1;
+        const x     = (start - 1) * charW + MARGIN_X;
+        const span  = document.createElement('span');
+        span.textContent    = el.value;
+        span.style.position = 'absolute';
+        span.style.left     = x + 'px';
+        span.style.top      = (curLine * lineH) + 'px';
+        wrap.appendChild(span);
+      }
+      if (doBreak) { curLine++; lines++; }
+    });
+
+    wrap.style.height = (lines * lineH) + 'px';
+    return wrap;
+  }
+
+  // へんかまえ
   const labelB = document.createElement('div');
-  labelB.textContent  = 'へんかまえ';
+  labelB.textContent = 'へんかまえ';
   labelB.style.cssText = 'font-size:11px;color:#888;margin-bottom:2px;';
   area.appendChild(labelB);
+  area.appendChild(makeWrap('.before', '.start-before'));
 
-  const wrapB = document.createElement('div');
-  wrapB.style.position   = 'relative';
-  wrapB.style.fontFamily = family;
-  wrapB.style.fontSize   = fontSize + 'px';
-  wrapB.style.color      = color;
-  wrapB.style.lineHeight = '1';
-  area.appendChild(wrapB);
-
-  let yB = fontSize;
-  document.querySelectorAll('#inputTable tbody tr.input-row').forEach(row => {
-    const before      = row.querySelector('.before');
-    const startBefore = row.querySelector('.start-before');
-    const breakEl     = row.querySelector('.break');
-    const doBreak     = breakEl ? breakEl.checked : false;
-    if (before && before.value) {
-      const start = startBefore ? (parseInt(startBefore.value) || 1) : 1;
-      const x     = (start - 1) * charW + MARGIN_X;
-      const span  = document.createElement('span');
-      span.textContent    = before.value;
-      span.style.position = 'absolute';
-      span.style.left     = x + 'px';
-      span.style.top      = '0px';
-      wrapB.appendChild(span);
-    }
-    if (doBreak) yB += lineH;
-  });
-  if (yB === fontSize) yB += lineH;
-  wrapB.style.height    = yB + 'px';
-
-  // ── 変化後 ──
+  // 変化後
   const labelA = document.createElement('div');
-  labelA.textContent  = '変化後';
-  labelA.style.cssText = 'font-size:11px;color:#888;margin-top:10px;margin-bottom:2px;';
+  labelA.textContent = '変化後';
+  labelA.style.cssText = 'font-size:11px;color:#888;margin-top:6px;margin-bottom:2px;';
   area.appendChild(labelA);
-
-  const wrapA = document.createElement('div');
-  wrapA.style.position   = 'relative';
-  wrapA.style.fontFamily = family;
-  wrapA.style.fontSize   = fontSize + 'px';
-  wrapA.style.color      = color;
-  wrapA.style.lineHeight = '1';
-  area.appendChild(wrapA);
-
-  let yA = fontSize;
-  document.querySelectorAll('#inputTable tbody tr.input-row').forEach(row => {
-    const after      = row.querySelector('.after');
-    const startAfter = row.querySelector('.start-after');
-    const breakEl    = row.querySelector('.break');
-    const doBreak    = breakEl ? breakEl.checked : false;
-    if (after && after.value) {
-      const start = startAfter ? (parseInt(startAfter.value) || 1) : 1;
-      const x     = (start - 1) * charW + MARGIN_X;
-      const span  = document.createElement('span');
-      span.textContent    = after.value;
-      span.style.position = 'absolute';
-      span.style.left     = x + 'px';
-      span.style.top      = '0px';
-      wrapA.appendChild(span);
-    }
-    if (doBreak) yA += lineH;
-  });
-  if (yA === fontSize) yA += lineH;
-  wrapA.style.height    = yA + 'px';
-
-  area.style.minHeight = (yB + yA + 24) + 'px';
+  area.appendChild(makeWrap('.after', '.start-after'));
 }
 
 function delRow(btn) {
@@ -366,11 +343,11 @@ function addRow() {
   row.innerHTML = `
     <td>
       <input type="text" class="before" oninput="updateKanaPreview()">
-      <div class="start-wrap"><input type="range" class="start-before" value="1" min="1" max="40" oninput="this.nextElementSibling.value=this.value; updateKanaPreview();"><input type="number" class="start-num" value="1" min="1" max="40" oninput="this.previousElementSibling.value=this.value; updateKanaPreview();"></div>
+      <div class="start-wrap"><input type="range" class="start-before" value="1" min="1" max="40" step="0.1" oninput="this.nextElementSibling.value=this.value; updateKanaPreview();"><input type="number" class="start-num" value="1" min="1" max="40" step="0.1" oninput="this.previousElementSibling.value=this.value; updateKanaPreview();"></div>
     </td>
     <td>
       <input type="text" class="after" oninput="updateKanaPreview()">
-      <div class="start-wrap"><input type="range" class="start-after" value="1" min="1" max="40" oninput="this.nextElementSibling.value=this.value; updateKanaPreview();"><input type="number" class="start-num" value="1" min="1" max="40" oninput="this.previousElementSibling.value=this.value; updateKanaPreview();"></div>
+      <div class="start-wrap"><input type="range" class="start-after" value="1" min="1" max="40" step="0.1" oninput="this.nextElementSibling.value=this.value; updateKanaPreview();"><input type="number" class="start-num" value="1" min="1" max="40" step="0.1" oninput="this.previousElementSibling.value=this.value; updateKanaPreview();"></div>
       <label class="break-label"><input type="checkbox" class="break" onchange="updateKanaPreview()"> 改行</label>
     </td>
     <td class="td-del"><button class="row-del-btn" onclick="delRow(this)" title="削除"><span class="chev-sp1"></span><span class="chev-sp2"></span></button></td>
