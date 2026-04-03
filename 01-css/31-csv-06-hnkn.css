@@ -190,3 +190,33 @@ textarea#svgCode {
   font-size: 14px;
   flex-shrink: 0;
 }
+
+/* 開始位置th/tdを狭く */
+.th-start, .td-start {
+  width: 120px;
+}
+
+/* ＋ボタン用td */
+.th-add, .td-add {
+  width: 44px;
+  text-align: center;
+  padding: 4px;
+}
+
+.add-btn {
+  padding: 4px 8px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* kanaプレビューエリア */
+#kanaPreviewArea {
+  min-height: 2em;
+  padding: 10px 12px;
+  margin: 8px 0;
+  border: 1px dashed #bbb;
+  border-radius: 6px;
+  background: #fafafa;
+  line-height: 1.8;
+  word-break: break-all;
+}
