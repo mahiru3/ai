@@ -1,89 +1,119 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Typing SVG Generator + APNG Export</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>設定（左）</title>
+  <link rel="stylesheet" href="../../01-css/00-style.css">
   <link rel="stylesheet" href="../../01-css/31-csv-06-hnkn.css">
+  <style>
+    body    { margin:0; padding:10px; font-family:sans-serif; font-size:13px; }
+    h3      { margin:0 0 8px; font-size:13px; color:#888; }
+    section { margin-bottom:12px; border-bottom:1px solid #eee; padding-bottom:10px; }
+    label   { display:block; font-size:12px; color:#444; margin:6px 0 2px; }
+    input[type="range"] { width:100%; cursor:pointer; margin-top:2px; }
+    .color-row { display:flex; align-items:center; gap:6px; margin-top:2px; }
+    input[type="color"] { width:28px; height:28px; border:1px solid #bbb; border-radius:4px; padding:1px; cursor:pointer; }
+    .hex-input { width:80px; font-family:monospace; font-size:12px; padding:4px 6px; border:1px solid #bbb; border-radius:4px; box-sizing:border-box; }
+    .hint   { font-size:11px; color:#888; margin-top:2px; }
+    .navi-btn {
+      width:100%; margin-top:10px; padding:8px;
+      border:2px solid #333; color:#333; background:#fff;
+      overflow:hidden; position:relative; z-index:1;
+      cursor:pointer; font:inherit; font-size:13px;
+      border-radius:0; transition:color 0.4s; display:block;
+    }
+    .navi-btn::before {
+      content:''; width:100%; height:100%;
+      background-color:#e0e0e0; position:absolute;
+      left:-100%; top:0; transition:left 0.4s; z-index:-1;
+    }
+    .navi-btn:hover::before { left:0; }
+    .navi-btn:active { transform:translateY(1px); }
+  </style>
 </head>
 <body>
 
-<h1>Typing SVG Generator</h1>
+<button class="navi-btn" id="applyBtn">▶ 設定を反映</button>
 
-<table id="inputTable">
-  <thead>
-    <tr>
-      <th>へんかまえ（かな）</th>
-      <th>変化後（漢字）</th>
-      <th>改行</th>
-      <th>開始位置</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><input type="text"   class="before" value="れいとなる"></td>
-      <td><input type="text"   class="after"  value="例となる"></td>
-      <td><input type="checkbox" class="break"></td>
-      <td><input type="number" class="start"  value="1" min="1"></td>
-    </tr>
-    <tr>
-      <td><input type="text"   class="before" value="ぶんしょう"></td>
-      <td><input type="text"   class="after"  value="文章"></td>
-      <td><input type="checkbox" class="break" checked></td>
-      <td><input type="number" class="start"  value="5" min="1"></td>
-    </tr>
-  </tbody>
-</table>
+<section>
+  <b>文字</b>
 
-<button class="svg-btn" onclick="addRow()">行を追加</button>
-
-<div class="controls">
-  <label>文字サイズ</label>
-  <input type="number" id="fontSize" value="32" min="8" max="100">
   <label>文字色</label>
-  <input type="color" id="fontColor" value="#000000">
+  <div class="color-row">
+    <input type="color" id="fontColorPicker" value="#000000">
+    <input type="text"  id="fontColorHex"    value="#000000" class="hex-input">
+  </div>
+
+  <label>文字サイズ（px）: <span id="fontSizeVal">32</span></label>
+  <input id="fontSize" type="range" min="8" max="100" value="32" oninput="upd('fontSizeVal',this.value); sendCfg();">
+
+  <label>フォント</label>
+  <select id="fontFamily" onchange="sendCfg()">
+    <option value="'Noto Sans JP',sans-serif"           style="font-family:'Noto Sans JP',sans-serif"  selected>Noto Sans JP</option>
+    <option value="'Yu Gothic','Meiryo',sans-serif"     style="font-family:'Yu Gothic'"               >Yu Gothic</option>
+    <option value="'Yu Mincho','MS Mincho',serif"       style="font-family:'Yu Mincho'"               >Yu Mincho（明朝）</option>
+    <option value="'MS Gothic','MS PGothic',sans-serif" style="font-family:'MS Gothic'"               >MS ゴシック</option>
+    <option value="'MS Mincho','MS PMincho',serif"      style="font-family:'MS Mincho'"               >MS 明朝</option>
+    <option value="'Meiryo',sans-serif"                 style="font-family:'Meiryo'"                  >メイリオ</option>
+    <option value="serif"                               style="font-family:serif"                     >serif（明朝系）</option>
+    <option value="sans-serif"                          style="font-family:sans-serif"                >sans-serif（ゴシック系）</option>
+    <option value="monospace"                           style="font-family:monospace"                 >monospace（等幅）</option>
+    <option value="'Courier New',monospace"             style="font-family:'Courier New'"             >Courier New</option>
+    <option value="'Impact',sans-serif"                 style="font-family:'Impact'"                  >Impact</option>
+  </select>
+</section>
+
+<section>
+  <b>背景色</b>
+
   <label>背景色</label>
-  <input type="color" id="bgColor" value="#ffffff">
-  <label>速度</label>
-  <input type="range" id="speed" min="20" max="500" value="120" step="10">
-</div>
+  <div class="color-row">
+    <input type="color" id="bgColorPicker" value="#ffffff">
+    <input type="text"  id="bgColorHex"    value="#ffffff" class="hex-input">
+  </div>
+</section>
 
-<div class="actions">
-  <button class="svg-btn" onclick="generateSVG()">SVGを生成</button>
-  <button class="svg-btn" onclick="copyCode()">コードをコピー</button>
-  <button class="svg-btn" onclick="downloadSVG()">SVGを保存</button>
-  <button class="svg-btn" onclick="generateAPNG()">APNGを保存</button>
-</div>
+<section>
+  <b>アニメーション</b>
 
-<div id="previewWrap">
-  <div id="preview"></div>
-</div>
+  <label>速度（ms）: <span id="speedVal">120</span></label>
+  <input id="speed" type="range" min="20" max="500" value="120" step="10" oninput="upd('speedVal',this.value); sendCfg();">
+  <div class="hint">小さいほど速い</div>
+</section>
 
-<textarea id="svgCode" readonly></textarea>
-
-<script src="../../03-js/31-csv-06-hnkn.js"></script>
-
+<h3>設定パネル</h3>
 
 <script>
-  // navi.htmlからpostMessageで設定を受け取り、各コントロールに反映
-  window.addEventListener('message', e => {
-    if (!e.data || e.data.type !== 'hnknCfg') return;
-    const c = e.data.cfg;
-    if (c.fontColor  != null) document.getElementById('fontColor').value  = c.fontColor;
-    if (c.fontSize   != null) document.getElementById('fontSize').value   = c.fontSize;
-    if (c.bgColor    != null) document.getElementById('bgColor').value    = c.bgColor;
-    if (c.speed      != null) document.getElementById('speed').value      = c.speed;
-    if (c.fontFamily != null) {
-      const sel = document.getElementById('fontFamily');
-      if (!sel) {
-        // fontFamilyセレクトがない場合はdata属性で保持
-        document.body.dataset.fontFamily = c.fontFamily;
-      } else {
-        sel.value = c.fontFamily;
-      }
-    }
-  });
+  function upd(id, val) { document.getElementById(id).textContent = val; }
+
+  function bindColor(pickerId, hexId) {
+    const picker = document.getElementById(pickerId);
+    const hex    = document.getElementById(hexId);
+    picker.addEventListener('input', () => { hex.value = picker.value.toUpperCase(); sendCfg(); });
+    hex.addEventListener('input', () => {
+      if (/^#[0-9A-Fa-f]{6}$/.test(hex.value)) { picker.value = hex.value; sendCfg(); }
+    });
+  }
+  bindColor('fontColorPicker', 'fontColorHex');
+  bindColor('bgColorPicker',   'bgColorHex');
+
+  function getCfg() {
+    return {
+      fontColor:  document.getElementById('fontColorHex').value,
+      fontSize:   Number(document.getElementById('fontSize').value),
+      fontFamily: document.getElementById('fontFamily').value,
+      bgColor:    document.getElementById('bgColorHex').value,
+      speed:      Number(document.getElementById('speed').value),
+    };
+  }
+
+  function sendCfg() {
+    const center = parent && parent.frames && parent.frames['center'];
+    if (center) center.postMessage({ type: 'hnknCfg', cfg: getCfg() }, '*');
+  }
+
+  document.getElementById('applyBtn').addEventListener('click', sendCfg);
 </script>
 </body>
 </html>
