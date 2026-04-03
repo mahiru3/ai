@@ -237,3 +237,11 @@ textarea#svgCode {
   border-color: #999;
   color: #666;
 }
+
+/* －列・＋列を個別のtdに */
+.th-del, .td-del,
+.th-add, .td-add {
+  width: 36px;
+  text-align: center;
+  padding: 4px 2px;
+}
