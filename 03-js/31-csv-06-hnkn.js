@@ -54,6 +54,7 @@ function generateSVG() {
         <line id="underline${i}" y1="${underlineY}" y2="${underlineY}" x1="0" x2="0" class="dash"/>
       </g>`);
     if (item.break) y += lineHeight;
+    // breakなしの場合はyを変えない（同じ行に続く）
   });
 
   const svgScript = `
