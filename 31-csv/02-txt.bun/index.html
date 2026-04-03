@@ -11,20 +11,24 @@
 
 <fieldset>
   <legend>① 手書きテキスト</legend>
-  <label>テキスト①</label>
-  <input id="text1" type="text" value="Call of Cthulhu">
+  <div class="input-preview-row">
+    <input id="text1" type="text" value="Call of Cthulhu">
+    <span id="prev1" class="text-preview"></span>
+  </div>
 </fieldset>
 
 <fieldset>
   <legend>② 浮かび上がるテキスト</legend>
-  <label>テキスト②</label>
-  <input id="text2" type="text" value="Welcome to the Mythos">
+  <div class="input-preview-row">
+    <input id="text2" type="text" value="Welcome to the Mythos">
+    <span id="prev2" class="text-preview"></span>
+  </div>
 </fieldset>
 
 <div class="actions">
-  <button id="build">SVGを生成</button>
-  <button id="copy">SVGをコピー</button>
-  <button id="download">SVGをダウンロード</button>
+  <button class="svg-btn" id="build">SVGを生成</button>
+  <button class="svg-btn" id="copy">SVGをコピー</button>
+  <button class="svg-btn" id="download">SVGをダウンロード</button>
 </div>
 
 <fieldset>
@@ -38,19 +42,37 @@
 </fieldset>
 
 <script>
-  // navi.htmlから受け取る設定値（デフォルト値）
   let cfg = {
     color1:'#000000', size1:72,   font1sel:'serif', font1free:'', letter1:2,   baseDur1:0.75, splitDur:1.2,
     color2:'#000000', size2:56,   font2sel:'serif', font2free:'', letter2:1,   riseDur:0.9,   afterDelay:0.2
   };
 
-  // navi.html（左iframe）からpostMessageで設定を受け取る
   window.addEventListener('message', e => {
     if (e.data && e.data.type === 'svgCfg') {
       cfg = Object.assign(cfg, e.data.cfg);
+      updatePreviews();
       buildSVG();
     }
   });
+
+  // テキスト入力のリアルタイムプレビュー更新
+  function updatePreviews() {
+    const f1 = (cfg.font1free || '').trim() || cfg.font1sel;
+    const f2 = (cfg.font2free || '').trim() || cfg.font2sel;
+    const p1 = document.getElementById('prev1');
+    const p2 = document.getElementById('prev2');
+    p1.textContent = document.getElementById('text1').value;
+    p1.style.fontFamily = f1;
+    p1.style.fontSize   = Math.min(Number(cfg.size1), 32) + 'px';
+    p1.style.color      = cfg.color1;
+    p2.textContent = document.getElementById('text2').value;
+    p2.style.fontFamily = f2;
+    p2.style.fontSize   = Math.min(Number(cfg.size2), 28) + 'px';
+    p2.style.color      = cfg.color2;
+  }
+
+  document.getElementById('text1').addEventListener('input', updatePreviews);
+  document.getElementById('text2').addEventListener('input', updatePreviews);
 
   const meas = document.createElement('canvas').getContext('2d');
   function widthOf(ch, size, family) { meas.font = `${size}px ${family}`; return meas.measureText(ch).width; }
@@ -177,6 +199,7 @@
     URL.revokeObjectURL(url);
   });
 
+  updatePreviews();
   buildSVG();
 </script>
 </body>
