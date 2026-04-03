@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>目次（右）</title>
+
+  <link rel="stylesheet" href="01-css/00-style.css" />
+  <link rel="stylesheet" href="01-css/03-migi.css" />
+</head>
+<body>
+  <h3>目次（右）</h3>
+
+  <div class="menu">
+    <!-- トップ：中央だけ切替（左は維持） -->
+    <a href="00-main.html" target="center">トップ（00-main.html）</a>
+
+    <!-- ▼ ここから「左＋中央 同時切替」リンク -->
+    <!-- chara -->
+    <a class="dual-link"
+       href="31-csv/01-chara/index.html"
+       data-center="31-csv/01-chara/index.html"
+       data-left="31-csv/01-chara/navi.html"
+       target="center">いあきゃら変換</a>
+
+    <!-- 黒板 -->
+    <a class="dual-link"
+       href="31-csv/05-kkbn/index.html"
+       data-center="31-csv/05-kkbn/index.html"
+       data-left="31-csv/05-kkbn/navi.html"
+       target="center">黒板</a>
+
+    <!-- てせうす -->
+    <a class="dual-link"
+       href="21-chara/11-tese/index.html"
+       data-center="21-chara/11-tese/index.html"
+       data-left="21-chara/11-tese/navi.html"
+       target="center">てせうす</a>
+
+    <!-- ▲ 追加する場合は、上の dual-link をコピペして data-left/data-center を変えるだけ -->
+  </div>
+
+  <p class="note">
+    ※「dual-link」はクリック1回で左iframe（name="left"）と中央iframe（name="center"）を同時に切り替えます。<br>
+    ※トップは中央だけ切り替え（左はそのまま）です。
+  </p>
+
+  <script>
+    document.addEventListener("click", (e) => {
+      const a = e.target.closest("a.dual-link");
+      if (!a) return;
+
+      const leftUrl = a.dataset.left;
+      const centerUrl = a.dataset.center;
+      if (!leftUrl || !centerUrl) return;
+
+      // JSで同時切替するので通常遷移は止める
+      e.preventDefault();
+
+      // 左と中央を同時に切り替え
+      if (parent && parent.frames) {
+        if (parent.frames["left"]) parent.frames["left"].location.href = leftUrl;
+        if (parent.frames["center"]) parent.frames["center"].location.href = centerUrl;
+      }
+    });
+  </script>
+</body>
+</html>

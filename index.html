@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ローカルブログ（フレーム風）</title>
+<link rel="stylesheet" href="01-css/00-style.css">
+</head>
+<body class="layout">
+  <header class="area area-top">
+    <iframe class="frame" src="01-ue.html" name="top" title="上"></iframe>
+  </header>
+
+  <aside class="area area-left">
+<iframe class="frame" src="04-hidari.html" name="left" title="左"></iframe>
+  </aside>
+
+  <nav class="area area-right">
+    <iframe class="frame" src="03-migi.html" name="right" title="右（目次）"></iframe>
+  </nav>
+
+  <main class="area area-center">
+    <!-- ここだけ差し替え対象 -->
+<iframe class="frame" src="00-main.html"   name="center" title="中央"></iframe>
+  </main>
+
+  <footer class="area area-bottom">
+    <iframe class="frame" src="02-sita.html" name="bottom" title="下"></iframe>
+  </footer>
+</body>
+</html>

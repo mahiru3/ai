@@ -1,0 +1,238 @@
+/* chara.css : 10-kmak/index.html 用（キャラページ共通で使い回し可） */
+
+body{
+  padding:20px;
+  font-family:sans-serif;
+  line-height:1.7;
+}
+
+h1{
+  margin: 0 0 14px;
+}
+
+h2{
+  margin: 34px 0 10px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 6px;
+}
+
+h3{
+  margin: 22px 0 8px;
+}
+
+.note{
+  color:#555;
+}
+
+.line{
+  margin: 6px 0;
+}
+
+.btn-tag{
+  display:inline-block;
+  margin-left:8px;
+  padding:2px 8px;
+  border:1px solid #bbb;
+  border-radius:999px;
+  font-size:12px;
+  vertical-align:middle;
+  color:#333;
+  background:#fff;
+}
+
+.skill-line{
+  margin: 4px 0;
+}
+
+hr{
+  margin: 22px 0;
+  border:0;
+  border-top:1px solid #ddd;
+}
+
+code{
+  background:#f6f6f6;
+  padding:0 4px;
+  border-radius:4px;
+}
+.copy-btn{
+  display:inline-block;
+  margin-left:8px;
+  padding:2px 10px;
+  border:1px solid #bbb;
+  border-radius:999px;
+  font-size:12px;
+  line-height:1.6;
+  vertical-align:middle;
+  color:#333;
+  background:#fff;
+  cursor:pointer;
+}
+
+.copy-btn:hover{
+  filter: brightness(0.97);
+}
+
+.copy-btn:active{
+  transform: translateY(1px);
+}
+.copy-btn{
+  display:inline-block;
+  margin-left:8px;
+  padding:2px 10px;
+  border:1px solid #bbb;
+  border-radius:999px;
+  font-size:12px;
+  line-height:1.6;
+  vertical-align:middle;
+  color:#333;
+  background:#fff;
+  cursor:pointer;
+}
+
+.copy-btn:hover{
+  filter: brightness(0.97);
+}
+
+.copy-btn:active{
+  transform: translateY(1px);
+}
+/* =========================
+   accordion-008（details/summary）
+========================= */
+.accordion-008{
+  margin: 10px 0;
+  border-radius: 8px;
+  box-shadow: 0 7px 15px -5px rgb(0 0 0 / 5%);
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  overflow: hidden; /* 角丸を効かせる */
+}
+
+.accordion-008 summary{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  list-style: none; /* Firefox対策 */
+  position: relative;
+  padding: 12px 16px;
+  color: #333;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* marker消し（Chrome/Brave） */
+.accordion-008 summary::-webkit-details-marker{
+  display: none;
+}
+
+/* marker消し（Firefox） */
+.accordion-008 summary::marker{
+  content: "";
+}
+
+/* 右の矢印 */
+.accordion-008 summary::after{
+  width: 8px;
+  height: 8px;
+  margin-left: 12px;
+  border-bottom: 3px solid rgba(51,51,51,.7);
+  border-right: 3px solid rgba(51,51,51,.7);
+  transform: translateY(-25%) rotate(45deg);
+  content: "";
+  transition: transform .2s;
+}
+
+.accordion-008[open] summary::after{
+  transform: rotate(225deg);
+}
+
+/* 中身（pだけでなく、複数要素を入れてもOKにする） */
+.accordion-008 .accordion-body{
+  padding: 0 16px 14px;
+  color: #333;
+  line-height: 1.7;
+}
+
+/* ふわっと表示 */
+/* accordion-008 余白を狭く */
+
+.accordion-008{
+  margin: 4px 0;          /* ←上下の外側余白を縮小 */
+  border-radius: 6px;
+}
+
+.accordion-008 summary{
+  padding: 6px 12px;      /* ←上下padding縮小 */
+  line-height: 1.3;       /* ←高さ圧縮 */
+}
+
+.accordion-008 .accordion-body{
+  padding: 0 12px 10px;　 /*縮小 */
+}
+
+.accordion-008 .accordion-body > *{
+  margin-top: 6px;     /* 10px → 縮小 */
+}
+/* summary内テキストが大きい場合 */
+.accordion-008 summary span,
+.accordion-008 summary{
+  margin: 0;
+}
+
+/* h2 / h3 の余白も詰める */
+h2{
+  margin: 12px 0 8px;
+}
+
+h3{
+  margin: 12px 0 6px;
+}
+/* 021 */
+/* 021（通常＝枠線、hover＝背景） */
+.button021 a{
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;   /* 右端に📋 */
+  gap: 10px;
+  padding: 4px 10px;   /* 6px 12px → 縮小 */
+  border-radius: 6px;  /* 必要なら 5px などに */
+  color: #313131;
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+
+  /* 通常は枠線だけ */
+  background: transparent;
+  border: 1px solid rgba(107,182,255,0.25);  /* 薄い枠線 */
+  border-radius: 6px;
+
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+
+/* hoverで薄く背景、枠線も少しだけ濃く */
+.button021 a:hover{
+  background: rgba(107,182,255,0.12);
+  border-color: rgba(107,182,255,0.35);
+}
+
+/* クリック時の軽いフィードバック（不要なら削除可） */
+.button021 a:active{
+  transform: translateY(1px);
+}
+
+/* 右側の📋アイコン */
+.button021 a::after{
+  content: "📋";
+  flex: 0 0 auto;
+  opacity: 0.55;
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* hoverで少しだけ強調 */
+.button021 a:hover::after{
+  opacity: 0.85;
+}
