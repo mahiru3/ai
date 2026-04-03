@@ -1,0 +1,89 @@
+body {
+  font: 14px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+}
+
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #fff;
+  padding: 10px 0 6px;
+  margin: 0 0 10px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.box {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 14px;
+  margin: 8px 0;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+textarea,
+input[type="text"] {
+  width: 100%;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 13px;
+}
+
+textarea {
+  height: 220px;
+}
+
+button {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #999;
+  cursor: pointer;
+  background: #fff;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+th {
+  background: #fafafa;
+}
+
+.drag {
+  cursor: grab;
+  width: 2rem;
+  text-align: center;
+}
+
+.ok {
+  color: #0a7a20;
+  font-weight: 600;
+}
+
+.err {
+  color: #b00020;
+  font-weight: 600;
+  white-space: pre-wrap;
+}
+
+.small {
+  color: #555;
+  font-size: 12px;
+}

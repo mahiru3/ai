@@ -1,0 +1,75 @@
+/* === 強制グリッド（検証用） === */
+body.layout{
+  display: grid !important;
+  height: 100vh !important;
+  grid-template-rows: 64px 1fr 44px !important;
+  grid-template-columns: 220px 1fr 260px !important;
+  grid-template-areas:
+    "top top top"
+    "left center right"
+    "bottom bottom bottom" !important;
+}
+.area-top{ grid-area: top !important; }
+.area-left{ grid-area: left !important; }
+.area-center{ grid-area: center !important; }
+.area-right{ grid-area: right !important; }
+.area-bottom{ grid-area: bottom !important; }
+
+.frame{ width:100% !important; height:100% !important; border:0 !important; display:block !important; }
+.area{ border:1px solid #ddd !important; background:#fff !important; box-sizing:border-box !important; }
+/* === ここまで === */
+
+
+/* 5分割レイアウト：上・下は固定、中央だけスクロール（iframe内） */
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+.layout {
+  display: grid;
+  height: 100vh;
+  grid-template-rows: 64px 1fr 44px;     /* 上 / 中 / 下 */
+  grid-template-columns: 220px 1fr 260px; /* 左 / 中央 / 右 */
+  grid-template-areas:
+    "top top top"
+    "left center right"
+    "bottom bottom bottom";
+  background: #f6f6f6;
+}
+
+/* エリア割当 */
+.area-top    { grid-area: top; }
+.area-left   { grid-area: left; }
+.area-center { grid-area: center; }
+.area-right  { grid-area: right; }
+.area-bottom { grid-area: bottom; }
+
+/* iframe共通（枠の中身だけスクロール） */
+.frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #fff;
+}
+
+/* 見た目を少しブログっぽく（最小） */
+.area {
+  box-sizing: border-box;
+  border: 1px solid #ddd;
+  background: #fff;
+}
+
+/* 右と左は少し薄い背景 */
+.area-left, .area-right {
+  background: #fafafa;
+}
+
+/* 画面が狭い場合の最小対応（必要なら後で調整） */
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 180px 1fr 220px;
+  }
+
+

@@ -1,0 +1,14 @@
+/* 中央iframe専用：スクロールは可能、バーだけ非表示 */
+
+html, body {
+  margin: 0;
+  overflow: auto;            /* スクロール有効 */
+  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none;  /* 旧Edge */
+}
+
+/* Chrome / Brave */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
