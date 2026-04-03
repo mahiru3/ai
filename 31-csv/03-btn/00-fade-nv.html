@@ -12,25 +12,14 @@
       font-size: 13px;
       background: #fafafa;
     }
-
     h3 {
       margin: 0 0 12px;
       font-size: 14px;
       border-bottom: 1px solid #ddd;
       padding-bottom: 6px;
     }
-
-    .section {
-      margin-bottom: 14px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 4px;
-      color: #555;
-      font-size: 12px;
-    }
-
+    .section { margin-bottom: 14px; }
+    label { display: block; margin-bottom: 4px; color: #555; font-size: 12px; }
     input[type="color"] {
       width: 100%;
       height: 32px;
@@ -40,18 +29,8 @@
       padding: 2px;
       background: #fff;
     }
-
-    input[type="range"] {
-      width: 100%;
-      margin: 4px 0 2px;
-    }
-
-    .val {
-      text-align: right;
-      color: #888;
-      font-size: 11px;
-    }
-
+    input[type="range"] { width: 100%; margin: 4px 0 2px; }
+    .val { text-align: right; color: #888; font-size: 11px; }
     button {
       width: 100%;
       padding: 7px;
@@ -64,13 +43,7 @@
       margin-top: 4px;
     }
     button:hover { background: #3a6fc4; }
-
-    .note {
-      margin-top: 10px;
-      font-size: 11px;
-      color: #999;
-      line-height: 1.6;
-    }
+    .note { margin-top: 10px; font-size: 11px; color: #999; line-height: 1.6; }
   </style>
 </head>
 <body>
@@ -105,21 +78,10 @@
     <div class="val"><span id="val-wait">0.6</span> 秒</div>
   </div>
 
-  <div class="section">
-    <label>ボタン幅 (px)</label>
-    <input type="range" id="cfg-w" min="100" max="500" step="10" value="260" />
-    <div class="val"><span id="val-w">260</span> px</div>
-  </div>
-
-  <div class="section">
-    <label>ボタン高さ (px)</label>
-    <input type="range" id="cfg-h" min="30" max="160" step="2" value="80" />
-    <div class="val"><span id="val-h">80</span> px</div>
-  </div>
-
   <button id="btn-apply">プレビューに反映</button>
 
   <p class="note">
+    ※ 出力サイズは 24×24px 固定です。<br>
     ※ 反映ボタンで中央のプレビューが更新されます。
   </p>
 
@@ -129,8 +91,6 @@
       { id: "cfg-hold",     val: "val-hold"      },
       { id: "cfg-fade-out", val: "val-fade-out"  },
       { id: "cfg-wait",     val: "val-wait"      },
-      { id: "cfg-w",        val: "val-w"         },
-      { id: "cfg-h",        val: "val-h"         },
     ];
 
     sliders.forEach(({ id, val }) => {
@@ -146,11 +106,7 @@
         hold:    parseFloat(document.getElementById("cfg-hold").value),
         fadeOut: parseFloat(document.getElementById("cfg-fade-out").value),
         wait:    parseFloat(document.getElementById("cfg-wait").value),
-        w:       parseInt(document.getElementById("cfg-w").value),
-        h:       parseInt(document.getElementById("cfg-h").value),
       };
-
-      // 中央iframe（center）に設定を送る
       if (parent && parent.frames && parent.frames["center"]) {
         parent.frames["center"].applyConfig(cfg);
       }
