@@ -17,7 +17,7 @@ function getInputData() {
     const before = row.querySelector('.before').value.trim();
     const after = row.querySelector('.after').value.trim();
     const breakLine = row.querySelector('.break').checked;
-    const start = parseInt(row.querySelector('.start').value, 10) || 1;
+    const startEl = row.querySelector('.start'); const start = startEl ? (parseInt(startEl.value, 10) || 1) : 1;
     if (before || after) {
       result.push({ before, after: after || before, break: breakLine, start });
     }
