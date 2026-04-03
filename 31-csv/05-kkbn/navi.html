@@ -2,68 +2,132 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>navi</title>
-  <link rel="stylesheet" href="../../01-css/00-style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>設定（左）</title>
+  <link rel="stylesheet" href="../../01-css/31-csv-05-kkbn.css">
   <style>
-    body{ margin:0; padding:12px; font-family:sans-serif; line-height:1.6; }
-    .nav h2{ margin:0 0 10px; font-size:14px; }
-    .nav a{ color:inherit; text-decoration:none; }
-    .nav a:hover{ text-decoration:underline; }
-    ul{ margin:6px 0 6px 18px; padding:0; }
-    li{ margin:4px 0; list-style:none; }
-    .group{ margin-top:12px; font-weight:700; }
-    .leaf{ font-weight:400; }
-    .emoji{ margin-right:4px; }
+    body    { background:#202020; color:#ddd; padding:10px; text-align:left; }
+    h3      { margin:0 0 8px; font-size:13px; color:#aaa; }
+    section { margin-bottom:12px; border-bottom:1px solid #444; padding-bottom:10px; }
+    label   { display:block; font-size:12px; color:#bbb; margin:6px 0 2px; }
+    input[type="range"]  { width:100%; cursor:pointer; margin-top:2px; }
+    input[type="text"]   { width:100%; box-sizing:border-box; padding:4px 6px; border:1px solid #555; border-radius:4px; background:#333; color:#eee; font-size:12px; }
+    select  { width:100%; box-sizing:border-box; padding:4px 6px; border:1px solid #555; border-radius:4px; background:#333; color:#eee; font-size:12px; }
+    .color-row { display:flex; align-items:center; gap:6px; margin-top:2px; }
+    input[type="color"] { width:28px; height:28px; border:1px solid #555; border-radius:4px; padding:1px; cursor:pointer; background:none; }
+    .hex-input { width:80px; font-family:monospace; font-size:12px; }
+    button  { width:100%; margin:10px 0 0; padding:8px; border:2px solid #888; background:#333; color:#eee; font-size:13px; cursor:pointer; border-radius:4px; }
+    button:hover { background:#444; }
+    .hint   { font-size:11px; color:#888; margin-top:2px; }
   </style>
 </head>
-
 <body>
-  <nav class="nav">
-    <h2>目次</h2>
 
-    <div class="group">《戦闘》</div>
-    <ul>
-      <li>├ <a class="leaf" href="index.html#combat-rush" target="center">武道／ラッシュ(K.O.不可)</a></li>
-      <li>├ <a class="leaf" href="index.html#combat-feint" target="center">武道／フェイント(K.O.可)</a></li>
-      <li>├ <a class="leaf" href="index.html#combat-shotgun" target="center">ショットガン</a></li>
-      <li>└ <a class="leaf" href="index.html#combat-evade" target="center">回避行動</a></li>
-      <li>├ <a class="leaf" href="index.html#combat-critical" target="center">クリティカル</a></li>
-      <li>└ <a class="leaf" href="index.html#combat-fumble" target="center">ファンブル</a></li>
-      <li>├ <a class="leaf" href="index.html#combat-surprise-attack" target="center">不意打ち／攻撃</a></li>
-      <li>└ <a class="leaf" href="index.html#combat-surprise-evade" target="center">不意打ち／回避</a></li>
-    </ul>
+<button id="applyBtn">▶ 設定を反映</button>
 
-    <div class="group">《回復》</div>
-    <ul>
-      <li>├ <a class="leaf" href="index.html#heal-firstaid" target="center">応急手当</a></li>
-      <li>└ <a class="leaf" href="index.html#heal-medicine" target="center">医学組み合わせ</a></li>
-    </ul>
+<section>
+  <b style="font-size:13px">文字</b>
 
-    <div class="group">技能系</div>
-    <ul>
-      <li>├ <a class="leaf" href="index.html#skills-often" target="center">よく使う</a></li>
-      <li>├ <a class="leaf" href="index.html#skills-combat" target="center">戦闘</a></li>
-      <li>├ <a class="leaf" href="index.html#skills-recovery" target="center">戦闘関連／回復</a></li>
-      <li>├ <a class="leaf" href="index.html#skills-talk" target="center">交渉</a></li>
-      <li>├ <a class="leaf" href="index.html#skills-search-move" target="center">探索／運動</a></li>
-      <li>├ <a class="leaf" href="index.html#skills-search-brain" target="center">探索／頭脳</a></li>
-      <li>├ <a class="leaf" href="index.html#skills-athletics" target="center">運動</a></li>
-      <li>├ <a class="leaf" href="index.html#skills-operate" target="center">操作</a></li>
-      <li>└ <a class="leaf" href="index.html#skills-academic" target="center">学術</a></li>
-    </ul>
+  <label>文字色</label>
+  <div class="color-row">
+    <input type="color" id="textColorPicker" value="#ffffff">
+    <input type="text"  id="textColorHex"    value="#ffffff" class="hex-input">
+  </div>
 
-    <div class="group">ハウスルール</div>
-    <div class="group"><span class="emoji">🎲</span>クリファン／戦闘以外</div>
-    <ul>
-      <li>├ <a class="leaf" href="index.html#house-critical" target="center">クリティカル</a></li>
-      <li>└ <a class="leaf" href="index.html#house-fumble" target="center">ファンブル</a></li>
-    </ul>
+  <label>フォントサイズ（px）: <span id="fontSizeVal">44</span></label>
+  <input id="fontSize" type="range" min="10" max="120" value="44" oninput="upd('fontSizeVal',this.value); sendCfg();">
 
-    <div class="group">チャパレ</div>
-    <ul>
-      <li><a class="leaf" href="index.html#chapare" target="center">チャパレ一覧</a></li>
-    </ul>
+  <label>フォント</label>
+  <select id="fontFamily" onchange="sendCfg()">
+    <option value='"Noto Sans JP","Hiragino Sans","Yu Gothic Medium","Yu Gothic","Meiryo",sans-serif' selected style="font-family:'Yu Gothic'">Yu Gothic / Noto Sans JP</option>
+    <option value='"Yu Mincho","Hiragino Mincho ProN","MS Mincho",serif'                             style="font-family:'Yu Mincho'">Yu Mincho（明朝）</option>
+    <option value='"MS Gothic","MS PGothic",sans-serif'                                              style="font-family:'MS Gothic'">MS ゴシック</option>
+    <option value='"MS Mincho","MS PMincho",serif'                                                   style="font-family:'MS Mincho'">MS 明朝</option>
+    <option value='"Meiryo",sans-serif'                                                              style="font-family:'Meiryo'">メイリオ</option>
+    <option value="serif"                                                                            style="font-family:serif">serif</option>
+    <option value="sans-serif"                                                                       style="font-family:sans-serif">sans-serif</option>
+    <option value='"Courier New",monospace'                                                          style="font-family:'Courier New'">Courier New</option>
+    <option value='"Impact",sans-serif'                                                              style="font-family:'Impact'">Impact</option>
+  </select>
+</section>
 
-  </nav>
+<section>
+  <b style="font-size:13px">黒板の色</b>
+
+  <label>色①（左上）</label>
+  <div class="color-row">
+    <input type="color" id="board0picker" value="#173628">
+    <input type="text"  id="board0hex"    value="#173628" class="hex-input">
+  </div>
+
+  <label>色②（中央）</label>
+  <div class="color-row">
+    <input type="color" id="board1picker" value="#1b402d">
+    <input type="text"  id="board1hex"    value="#1b402d" class="hex-input">
+  </div>
+
+  <label>色③（右下）</label>
+  <div class="color-row">
+    <input type="color" id="board2picker" value="#123021">
+    <input type="text"  id="board2hex"    value="#123021" class="hex-input">
+  </div>
+</section>
+
+<section>
+  <b style="font-size:13px">アニメーション</b>
+
+  <label>行間隔（基準x1.6）: <span id="lineHval">自動</span></label>
+  <input id="lineH" type="range" min="20" max="120" value="70" oninput="upd('lineHval',this.value); sendCfg();">
+
+  <label>出現間隔（s）: <span id="baseDurVal">0.18</span></label>
+  <input id="baseDur" type="range" min="0" max="2" value="0.18" step="0.01" oninput="upd('baseDurVal',this.value); sendCfg();">
+
+  <label>アニメ秒数（s）: <span id="animDurVal">0.45</span></label>
+  <input id="animDur" type="range" min="0.05" max="3" value="0.45" step="0.05" oninput="upd('animDurVal',this.value); sendCfg();">
+
+  <label>上昇量（px）: <span id="riseVal">10</span></label>
+  <input id="rise" type="range" min="0" max="60" value="10" oninput="upd('riseVal',this.value); sendCfg();">
+</section>
+
+<h3>設定パネル</h3>
+
+<script>
+  function upd(id, val) { document.getElementById(id).textContent = val; }
+
+  function bindColor(pickerId, hexId) {
+    const picker = document.getElementById(pickerId);
+    const hex    = document.getElementById(hexId);
+    picker.addEventListener('input', () => { hex.value = picker.value.toUpperCase(); sendCfg(); });
+    hex.addEventListener('input', () => {
+      if (/^#[0-9A-Fa-f]{6}$/.test(hex.value)) { picker.value = hex.value; sendCfg(); }
+    });
+  }
+  bindColor('textColorPicker', 'textColorHex');
+  bindColor('board0picker', 'board0hex');
+  bindColor('board1picker', 'board1hex');
+  bindColor('board2picker', 'board2hex');
+
+  function getCfg() {
+    return {
+      fontSize:    Number(document.getElementById('fontSize').value),
+      fontFamily:  document.getElementById('fontFamily').value,
+      textColor:   document.getElementById('textColorHex').value,
+      boardColor0: document.getElementById('board0hex').value,
+      boardColor1: document.getElementById('board1hex').value,
+      boardColor2: document.getElementById('board2hex').value,
+      lineH:       Number(document.getElementById('lineH').value),
+      baseDur:     Number(document.getElementById('baseDur').value),
+      animDur:     Number(document.getElementById('animDur').value),
+      rise:        Number(document.getElementById('rise').value),
+    };
+  }
+
+  function sendCfg() {
+    const center = parent && parent.frames && parent.frames['center'];
+    if (center) center.postMessage({ type: 'kkbnCfg', cfg: getCfg() }, '*');
+  }
+
+  document.getElementById('applyBtn').addEventListener('click', sendCfg);
+</script>
 </body>
 </html>
