@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<h1>タイピング風やつ</h1>
+<h1>Typing</h1>
 
 <table id="inputTable">
   <thead>
@@ -214,17 +214,14 @@ function downloadSVG() {
 }
 
 async function generateAPNG() {
-  const object = document.querySelector('#preview object');
-  if (!object) return alert("まずSVGを生成してください。");
+  const svgText = document.getElementById('svgCode').value;
+  if (!svgText) return alert("まずSVGを生成してください。");
   if (!window.pako) {
     await new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   }
   if (!window.UPNG) {
     await new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/upng-js@2.1.0/UPNG.js"; s.onload = res; s.onerror = rej; document.body.appendChild(s); });
   }
-  const svgDoc = object.contentDocument;
-  if (!svgDoc) return alert("SVGがまだ読み込まれていません。");
-  const svgEl = svgDoc.querySelector('svg');
   const width = 800, height = 400;
   const canvas = document.createElement('canvas');
   canvas.width = width; canvas.height = height;
@@ -232,9 +229,8 @@ async function generateAPNG() {
   const frames = [];
   const frameDelay = 100;
   for (let i = 0; i < 60; i++) {
-    const data = new XMLSerializer().serializeToString(svgEl);
     const img  = new Image();
-    const blob = new Blob([data], { type: 'image/svg+xml;charset=utf-8' });
+    const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
     const url  = URL.createObjectURL(blob);
     img.src = url;
     await img.decode();
