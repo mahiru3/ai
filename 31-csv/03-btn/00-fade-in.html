@@ -29,69 +29,41 @@
 
   <p class="note">
     ※ 出力サイズ 24×24px・プレビューは 120×120px で表示しています。<br>
-    ※ APNG はアニメーションなし（静止画）での保存になります。<br>
-    ※ SVG ファイルはブラウザで開くとアニメーションが再生されます。
+    ※ APNG はアニメーションなし（静止画）での保存になります。
   </p>
 
   <script>
-    const OUT = 24;    // 出力サイズ
-    const PRV = 120;   // プレビュー表示サイズ
+    const OUT = 24;
+    const PRV = 120;
 
     let cfg = {
-      color:   "#9a4fbf",
-      fadeIn:  0.8,
-      hold:    0.6,
-      fadeOut: 0.8,
-      wait:    0.6,
-      loop:    true,
-      reverse: false,
+      color:    "#9a4fbf",
+      duration: 1.0,
+      loop:     true,
+      reverse:  false,
     };
 
-    function buildSVG(c) {
-      const total = c.fadeIn + c.hold + c.fadeOut + c.wait;
-      const t1 = (c.fadeIn / total).toFixed(3);
-      const t2 = ((c.fadeIn + c.hold) / total).toFixed(3);
-      const t3 = ((c.fadeIn + c.hold + c.fadeOut) / total).toFixed(3);
-      const dur = total.toFixed(2);
+    // 透明→色：0→1  逆：1→0
+    function buildSVG(c, size) {
       const repeat = c.loop ? "indefinite" : "1";
+      const vals   = c.reverse ? "1;0" : "0;1";
+      // ループしない場合、終了後にそのまま保持
+      const fill   = c.loop ? "remove" : "freeze";
 
-      // 通常: 透明→色→透明  リバース: 色→透明→色
-      const opVals = c.reverse
-        ? "1;1;0;0;1;1"
-        : "0;0;1;1;0;0";
-
-      return `<svg xmlns="http://www.w3.org/2000/svg" width="${OUT}" height="${OUT}" viewBox="0 0 ${OUT} ${OUT}">
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${OUT} ${OUT}">
   <rect width="${OUT}" height="${OUT}" fill="${c.color}">
     <animate attributeName="opacity"
-      values="${opVals}"
-      keyTimes="0;0.05;${t1};${t2};${t3};1"
-      dur="${dur}s" repeatCount="${repeat}"/>
-  </rect>
-</svg>`;
-    }
-
-    function buildPreviewSVG(c) {
-      const total = c.fadeIn + c.hold + c.fadeOut + c.wait;
-      const t1 = (c.fadeIn / total).toFixed(3);
-      const t2 = ((c.fadeIn + c.hold) / total).toFixed(3);
-      const t3 = ((c.fadeIn + c.hold + c.fadeOut) / total).toFixed(3);
-      const dur = total.toFixed(2);
-      const repeat = c.loop ? "indefinite" : "1";
-      const opVals = c.reverse ? "1;1;0;0;1;1" : "0;0;1;1;0;0";
-
-      return `<svg xmlns="http://www.w3.org/2000/svg" width="${PRV}" height="${PRV}" viewBox="0 0 ${OUT} ${OUT}">
-  <rect width="${OUT}" height="${OUT}" fill="${c.color}">
-    <animate attributeName="opacity"
-      values="${opVals}"
-      keyTimes="0;0.05;${t1};${t2};${t3};1"
-      dur="${dur}s" repeatCount="${repeat}"/>
+      values="${vals}"
+      dur="${c.duration.toFixed(2)}s"
+      repeatCount="${repeat}"
+      fill="${fill}"/>
   </rect>
 </svg>`;
     }
 
     function render(c) {
-      document.getElementById("preview-area").innerHTML = buildPreviewSVG(c);
-      document.getElementById("svg-code").value = buildSVG(c);
+      document.getElementById("preview-area").innerHTML = buildSVG(c, PRV);
+      document.getElementById("svg-code").value = buildSVG(c, OUT);
     }
 
     window.applyConfig = function(newCfg) {
@@ -101,7 +73,7 @@
 
     document.addEventListener("click", (e) => {
       if (e.target.id === "btn-svg") {
-        const blob = new Blob([buildSVG(cfg)], { type: "image/svg+xml" });
+        const blob = new Blob([buildSVG(cfg, OUT)], { type: "image/svg+xml" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = "fade.svg";
@@ -109,7 +81,7 @@
       }
 
       if (e.target.id === "btn-apng") {
-        const url = URL.createObjectURL(new Blob([buildSVG(cfg)], { type: "image/svg+xml" }));
+        const url = URL.createObjectURL(new Blob([buildSVG(cfg, OUT)], { type: "image/svg+xml" }));
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement("canvas");
@@ -125,7 +97,7 @@
       }
 
       if (e.target.id === "btn-copy") {
-        navigator.clipboard.writeText(buildSVG(cfg)).then(() => {
+        navigator.clipboard.writeText(buildSVG(cfg, OUT)).then(() => {
           const btn = document.getElementById("btn-copy");
           btn.textContent = "コピー済";
           setTimeout(() => btn.textContent = "コピー", 1000);
