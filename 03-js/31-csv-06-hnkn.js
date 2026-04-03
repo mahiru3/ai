@@ -28,7 +28,8 @@ function getInputData() {
 function generateSVG() {
   const inputData = getInputData();
   const fontSize = parseInt(document.getElementById('fontSize').value, 10);
-  const fontColor = document.getElementById('fontColor').value;
+  const fontColor  = document.getElementById('fontColor').value;
+  const fontFamily = document.body.dataset.fontFamily || "'Noto Sans JP', sans-serif";
   const bgColor = document.getElementById('bgColor').value;
   const speed = parseInt(document.getElementById('speed').value, 10);
 
@@ -42,7 +43,7 @@ function generateSVG() {
     .cursor { fill: ${fontColor}; animation: blink 1s step-start infinite; }
     @keyframes blink { 50% { opacity: 0; } }
     text {
-      font-family: 'Noto Sans JP', sans-serif;
+      font-family: ${fontFamily};
       font-size: ${fontSize}px;
       fill: ${fontColor};
       text-anchor: start;
