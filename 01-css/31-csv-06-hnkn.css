@@ -245,3 +245,21 @@ textarea#svgCode {
   text-align: center;
   padding: 4px 2px;
 }
+
+/* ＋ボタン：テーブル右下 */
+.table-add-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -1px;
+}
+
+.table-add-row .add-btn {
+  padding: 4px 10px;
+  font-size: 16px;
+}
+
+/* －列の枠線なし */
+.th-del, .td-del {
+  border: none;
+  background: transparent;
+}
