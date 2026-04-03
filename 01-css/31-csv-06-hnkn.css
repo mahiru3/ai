@@ -330,3 +330,15 @@ textarea#svgCode {
   justify-content: flex-end;
   margin-top: 4px;
 }
+
+/* 行アニメーション時にはみ出しを隠す */
+.input-row.row-expanding,
+.input-row.row-collapsing {
+  overflow: hidden;
+  max-height: 0;
+}
+
+.input-row {
+  max-height: 200px;
+  transition: opacity 0.25s ease, transform 0.25s ease, max-height 0.25s ease;
+}
