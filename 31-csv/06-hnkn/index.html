@@ -28,7 +28,7 @@
         <div class="inline-preview" style="display:none"></div>
       </td>
       <td><input type="text" class="after" value="例となる"></td>
-      <td><input type="checkbox" class="break"></td>
+      <td><input type="checkbox" class="break" onchange="updateKanaPreview()"></td>
       <td class="td-start">
         <input type="range" class="start" value="1" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value; updateKanaPreview();">
         <span class="start-val" style="display:none">1</span>
@@ -41,7 +41,7 @@
         <div class="inline-preview" style="display:none"></div>
       </td>
       <td><input type="text" class="after" value="文章"></td>
-      <td><input type="checkbox" class="break" checked></td>
+      <td><input type="checkbox" class="break" checked onchange="updateKanaPreview()"></td>
       <td class="td-start">
         <input type="range" class="start" value="5" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value; updateKanaPreview();">
         <span class="start-val" style="display:none">5</span>
@@ -164,7 +164,7 @@
         <div class="inline-preview" style="display:none"></div>
       </td>
       <td><input type="text" class="after"></td>
-      <td><input type="checkbox" class="break"></td>
+      <td><input type="checkbox" class="break" onchange="updateKanaPreview()"></td>
       <td class="td-start">
         <input type="range" class="start" value="1" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value; updateKanaPreview();">
         <span class="start-val" style="display:none">1</span>
