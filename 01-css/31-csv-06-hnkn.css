@@ -342,3 +342,15 @@ textarea#svgCode {
   max-height: 200px;
   transition: opacity 0.25s ease, transform 0.25s ease, max-height 0.25s ease;
 }
+
+/* 改行チェックボックス */
+.break-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #666;
+  margin-top: 3px;
+  cursor: pointer;
+  user-select: none;
+}
