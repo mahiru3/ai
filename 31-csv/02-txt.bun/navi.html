@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>設定（左）</title>
+  <link rel="stylesheet" href="../../01-css/00-style.css">
+  <link rel="stylesheet" href="../../01-css/31-csv-01chara.css">
+  <style>
+    body      { margin:0; padding:10px; font-family:sans-serif; font-size:13px; }
+    h3        { margin:0 0 8px; font-size:13px; }
+    section   { margin-bottom:12px; border-bottom:1px solid #eee; padding-bottom:10px; }
+    label     { display:block; font-size:12px; margin:6px 0 2px; color:#444; }
+    input[type="text"],
+    input[type="number"],
+    select    { width:100%; box-sizing:border-box; padding:4px 6px; border:1px solid #bbb; border-radius:5px; font:inherit; font-size:12px; }
+    .hint     { font-size:11px; color:#888; margin-top:2px; }
+    button    { width:100%; margin-top:10px; padding:7px; border-radius:7px; border:1px solid #999; cursor:pointer; background:#fff; font:inherit; font-size:13px; }
+    button:hover { background:#f3f7ff; border-color:#bcd3ff; }
+  </style>
+</head>
+<body>
+
+<h3>設定パネル</h3>
+
+<section>
+  <b>① 手書きテキスト</b>
+  <label>色①</label>
+  <input id="color1" type="text" value="#000000">
+  <label>サイズ①（px）</label>
+  <input id="size1" type="number" value="72" min="8" step="1">
+  <label>フォント①</label>
+  <select id="font1sel">
+    <option value="serif" selected>serif</option>
+    <option value="sans-serif">sans-serif</option>
+    <option value="monospace">monospace</option>
+    <option value="Georgia, serif">Georgia</option>
+    <option value="Times New Roman, serif">Times New Roman</option>
+    <option value="Garamond, serif">Garamond</option>
+    <option value="Palatino, serif">Palatino</option>
+    <option value="Arial, Helvetica, sans-serif">Arial</option>
+    <option value="Verdana, sans-serif">Verdana</option>
+    <option value="Tahoma, sans-serif">Tahoma</option>
+    <option value="Trebuchet MS, sans-serif">Trebuchet MS</option>
+    <option value="Impact, sans-serif">Impact</option>
+    <option value="Courier New, monospace">Courier New</option>
+    <option value="Noto Sans JP, sans-serif">Noto Sans JP</option>
+  </select>
+  <label>任意フォント①（空なら上を使用）</label>
+  <input id="font1free" type="text" placeholder="例）'Yu Mincho',serif">
+  <label>文字間①（px）</label>
+  <input id="letter1" type="number" value="2" step="0.5">
+  <label>基準描画秒①（s）</label>
+  <input id="baseDur1" type="number" value="0.75" step="0.05" min="0.05">
+  <div class="hint">大きいほどゆっくり</div>
+  <label>上下分割・消滅の秒数（s）</label>
+  <input id="splitDur" type="number" value="1.2" step="0.1" min="0.1">
+</section>
+
+<section>
+  <b>② 浮かび上がるテキスト</b>
+  <label>色②</label>
+  <input id="color2" type="text" value="#000000">
+  <label>サイズ②（px）</label>
+  <input id="size2" type="number" value="56" min="8" step="1">
+  <label>フォント②</label>
+  <select id="font2sel">
+    <option value="serif" selected>serif</option>
+    <option value="sans-serif">sans-serif</option>
+    <option value="monospace">monospace</option>
+    <option value="Georgia, serif">Georgia</option>
+    <option value="Times New Roman, serif">Times New Roman</option>
+    <option value="Garamond, serif">Garamond</option>
+    <option value="Palatino, serif">Palatino</option>
+    <option value="Arial, Helvetica, sans-serif">Arial</option>
+    <option value="Verdana, sans-serif">Verdana</option>
+    <option value="Tahoma, sans-serif">Tahoma</option>
+    <option value="Trebuchet MS, sans-serif">Trebuchet MS</option>
+    <option value="Impact, sans-serif">Impact</option>
+    <option value="Courier New, monospace">Courier New</option>
+    <option value="Noto Sans JP, sans-serif">Noto Sans JP</option>
+  </select>
+  <label>任意フォント②（空なら上を使用）</label>
+  <input id="font2free" type="text" placeholder="例）'Yu Gothic',sans-serif">
+  <label>文字間②（px）</label>
+  <input id="letter2" type="number" value="1" step="0.5">
+  <label>浮かび上がり秒数②（s）</label>
+  <input id="riseDur" type="number" value="0.9" step="0.1" min="0.1">
+  <label>出現までの待ち秒（s）</label>
+  <input id="afterDelay" type="number" value="0.2" step="0.05" min="0">
+</section>
+
+<button id="applyBtn">▶ 設定を反映</button>
+
+<script>
+  function getCfg() {
+    return {
+      color1:    document.getElementById('color1').value,
+      size1:     Number(document.getElementById('size1').value),
+      font1sel:  document.getElementById('font1sel').value,
+      font1free: document.getElementById('font1free').value,
+      letter1:   Number(document.getElementById('letter1').value),
+      baseDur1:  Number(document.getElementById('baseDur1').value),
+      splitDur:  Number(document.getElementById('splitDur').value),
+      color2:    document.getElementById('color2').value,
+      size2:     Number(document.getElementById('size2').value),
+      font2sel:  document.getElementById('font2sel').value,
+      font2free: document.getElementById('font2free').value,
+      letter2:   Number(document.getElementById('letter2').value),
+      riseDur:   Number(document.getElementById('riseDur').value),
+      afterDelay:Number(document.getElementById('afterDelay').value),
+    };
+  }
+
+  function sendCfg() {
+    const center = parent && parent.frames && parent.frames['center'];
+    if (center) {
+      center.postMessage({ type: 'svgCfg', cfg: getCfg() }, '*');
+    }
+  }
+
+  document.getElementById('applyBtn').addEventListener('click', sendCfg);
+</script>
+</body>
+</html>
