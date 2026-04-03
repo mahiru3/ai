@@ -263,3 +263,70 @@ textarea#svgCode {
   border: none;
   background: transparent;
 }
+
+/* ===== シェブロンボタン共通 ===== */
+.row-del-btn,
+.row-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 28px;
+  height: 28px;
+  background: #fff;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s;
+}
+
+.row-del-btn:hover,
+.row-add-btn:hover {
+  background: #f0f0f0;
+}
+
+/* V字スパン */
+.chev-sp1,
+.chev-sp2 {
+  width: 8px;
+  height: 3px;
+  background-color: #666;
+  display: inline-block;
+  transition: transform 0.15s linear;
+}
+
+/* 削除ボタン：∧（上向きV） */
+.row-del-btn .chev-sp1 { transform: skewY(-40deg) translateX(2px); }
+.row-del-btn .chev-sp2 { transform: skewY(40deg)  translateX(-2px); }
+
+/* 追加ボタン：∨（下向きV） */
+.row-add-btn .chev-sp1 { transform: skewY(40deg)  translateX(2px); }
+.row-add-btn .chev-sp2 { transform: skewY(-40deg) translateX(-2px); }
+
+/* ===== 行アニメーション ===== */
+.input-row {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  opacity: 1;
+  transform: scaleY(1);
+  transform-origin: top;
+}
+
+/* 追加時：最初は透明+縮んだ状態 */
+.input-row.row-expanding {
+  opacity: 0;
+  transform: scaleY(0);
+}
+
+/* 削除時：透明+縮む */
+.input-row.row-collapsing {
+  opacity: 0;
+  transform: scaleY(0);
+}
+
+/* ===== テーブル右下の追加ボタン ===== */
+.table-add-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
