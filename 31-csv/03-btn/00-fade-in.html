@@ -12,29 +12,21 @@
       font-family: sans-serif;
       font-size: 13px;
     }
+    h2 { margin: 0 0 16px; font-size: 16px; }
 
-    h2 {
-      margin: 0 0 16px;
-      font-size: 16px;
-    }
-
-    /* ── プレビュー ── */
     .preview-wrap {
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 24px;
-      background: #f0f0f0;
+      padding: 32px;
+      background: #e8e8e8;
       border-radius: 8px;
       margin-bottom: 20px;
-      min-height: 140px;
+      min-height: 100px;
     }
 
-    #preview-svg {
-      display: block;
-    }
+    #preview-area { display: block; }
 
-    /* ── ダウンロードパネル ── */
     .dl-panel {
       background: #fff;
       border: 1px solid #ddd;
@@ -42,18 +34,8 @@
       padding: 14px 16px;
       margin-bottom: 16px;
     }
-
-    .dl-panel h3 {
-      margin: 0 0 10px;
-      font-size: 13px;
-      color: #444;
-    }
-
-    .dl-row {
-      display: flex;
-      gap: 8px;
-    }
-
+    .dl-panel h3 { margin: 0 0 10px; font-size: 13px; color: #444; }
+    .dl-row { display: flex; gap: 8px; }
     .dl-btn {
       flex: 1;
       padding: 8px;
@@ -65,31 +47,19 @@
       text-align: center;
     }
     .dl-btn:hover { background: #eef3ff; border-color: #7ab; }
-
-    .dl-btn.primary {
-      background: #4a7fd4;
-      color: #fff;
-      border-color: #4a7fd4;
-    }
+    .dl-btn.primary { background: #4a7fd4; color: #fff; border-color: #4a7fd4; }
     .dl-btn.primary:hover { background: #3a6fc4; }
 
-    /* ── SVGコード表示 ── */
     .code-panel {
       background: #f6f6f6;
       border: 1px solid #ddd;
       border-radius: 8px;
       padding: 10px 12px;
     }
-
-    .code-panel h3 {
-      margin: 0 0 6px;
-      font-size: 12px;
-      color: #666;
-    }
-
+    .code-panel h3 { margin: 0 0 6px; font-size: 12px; color: #666; }
     textarea {
       width: 100%;
-      height: 120px;
+      height: 140px;
       font-family: monospace;
       font-size: 11px;
       border: none;
@@ -98,7 +68,6 @@
       box-sizing: border-box;
       color: #333;
     }
-
     .copy-btn {
       margin-top: 4px;
       padding: 4px 12px;
@@ -110,21 +79,14 @@
     }
     .copy-btn:hover { background: #eef3ff; }
 
-    .note {
-      margin-top: 12px;
-      font-size: 11px;
-      color: #999;
-      line-height: 1.6;
-    }
+    .note { margin-top: 12px; font-size: 11px; color: #999; line-height: 1.6; }
   </style>
 </head>
 <body>
   <h2>Fade — プレビュー</h2>
 
   <div class="preview-wrap">
-    <svg id="preview-svg" xmlns="http://www.w3.org/2000/svg"
-         width="260" height="80" viewBox="0 0 260 80">
-    </svg>
+    <div id="preview-area"></div>
   </div>
 
   <div class="dl-panel">
@@ -147,67 +109,47 @@
   </p>
 
   <script>
-    // デフォルト設定
+    const SIZE = 24;
+
     let cfg = {
       color:   "#9a4fbf",
       fadeIn:  0.8,
       hold:    0.6,
       fadeOut: 0.8,
       wait:    0.6,
-      w:       260,
-      h:       80,
     };
 
     function buildSVG(c) {
       const total = c.fadeIn + c.hold + c.fadeOut + c.wait;
-      const t1 = c.fadeIn / total;
-      const t2 = (c.fadeIn + c.hold) / total;
-      const t3 = (c.fadeIn + c.hold + c.fadeOut) / total;
+      const t1 = (c.fadeIn / total).toFixed(3);
+      const t2 = ((c.fadeIn + c.hold) / total).toFixed(3);
+      const t3 = ((c.fadeIn + c.hold + c.fadeOut) / total).toFixed(3);
       const dur = total.toFixed(2);
 
-      // テキスト色アニメーション用
-      const hex = c.color;
-
-      return `<svg xmlns="http://www.w3.org/2000/svg"
-  width="${c.w}" height="${c.h}" viewBox="0 0 ${c.w} ${c.h}">
-  <rect width="${c.w}" height="${c.h}" rx="6"
-    fill="none" stroke="${hex}" stroke-width="2"/>
-  <rect width="${c.w}" height="${c.h}" rx="6" fill="${hex}">
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}">
+  <rect width="${SIZE}" height="${SIZE}" fill="${c.color}">
     <animate attributeName="opacity"
       values="0;0;1;1;0;0"
-      keyTimes="0;${(0.05).toFixed(3)};${t1.toFixed(3)};${t2.toFixed(3)};${t3.toFixed(3)};1"
+      keyTimes="0;0.05;${t1};${t2};${t3};1"
       dur="${dur}s" repeatCount="indefinite"/>
   </rect>
-  <text x="${c.w/2}" y="${c.h/2}" dy="0.35em"
-    text-anchor="middle"
-    font-family="sans-serif" font-size="18" font-weight="600">
-    <animate attributeName="fill"
-      values="${hex};${hex};#ffffff;#ffffff;${hex};${hex}"
-      keyTimes="0;${(0.05).toFixed(3)};${t1.toFixed(3)};${t2.toFixed(3)};${t3.toFixed(3)};1"
-      dur="${dur}s" repeatCount="indefinite"/>
-    Fade
-  </text>
 </svg>`;
     }
 
     function render(c) {
       const svgStr = buildSVG(c);
-      document.getElementById("preview-svg").outerHTML = svgStr;
-      // outerHTML置換後に再取得
+      document.getElementById("preview-area").innerHTML = svgStr;
       document.getElementById("svg-code").value = svgStr;
     }
 
-    // 外部（nv）から呼ばれる関数
     window.applyConfig = function(newCfg) {
       cfg = { ...cfg, ...newCfg };
       render(cfg);
     };
 
-    // SVG保存
     document.addEventListener("click", (e) => {
       if (e.target.id === "btn-svg") {
-        const svgStr = buildSVG(cfg);
-        const blob = new Blob([svgStr], { type: "image/svg+xml" });
+        const blob = new Blob([buildSVG(cfg)], { type: "image/svg+xml" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = "fade.svg";
@@ -215,17 +157,15 @@
       }
 
       if (e.target.id === "btn-apng") {
-        // SVGをcanvasに描画→PNG化（静止画）
         const svgStr = buildSVG(cfg);
         const blob = new Blob([svgStr], { type: "image/svg+xml" });
         const url = URL.createObjectURL(blob);
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement("canvas");
-          canvas.width = cfg.w;
-          canvas.height = cfg.h;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0);
+          canvas.width = SIZE;
+          canvas.height = SIZE;
+          canvas.getContext("2d").drawImage(img, 0, 0);
           URL.revokeObjectURL(url);
           const a = document.createElement("a");
           a.href = canvas.toDataURL("image/png");
@@ -236,9 +176,7 @@
       }
 
       if (e.target.id === "btn-copy") {
-        const ta = document.getElementById("svg-code");
-        ta.select();
-        navigator.clipboard.writeText(ta.value).then(() => {
+        navigator.clipboard.writeText(buildSVG(cfg)).then(() => {
           const btn = document.getElementById("btn-copy");
           btn.textContent = "コピー済";
           setTimeout(() => btn.textContent = "コピー", 1000);
@@ -246,7 +184,6 @@
       }
     });
 
-    // 初期描画
     render(cfg);
   </script>
 </body>
