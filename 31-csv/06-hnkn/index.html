@@ -36,7 +36,7 @@
   </tbody>
 </table>
 
-<button onclick="addRow()">行を追加</button>
+<button class="svg-btn" onclick="addRow()">行を追加</button>
 
 <div class="controls">
   <label>文字サイズ</label>
@@ -50,10 +50,10 @@
 </div>
 
 <div class="actions">
-  <button onclick="generateSVG()">SVGを生成</button>
-  <button onclick="copyCode()">コードをコピー</button>
-  <button onclick="downloadSVG()">SVGを保存</button>
-  <button onclick="generateAPNG()">APNGを保存</button>
+  <button class="svg-btn" onclick="generateSVG()">SVGを生成</button>
+  <button class="svg-btn" onclick="copyCode()">コードをコピー</button>
+  <button class="svg-btn" onclick="downloadSVG()">SVGを保存</button>
+  <button class="svg-btn" onclick="generateAPNG()">APNGを保存</button>
 </div>
 
 <div id="previewWrap">
@@ -64,5 +64,26 @@
 
 <script src="../../03-js/31-csv-06-hnkn.js"></script>
 
+
+<script>
+  // navi.htmlからpostMessageで設定を受け取り、各コントロールに反映
+  window.addEventListener('message', e => {
+    if (!e.data || e.data.type !== 'hnknCfg') return;
+    const c = e.data.cfg;
+    if (c.fontColor  != null) document.getElementById('fontColor').value  = c.fontColor;
+    if (c.fontSize   != null) document.getElementById('fontSize').value   = c.fontSize;
+    if (c.bgColor    != null) document.getElementById('bgColor').value    = c.bgColor;
+    if (c.speed      != null) document.getElementById('speed').value      = c.speed;
+    if (c.fontFamily != null) {
+      const sel = document.getElementById('fontFamily');
+      if (!sel) {
+        // fontFamilyセレクトがない場合はdata属性で保持
+        document.body.dataset.fontFamily = c.fontFamily;
+      } else {
+        sel.value = c.fontFamily;
+      }
+    }
+  });
+</script>
 </body>
 </html>
