@@ -9,39 +9,92 @@
 <body>
 
 <h1>🧪 黒板チョーク風SVGジェネレーター</h1>
-<p>テキストを入力して「生成」ボタンを押してください。</p>
 <textarea id="textInput">ここに文字をうって生成すればいいよ
 　　　改行もそのまま反映されるよ。</textarea><br>
 <button id="genBtn">▶ 生成</button>
 <button id="dlBtn" disabled>💾 ダウンロード</button>
 
-<div id="preview"></div>
+<div id="previewWrap">
+  <div id="preview"></div>
+</div>
 
 <script>
-document.getElementById("genBtn").onclick = () => {
-  const text = document.getElementById("textInput").value;
-  const lines = text.split(/\n/);
-  const W = 1600, H = 900, MARGIN_X = 120, MARGIN_Y = 160;
-  const FONT_SIZE = 44, LINE_H = Math.round(FONT_SIZE * 1.6);
-  const BASE_DELAY = 0.18, DUR = 0.45, RISE = 10;
+  // navi.htmlから受け取る設定値（デフォルト値）
+  let cfg = {
+    fontSize:   44,
+    lineH:      null,   // nullのとき fontSize*1.6 で自動計算
+    fontFamily: '"Noto Sans JP","Hiragino Sans","Yu Gothic Medium","Yu Gothic","Meiryo",sans-serif',
+    textColor:  '#ffffff',
+    boardColor0:'#173628',
+    boardColor1:'#1b402d',
+    boardColor2:'#123021',
+    baseDur:    0.18,
+    animDur:    0.45,
+    rise:       10,
+    marginX:    120,
+    marginY:    160,
+  };
 
-  const textElems = lines.map((line, i) => {
-    const y     = MARGIN_Y + i * LINE_H;
-    const begin = `${(i * BASE_DELAY).toFixed(2)}s`;
-    return `
+  // navi.htmlからpostMessageで受け取る
+  window.addEventListener('message', e => {
+    if (e.data && e.data.type === 'kkbnCfg') {
+      cfg = Object.assign(cfg, e.data.cfg);
+      updateTextarea();
+      generate();
+    }
+  });
+
+  // テキストエリアの色をボード色に合わせる
+  function updateTextarea() {
+    const ta = document.getElementById('textInput');
+    ta.style.background   = cfg.boardColor1;
+    ta.style.color        = cfg.textColor;
+    ta.style.fontFamily   = cfg.fontFamily;
+    ta.style.fontSize     = Math.min(cfg.fontSize, 20) + 'px';
+  }
+
+  // プレビューをウィンドウ幅に合わせてスケール
+  function scalePreview() {
+    const wrap = document.getElementById('previewWrap');
+    const prev = document.getElementById('preview');
+    const svg  = prev.querySelector('svg');
+    if (!svg) return;
+    const svgW = Number(svg.getAttribute('width')) || 1600;
+    const scale = Math.min(1, (wrap.offsetWidth - 4) / svgW);
+    prev.style.transform = `scale(${scale})`;
+    prev.style.width     = svgW + 'px';
+    wrap.style.height    = (Number(svg.getAttribute('height') || 900) * scale) + 'px';
+  }
+
+  function generate() {
+    const text  = document.getElementById("textInput").value;
+    const lines = text.split(/\n/);
+    const W = 1600, H = 900;
+    const FONT_SIZE  = cfg.fontSize;
+    const LINE_H     = cfg.lineH || Math.round(FONT_SIZE * 1.6);
+    const MARGIN_X   = cfg.marginX;
+    const MARGIN_Y   = cfg.marginY;
+    const BASE_DELAY = cfg.baseDur;
+    const DUR        = cfg.animDur;
+    const RISE       = cfg.rise;
+
+    const textElems = lines.map((line, i) => {
+      const y     = MARGIN_Y + i * LINE_H;
+      const begin = `${(i * BASE_DELAY).toFixed(2)}s`;
+      return `
     <text class="chalkText" x="${MARGIN_X}" y="${y}" opacity="0">${line}
       <animate attributeName="opacity" from="0" to="1" dur="${DUR}s" begin="${begin}" fill="freeze"/>
       <animateTransform attributeName="transform" type="translate" from="0,${RISE}" to="0,0" dur="${DUR}s" begin="${begin}" fill="freeze"/>
     </text>`;
-  }).join("");
+    }).join("");
 
-  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+    const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <defs>
     <linearGradient id="boardGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0"    stop-color="#173628"/>
-      <stop offset="0.65" stop-color="#1b402d"/>
-      <stop offset="1"    stop-color="#123021"/>
+      <stop offset="0"    stop-color="${cfg.boardColor0}"/>
+      <stop offset="0.65" stop-color="${cfg.boardColor1}"/>
+      <stop offset="1"    stop-color="${cfg.boardColor2}"/>
     </linearGradient>
     <filter id="boardNoise" x="-20%" y="-20%" width="140%" height="140%">
       <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="8" result="n"/>
@@ -53,19 +106,19 @@ document.getElementById("genBtn").onclick = () => {
       <feDisplacementMap in="SourceGraphic" in2="turb" scale="1.2" xChannelSelector="R" yChannelSelector="G"/>
       <feGaussianBlur stdDeviation="0.25"/>
     </filter>
-    <linearGradient id="chalkWhite" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffffff"/>
-      <stop offset="1" stop-color="#f4f4f4"/>
+    <linearGradient id="chalkColor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${cfg.textColor}"/>
+      <stop offset="1" stop-color="${cfg.textColor}"/>
     </linearGradient>
     <style><![CDATA[
       .chalkText {
-        fill: url(#chalkWhite);
-        font-family: "Noto Sans JP","Hiragino Sans","Yu Gothic Medium","Yu Gothic","Meiryo",sans-serif;
+        fill: url(#chalkColor);
+        font-family: ${cfg.fontFamily};
         font-weight: 700;
         letter-spacing: 0.02em;
         filter: url(#chalk);
         paint-order: stroke fill;
-        stroke: #ffffff;
+        stroke: ${cfg.textColor};
         stroke-width: 0.2px;
         font-size: ${FONT_SIZE}px;
       }
@@ -76,19 +129,26 @@ document.getElementById("genBtn").onclick = () => {
   ${textElems}
 </svg>`;
 
-  document.getElementById("preview").innerHTML = svg;
-  document.getElementById("dlBtn").disabled = false;
+    document.getElementById("preview").innerHTML = svg;
+    document.getElementById("dlBtn").disabled = false;
+    scalePreview();
 
-  document.getElementById("dlBtn").onclick = () => {
-    const blob = new Blob([svg], { type: "image/svg+xml" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href = url;
-    a.download = `chalkboard_${Date.now()}.svg`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-};
+    document.getElementById("dlBtn").onclick = () => {
+      const blob = new Blob([svg], { type: "image/svg+xml" });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href = url;
+      a.download = `chalkboard_${Date.now()}.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+  }
+
+  document.getElementById("genBtn").onclick = generate;
+  window.addEventListener('resize', scalePreview);
+
+  // 初期化
+  updateTextarea();
 </script>
 </body>
 </html>
