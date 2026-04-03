@@ -61,10 +61,13 @@
     if (!svg) return;
     const svgW = Number(svg.getAttribute('width')) || 1600;
     const scale = Math.min(1, (wrap.offsetWidth - 4) / svgW);
+    const svgH = Number(svg.getAttribute('height')) || 900;
     prev.style.transformOrigin = 'top left';
     prev.style.transform = `scale(${scale})`;
     prev.style.width     = svgW + 'px';
-    wrap.style.height    = (Number(svg.getAttribute('height') || 900) * scale) + 'px';
+    prev.style.height    = svgH + 'px';
+    wrap.style.height    = (svgH * scale) + 'px';
+    wrap.style.overflow  = 'hidden';
   }
 
   function generate() {
