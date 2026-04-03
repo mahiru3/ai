@@ -16,7 +16,6 @@
     <tr>
       <th>へんかまえ（かな）</th>
       <th>変化後（漢字）</th>
-      <th>改行</th>
       <th class="th-start">開始位置</th>
       <th class="th-del"></th>
     </tr>
@@ -26,42 +25,39 @@
       <td>
         <input type="text" class="before" value="れいとなる" oninput="updateInlinePreview(this)">
         <div class="inline-preview" style="display:none"></div>
+        <input type="range" class="start-before" value="1" min="1" max="40" oninput="updateKanaPreview()">
       </td>
-      <td><input type="text" class="after" value="例となる"></td>
-      <td><input type="checkbox" class="break" onchange="updateKanaPreview()"></td>
-      <td class="td-start">
-        <input type="range" class="start" value="1" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value; updateKanaPreview();">
-        <span class="start-val" style="display:none">1</span>
+      <td>
+        <input type="text" class="after" value="例となる">
+        <input type="range" class="start-after" value="1" min="1" max="40" oninput="updateKanaPreview()">
       </td>
+      <td class="td-start"></td>
       <td class="td-del"><button class="row-del-btn" onclick="delRow(this)" title="削除"><span class="chev-sp1"></span><span class="chev-sp2"></span></button></td>
     </tr>
     <tr class="input-row">
       <td>
         <input type="text" class="before" value="ぶんしょう" oninput="updateInlinePreview(this)">
         <div class="inline-preview" style="display:none"></div>
+        <input type="range" class="start-before" value="1" min="1" max="40" oninput="updateKanaPreview()">
       </td>
-      <td><input type="text" class="after" value="文章"></td>
-      <td><input type="checkbox" class="break" checked onchange="updateKanaPreview()"></td>
-      <td class="td-start">
-        <input type="range" class="start" value="5" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value; updateKanaPreview();">
-        <span class="start-val" style="display:none">5</span>
+      <td>
+        <input type="text" class="after" value="文章">
+        <input type="range" class="start-after" value="5" min="1" max="40" oninput="updateKanaPreview()">
       </td>
+      <td class="td-start"></td>
       <td class="td-del"><button class="row-del-btn" onclick="delRow(this)" title="削除"><span class="chev-sp1"></span><span class="chev-sp2"></span></button></td>
     </tr>
   </tbody>
 </table>
 
-<!-- 行追加ボタン：テーブル右下、シェブロン（V字）で展開イメージ -->
 <div class="table-add-row">
   <button class="row-add-btn" onclick="addRow()" title="行を追加">
     <span class="chev-sp1"></span><span class="chev-sp2"></span>
   </button>
 </div>
 
-<!-- へんかまえのリアルタイムプレビューエリア -->
 <div id="kanaPreviewArea"></div>
 
-<!-- hidden controls -->
 <input type="number" id="fontSize"  value="32"      style="display:none">
 <input type="color"  id="fontColor" value="#000000" style="display:none">
 <input type="color"  id="bgColor"   value="#ffffff" style="display:none">
@@ -82,117 +78,5 @@
 
 <script src="../../03-js/31-csv-06-hnkn.js"></script>
 
-<script>
-  function updateInlinePreview(input) {
-    const prev = input.nextElementSibling;
-    if (prev && prev.classList.contains('inline-preview')) {
-      prev.textContent      = input.value;
-      prev.style.color      = document.getElementById('fontColor').value || '#333';
-      prev.style.fontFamily = document.body.dataset.fontFamily || "'Noto Sans JP',sans-serif";
-    }
-    updateKanaPreview();
-  }
-
-  function updateKanaPreview() {
-    const area     = document.getElementById('kanaPreviewArea');
-    const fontSize = parseInt(document.getElementById('fontSize').value) || 32;
-    const color    = document.getElementById('fontColor').value || '#000';
-    const family   = document.body.dataset.fontFamily || "'Noto Sans JP',sans-serif";
-    const charW    = fontSize * 0.6;
-    const lineH    = fontSize * 1.6;
-    const MARGIN_X = 20;
-    area.innerHTML = '';
-    let y = fontSize * 1.5;
-    const wrapper = document.createElement('div');
-    wrapper.style.position   = 'relative';
-    wrapper.style.fontFamily = family;
-    wrapper.style.fontSize   = fontSize + 'px';
-    wrapper.style.color      = color;
-    wrapper.style.lineHeight = '1';
-    area.appendChild(wrapper);
-    document.querySelectorAll('#inputTable tbody tr.input-row').forEach(row => {
-      const before   = row.querySelector('.before');
-      const startEl  = row.querySelector('.start');
-      const hasBreak = row.querySelector('.break').checked;
-      if (!before || !before.value) { if (hasBreak) y += lineH; return; }
-      const start = startEl ? (parseInt(startEl.value) || 1) : 1;
-      const x     = (start - 1) * charW + MARGIN_X;
-      const span  = document.createElement('span');
-      span.textContent      = before.value;
-      span.style.position   = 'absolute';
-      span.style.left       = x + 'px';
-      span.style.top        = (y - fontSize) + 'px';
-      wrapper.appendChild(span);
-      if (hasBreak) y += lineH;
-    });
-    wrapper.style.height  = y + 'px';
-    area.style.minHeight  = y + 'px';
-  }
-
-  function updateAllPreviews() {
-    document.querySelectorAll('#inputTable .before').forEach(input => {
-      const prev = input.nextElementSibling;
-      if (prev && prev.classList.contains('inline-preview')) {
-        prev.textContent      = input.value;
-        prev.style.color      = document.getElementById('fontColor').value || '#333';
-        prev.style.fontFamily = document.body.dataset.fontFamily || "'Noto Sans JP',sans-serif";
-      }
-    });
-    updateKanaPreview();
-  }
-
-  // 行削除：スライドアップアニメーション
-  function delRow(btn) {
-    const rows = document.querySelectorAll('#inputTable tbody tr.input-row');
-    if (rows.length <= 1) return;
-    const row = btn.closest('tr');
-    row.classList.add('row-collapsing');
-    row.addEventListener('transitionend', () => {
-      row.remove();
-      updateKanaPreview();
-    }, { once: true });
-  }
-
-  // 行追加：スライドダウンアニメーション
-  function addRow() {
-    const tbody = document.querySelector('#inputTable tbody');
-    const row   = document.createElement('tr');
-    row.className = 'input-row row-expanding';
-    row.innerHTML = `
-      <td>
-        <input type="text" class="before" oninput="updateInlinePreview(this)">
-        <div class="inline-preview" style="display:none"></div>
-      </td>
-      <td><input type="text" class="after"></td>
-      <td><input type="checkbox" class="break" onchange="updateKanaPreview()"></td>
-      <td class="td-start">
-        <input type="range" class="start" value="1" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value; updateKanaPreview();">
-        <span class="start-val" style="display:none">1</span>
-      </td>
-      <td class="td-del"><button class="row-del-btn" onclick="delRow(this)" title="削除"><span class="chev-sp1"></span><span class="chev-sp2"></span></button></td>
-    `;
-    tbody.appendChild(row);
-    // 次フレームでクラスを外してトランジション発動
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        row.classList.remove('row-expanding');
-        updateKanaPreview();
-      });
-    });
-  }
-
-  window.addEventListener('message', e => {
-    if (!e.data || e.data.type !== 'hnknCfg') return;
-    const c = e.data.cfg;
-    if (c.fontColor  != null) document.getElementById('fontColor').value = c.fontColor;
-    if (c.fontSize   != null) document.getElementById('fontSize').value  = c.fontSize;
-    if (c.bgColor    != null) document.getElementById('bgColor').value   = c.bgColor;
-    if (c.speed      != null) document.getElementById('speed').value     = c.speed;
-    if (c.fontFamily != null) document.body.dataset.fontFamily = c.fontFamily;
-    updateAllPreviews();
-  });
-
-  updateAllPreviews();
-</script>
 </body>
 </html>
