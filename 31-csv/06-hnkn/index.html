@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>タイピング風やつ</title>
+  <title>Typing SVG Generator + APNG Export</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../01-css/31-csv-06-hnkn.css">
 </head>
 <body>
 
-<h1>タイピング風やつ。APEGもいけるらしい</h1>
+<h1>Typing SVG Generator</h1>
 
 <table id="inputTable">
   <thead>
@@ -19,7 +19,6 @@
       <th>改行</th>
       <th class="th-start">開始位置</th>
       <th class="th-del"></th>
-      <th class="th-add"></th>
     </tr>
   </thead>
   <tbody>
@@ -35,7 +34,6 @@
         <span class="start-val" style="display:none">1</span>
       </td>
       <td class="td-del"><button class="del-btn svg-btn" onclick="delRow(this)">－</button></td>
-      <td class="td-add"></td>
     </tr>
     <tr>
       <td>
@@ -49,10 +47,10 @@
         <span class="start-val" style="display:none">5</span>
       </td>
       <td class="td-del"><button class="del-btn svg-btn" onclick="delRow(this)">－</button></td>
-      <td class="td-add"><button class="add-btn svg-btn" onclick="addRow(this)">＋</button></td>
     </tr>
   </tbody>
 </table>
+<div class="table-add-row"><button class="add-btn svg-btn" onclick="addRow()">＋</button></div>
 
 <!-- へんかまえのリアルタイムプレビューエリア -->
 <div id="kanaPreviewArea"></div>
@@ -157,18 +155,6 @@
     const row = btn.closest('tr');
     const isLast = !row.nextElementSibling;
     row.remove();
-    // 削除した行が最終行だった場合、新しい最終行に＋ボタンを移動
-    if (isLast) {
-      document.querySelectorAll('.add-btn').forEach(b => b.remove());
-      const lastTd = document.querySelector('#inputTable tbody tr:last-child .td-add');
-      if (lastTd) {
-        const addBtn = document.createElement('button');
-        addBtn.className = 'add-btn svg-btn';
-        addBtn.textContent = '＋';
-        addBtn.setAttribute('onclick', 'addRow(this)');
-        lastTd.appendChild(addBtn);
-      }
-    }
     updateKanaPreview();
   }
 
@@ -190,7 +176,6 @@
         <span class="start-val" style="display:none">1</span>
       </td>
       <td class="td-del"><button class="del-btn svg-btn" onclick="delRow(this)">－</button></td>
-      <td class="td-add"><button class="add-btn svg-btn" onclick="addRow(this)">＋</button></td>
     `;
     tbody.appendChild(row);
     updateKanaPreview();
