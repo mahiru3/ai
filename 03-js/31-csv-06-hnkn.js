@@ -212,3 +212,29 @@ async function generateAPNG() {
   a.download = 'typing.apng';
   a.click();
 }
+
+// プレビューをウィンドウ幅に合わせてスケール
+function scalePreview() {
+  const wrap = document.getElementById('previewWrap');
+  const prev = document.getElementById('preview');
+  const obj  = prev.querySelector('object');
+  if (!obj) return;
+  const svgW = Number(obj.getAttribute('width'))  || 800;
+  const svgH = Number(obj.getAttribute('height')) || 400;
+  const scale = Math.min(1, (wrap.offsetWidth - 4) / svgW);
+  prev.style.transformOrigin = 'top left';
+  prev.style.transform       = `scale(${scale})`;
+  prev.style.width           = svgW + 'px';
+  prev.style.height          = svgH + 'px';
+  wrap.style.height          = (svgH * scale) + 'px';
+  wrap.style.overflow        = 'hidden';
+}
+
+// generateSVG完了後にscalePreviewを呼ぶ
+const _origGenerate = window.generateSVG;
+window.generateSVG = function() {
+  if (typeof _origGenerate === 'function') _origGenerate();
+  setTimeout(scalePreview, 50);
+};
+
+window.addEventListener('resize', scalePreview);
