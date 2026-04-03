@@ -113,20 +113,15 @@
       const indent = (start - 1) * charW;
 
       const span = document.createElement('span');
-      span.textContent      = before.value;
-      span.style.fontSize   = fontSize + 'px';
-      span.style.color      = color;
-      span.style.fontFamily = family;
+      span.textContent       = before.value;
+      span.style.fontSize    = fontSize + 'px';
+      span.style.color       = color;
+      span.style.fontFamily  = family;
       span.style.paddingLeft = indent + 'px';
-      span.style.display    = 'block';
-      span.style.lineHeight = '1.6';
+      span.style.display     = 'inline';
       lineDiv.appendChild(span);
 
-      if (hasBreak) {
-        const br = document.createElement('div');
-        br.style.height = '4px';
-        lineDiv.appendChild(br);
-      }
+      if (hasBreak) lineDiv.appendChild(document.createElement('br'));
     });
   }
 
