@@ -153,3 +153,40 @@ textarea#svgCode {
 .svg-btn:active {
   transform: translateY(1px);
 }
+
+/* インラインプレビュー */
+.inline-preview {
+  min-height: 1.2em;
+  font-size: 14px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+/* 開始位置スライダー行 */
+.start-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.start-wrap input[type="range"] {
+  flex: 1;
+  min-width: 60px;
+}
+
+.start-val {
+  font-size: 12px;
+  min-width: 20px;
+  text-align: right;
+}
+
+/* ＋ボタン */
+.add-btn {
+  padding: 4px 8px;
+  font-size: 14px;
+  flex-shrink: 0;
+}
