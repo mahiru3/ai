@@ -2,348 +2,93 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>かみあく：戦闘・技能</title>
-  <link rel="stylesheet" href="../../01-css/00-style.css">
-  <link rel="stylesheet" href="../../01-css/21-chara.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>黒板チョーク風SVGジェネレーター</title>
+  <link rel="stylesheet" href="../../01-css/31-csv-05-kkbn.css">
 </head>
-
 <body>
 
-<h1 id="top">戦闘／技能／ハウスルール／チャパレ</h1>
+<h1>🧪 黒板チョーク風SVGジェネレーター</h1>
+<p>テキストを入力して「生成」ボタンを押してください。</p>
+<textarea id="textInput">ここに文字をうって生成すればいいよ
+　　　改行もそのまま反映されるよ。</textarea><br>
+<button id="genBtn">▶ 生成</button>
+<button id="dlBtn" disabled>💾 ダウンロード</button>
 
-<!-- =========================
-     《戦闘》
-========================= -->
-<h2 id="combat">攻撃</h2>
+<div id="preview"></div>
 
-<details class="accordion-008">
-  <summary><h3 id="combat-rush">武道／ラッシュ(K.O.不可)</h3></summary>
-<div class="accordion-body">
-<div class="button021 copy-line"><a href="#">CBRB(75,75)　〈武道サバット〉&amp;〈キック〉👠ラッシュ</a></div>
-<div class="note line">※対象の回避行動後、命中したら👠ラッシュ　※対象は「スタン」（回避行動はOK）</div>
-<div class="note line">※スタン効果は1d6R。これは対象（＝あなた）が振ってください。</a></div>
+<script>
+document.getElementById("genBtn").onclick = () => {
+  const text = document.getElementById("textInput").value;
+  const lines = text.split(/\n/);
+  const W = 1600, H = 900, MARGIN_X = 120, MARGIN_Y = 160;
+  const FONT_SIZE = 44, LINE_H = Math.round(FONT_SIZE * 1.6);
+  const BASE_DELAY = 0.18, DUR = 0.45, RISE = 10;
 
-<div class="button021 copy-line"><a href="#">2d6+1d6+1+1　両方成功時👠</a></div>
-<div class="button021 copy-line"><a href="#">1d6+1d6+1+1　〈キック〉のみ成功👠ラッシュ発生しない</a></div>
+  const textElems = lines.map((line, i) => {
+    const y     = MARGIN_Y + i * LINE_H;
+    const begin = `${(i * BASE_DELAY).toFixed(2)}s`;
+    return `
+    <text class="chalkText" x="${MARGIN_X}" y="${y}" opacity="0">${line}
+      <animate attributeName="opacity" from="0" to="1" dur="${DUR}s" begin="${begin}" fill="freeze"/>
+      <animateTransform attributeName="transform" type="translate" from="0,${RISE}" to="0,0" dur="${DUR}s" begin="${begin}" fill="freeze"/>
+    </text>`;
+  }).join("");
 
-<div class="button021 copy-line"><a href="#">✨ラウンドの最後に追加攻撃</div>
-<div class="button021 copy-line"><a href="#">CBRB(75,75)　〈武道サバット〉&amp;〈キック〉👠ラッシュ追加攻撃</a></div>
-<div class="button021 copy-line"><a href="#">2d6+1d6+1+1　両方成功時👠ラッシュde追撃</a></div>
-<div class="button021 copy-line"><a href="#">1d6+1d6+1+1　〈キック〉のみ成功👠ラッシュde追撃</a></div>
-<hr>
-<div class="button021 copy-line"><a href="#">2d6+1d6+1　両方成功時💛ラッシュ</a></div>
-<div class="button021 copy-line"><a href="#">1d6+1d6+1　〈キック〉のみ成功💛ラッシュ発生しない</a></div>
-<div class="button021 copy-line"><a href="#">2d6+1d6+1　両方成功時💛ラッシュde追撃</a></div>
-<div class="button021 copy-line"><a href="#">1d6+1d6+1　〈キック〉のみ成功💛ラッシュde追撃</a></div>
-  </div>
-</details>
-<details class="accordion-008">
-  <summary><h3 id="combat-feint">武道／フェイント(K.O.可)</h3></summary>
-<div class="accordion-body">
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+  <defs>
+    <linearGradient id="boardGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0"    stop-color="#173628"/>
+      <stop offset="0.65" stop-color="#1b402d"/>
+      <stop offset="1"    stop-color="#123021"/>
+    </linearGradient>
+    <filter id="boardNoise" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="8" result="n"/>
+      <feColorMatrix in="n" type="saturate" values="0.25"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 0.04 0.06"/></feComponentTransfer>
+    </filter>
+    <filter id="chalk" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="1" seed="11" result="turb"/>
+      <feDisplacementMap in="SourceGraphic" in2="turb" scale="1.2" xChannelSelector="R" yChannelSelector="G"/>
+      <feGaussianBlur stdDeviation="0.25"/>
+    </filter>
+    <linearGradient id="chalkWhite" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f4f4f4"/>
+    </linearGradient>
+    <style><![CDATA[
+      .chalkText {
+        fill: url(#chalkWhite);
+        font-family: "Noto Sans JP","Hiragino Sans","Yu Gothic Medium","Yu Gothic","Meiryo",sans-serif;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        filter: url(#chalk);
+        paint-order: stroke fill;
+        stroke: #ffffff;
+        stroke-width: 0.2px;
+        font-size: ${FONT_SIZE}px;
+      }
+    ]]></style>
+  </defs>
+  <rect width="${W}" height="${H}" fill="url(#boardGrad)"/>
+  <rect width="${W}" height="${H}" fill="#000" opacity="0.22" filter="url(#boardNoise)"/>
+  ${textElems}
+</svg>`;
 
-<div class="button021 copy-line"><a href="#">CBRB(75,75)　〈武道サバット〉&amp;〈キック〉💋フェイント</a></div>
-<div class="note line">①成功時＝相手の回避の権利を確定で１消費</div>
+  document.getElementById("preview").innerHTML = svg;
+  document.getElementById("dlBtn").disabled = false;
 
-<div class="button021 copy-line"><a href="#">CBRB(75,75)　〈武道サバット〉&amp;〈キック〉💋フェイント2撃目</a></div>
-<div class="button021 copy-line"><a href="#">2d6+1d6+1+1　両方成功時💋フェイント</a></div>
-<div class="button021 copy-line"><a href="#">1d6+1d6+1+1　〈キック〉のみ成功💋フェイント発生しない</a></div>
-
-<div class="note line">※①で〈武道〉受け流しが成功した場合、2撃目は発生しない</div>
-
-<div class="button021 copy-line"><a href="#">CBRB(75,75)　〈武道サバット〉&amp;〈キック〉💋フェイント追加攻撃</div>
-<div class="button021 copy-line"><a href="#">2d6+1d6+1+1　両方成功時💋フェイント2撃目</div>
-<div class="button021 copy-line"><a href="#">1d6+1d6+1+1　〈キック〉のみ成功💋フェイント2撃目</div>
-
-<hr>
-
-<div class="button021 copy-line"><a href="#">2d6+1d6+1　両方成功時💛フェイント</a></div>
-<div class="button021 copy-line"><a href="#">1d6+1d6+1　〈キック〉のみ成功💛フェイント発生しない</a></div>
-<div class="button021 copy-line"><a href="#">2d6+1d6+1　両方成功時💛フェイント2撃目</a></div>
-<div class="button021 copy-line"><a href="#">1d6+1d6+1　〈キック〉のみ成功💛フェイント2撃目</a></div>
-  </div>
-</details>
-<details class="accordion-008">
-  <summary><h3 id="combat-shotgun">ショットガン</h3></summary>
-<div class="accordion-body">
-
-<div class="button021 copy-line"><a href="#">ショットガンは背中のケースにいれている。</div>
-<div class="button021 copy-line"><a href="#">取り出し＆装備する必要から　２R目から使用できる。</div>
-<div class="button021 copy-line"><a href="#">--------------------------</div>
-<div class="button021 copy-line"><a href="#">CCB(100)&lt;=75 【ショットガン1射】</a></div>
-<div class="button021 copy-line"><a href="#">CCB(100)&lt;=75-25 【ショットガン2射】</a></div>
-<div class="button021 copy-line"><a href="#">命中後1d100table</div>
-<div class="button021 copy-line"><a href="#">4d6 (1発目)1-5</a></div>
-<div class="button021 copy-line"><a href="#">2d6 (1発目)6-15</a></div>
-<div class="button021 copy-line"><a href="#">1d6 (1発目)16-100</a></div>
-<div class="button021 copy-line"><a href="#">4d6 (2発目)1-5</a></div>
-<div class="button021 copy-line"><a href="#">2d6 (2発目)6-15</a></div>
-<div class="button021 copy-line"><a href="#">1d6 (2発目)16-100</a></div>  </div>
-</details>
-<div class="note line">🔴クリティカルで 回避可＋攻撃２倍を選択した場合は再度ふる</div>
-
-<details class="accordion-008">
-  <summary><h3 id="combat-evade">回避行動は〈回避〉or《受け流し》</h3></summary>
-<div class="accordion-body">
-<div class="button021 copy-line"><a href="#">CCB&lt;=75 〈武道〉 受け流し1R1回</a></div>
-<div class="button021 copy-line"><a href="#">CCB&lt;=70 〈回避〉👠 1回目</a></div>
-<div class="button021 copy-line"><a href="#">CCB&lt;=70/2 〈回避〉👠 2回目</a></div>
-<div class="button021 copy-line"><a href="#">CCB&lt;=70/3 〈回避〉👠 3回目</a></div>
-<div class="button021 copy-line"><a href="#">👠を脱ぐ💛（DB+1なくなる）</div>
-<div class="button021 copy-line"><a href="#">CCB&lt;=75 〈回避〉 💛1回目</a></div>
-<div class="button021 copy-line"><a href="#">CCB&lt;=75/2 〈回避〉💛 2回目</a></div>
-<div class="button021 copy-line"><a href="#">CCB&lt;=75/3 〈回避〉💛 3回目</a></div>
- </div>
-</details>
-<details class="accordion-008">
-  <summary><h3 id="combat-critical">～戦闘🎲クリティカル～🅰️ 🅱️ どちらか選択</h3></summary>
-<div class="accordion-body">
-<div class="note line">✨戦闘中にクリチケgetはできない／使用はできる</div>
-<div class="note line">🅰️ 回避可！ダメ2倍</div>
-<div class="note line">※👠はヒールあり、💛はヒールなし</div>
-<div class="button021 copy-line"><a href="#">(2d6+1d6+1+1)+(2d6+1d6+1+1)　両方成功👠ダメ2倍</a></div>
-<div class="button021 copy-line"><a href="#">(1d6+1d6+1+1)+(1d6+1d6+1+1)　〈キック〉のみ👠ダメ2倍</a></div>
-<div class="button021 copy-line"><a href="#">(2d6+1d6+1)+(2d6+1d6+1)　両方成功💛ダメ2倍</a></div>
-<div class="button021 copy-line"><a href="#">(1d6+1d6+1)+(1d6+1d6+1)　〈キック〉のみ💛ダメ2倍</a></div>
-<div class="button021 copy-line"><a href="#">🅱️ 回避不可！通常ダメ</a></div>
-  </div>
-</details>
-<details class="accordion-008">
-  <summary><h3 id="combat-fumble">～戦闘🎲ファンブル～転倒状態</h3></summary>
-<div class="accordion-body">
-<div class="button021 copy-line"><a href="#">行動不能👠</div>
-<div class="button021 copy-line"><a href="#">CCB&lt;={70}/2　〈回避〉👠１回目</a></div>
-<div class="button021 copy-line"><a href="#">CCB&lt;={75}/2　〈武道〉《受け流し》</a></div>
-<div class="button021 copy-line"><a href="#">CCB&lt;={70}/3　〈回避〉👠2回目</a></div>
-<div class="note line">次ラウンドは、転倒状態解除のため行動はできない</div>
-
-<hr>
-
-<div class="button021 copy-line"><a href="#">行動不能💛</div>
-<div class="button021 copy-line"><a href="#">CCB&lt;={75}/2　〈回避〉💛１回目</a></div>
-<div class="button021 copy-line"><a href="#">CCB&lt;={75}/2　〈武道〉《受け流し》</a></div>
-<div class="button021 copy-line"><a href="#">CCB&lt;={75}/3　〈回避〉💛2回目</a></div>
-</div>
-</details>
-<details class="accordion-008">
-  <summary><h3 id="combat-surprise-attack">不意打ち</h3></summary>
-<div class="accordion-body">
-
-<div class="note line">【必須】KPに個別で宣言</div>
-<div class="button021 copy-line"><a href="#">不意打ち/〈武道サバット〉&amp;〈キック〉ラッシュします。</a></div>
-
-<div class="button021 copy-line"><a href="#">CBRB((75-20),(75-20))　〈武道サバット〉&amp;〈キック〉👠ラッシュ</a></div>
-<div class="note line">※対象の回避行動後。命中した場合 スタン効果は1d6R。これは対象（＝あなた）が振ってください。</div>
-<div class="button021 copy-line"><a href="#">2d6+1d6+1+1　両方成功時👠ラッシュ</a></div>
-<div class="button021 copy-line"><a href="#">1d6+1d6+1+1　〈キック〉のみ成功👠ラッシュ</a></div>
-<div class="button021 copy-line"><a href="#">2d6+1d6+1　両方成功時💛ラッシュ</a></div>
-<div class="button021 copy-line"><a href="#">1d6+1d6+1　〈キック〉のみ成功💛ラッシュ</a></div>
-
-<div class="button021 copy-line"><a href="#">CBRB((75-20),(75-20))　〈武道サバット〉&amp;〈キック〉👠ラッシュ追撃</a></div>
-<div class="button021 copy-line"><a href="#">2d6+1d6+1+1　両方成功時👠ラッシュde追撃</a></div>
-<div class="button021 copy-line"><a href="#">1d6+1d6+1+1　〈キック〉のみ成功👠ラッシュde追撃</a></div>
-<div class="button021 copy-line"><a href="#">2d6+1d6+1　両方成功時💛ラッシュde追撃</a></div>
-<div class="button021 copy-line"><a href="#">1d6+1d6+1　〈キック〉のみ成功💛ラッシュde追撃</a></div>
-  </div>
-</details>
-<details class="accordion-008">
-  <summary><h3 id="combat-surprise-evade">不意打ち（回避）行動</h3></summary>
-<div class="accordion-body">
-
-<div class="button021 copy-line"><a href="#">CCB&lt;=75-10　〈武道〉 受け流し1R1回</a></div>
-<div class="button021 copy-line"><a href="#">CCB&lt;=70-10　〈回避〉👠 1回目</a></div>
-<div class="button021 copy-line"><a href="#">CCB&lt;=75-10　〈回避〉💛 1回目</a></div>
-  </div>
-</details>
-<!-- =========================
-     《回復》
-========================= -->
-<h2 id="heal">回復</h2>
-<div class="button021 copy-line"><a href="#">応急セット(1回のみ/1つのみ所持)は🅰️ 🅱️どちらかの効果のみ</div>
-<div class="button021 copy-line"><a href="#">🅰️〈応急手当〉+15%</div>
-<div class="button021 copy-line"><a href="#">🅱️1d3+1回復</div>
-<details class="accordion-008">
-  <summary><h3 id="heal-firstaid">応急手当</h3></summary>
-<div class="accordion-body">
-
-<div class="button021 copy-line"><a href="#">CCB&lt;=55　〈応急手当〉</a></div>
-<div class="button021 copy-line"><a href="#">CCB&lt;=55+15　〈応急手当〉+CT使用</a></div>
-<div class="button021 copy-line"><a href="#">応急セット使用。効果は+15%選択</a></div>
-<div class="button021 copy-line"><a href="#">CCB&lt;=55+15　〈応急手当〉+応急セット使用</a></div>
-<div class="button021 copy-line"><a href="#">1d3　〈応急手当〉での回復</a></div>
-<div class="button021 copy-line"><a href="#">1d3+1　〈応急手当〉／クリティカルでの回復</a></div>
-<div class="button021 copy-line"><a href="#">1d3+1　〈応急手当〉／応急セット使用での回復</a></div>
-<div class="button021 copy-line"><a href="#">1d3+2　〈応急手当〉／クリティカル効果＋応急セット</a></div>
-
-  </div>
-</details>
-<details class="accordion-008">
-  <summary><h3 id="heal-medicine">医学</h3></summary>
-<div class="accordion-body">
-
-<div class="button021 copy-line"><a href="#">CBRB({応急手当},{医学})</div>
-<div class="button021 copy-line"><a href="#">CBRB(55,(5+15))　〈応急手当〉+〈医学〉/〈医学〉にCT使用</a></div>
-<div class="button021 copy-line"><a href="#">1d2+1　〈応急手当〉&amp;〈医学〉での回復</a></div>
-<div class="button021 copy-line"><a href="#">1d2+2　〈応急手当〉&amp;〈医学〉／クリティカルでの回復</a></div>
-<div class="button021 copy-line"><a href="#">1d2+2　〈応急手当〉&amp;〈医学〉／応急セット使用での回復</a></div>
-<div class="button021 copy-line"><a href="#">1d2+3　〈応急手当〉&amp;〈医学〉／クリティカル+応急セット使用での回復</a></div>
-  </div>
-</details>
-<!-- =========================
-     ハウスルール
-========================= -->
-<details class="accordion-008">
-  <summary><h2 id="house">🎲クリファン／戦闘以外</h2></summary>
-<div class="accordion-body">
-
-<div class="note line">攻撃／回避可でダメ2倍or回避不可で通常ダメ</div>
-<div class="note line">1クリ／回避不可＋ダメージ2倍</div>
-<div class="note line">回避／カウンター攻撃で1d3のダメージ</div>
-<div class="note line">🌀戦闘中のファンブル：転倒／1R行動不能。回避受け流しは1/2</div>
-<hr>
-<h3 id="house-critical">クリティカル／戦闘以外</h3>
-<div class="button021 copy-line"><a href="#">:CT+1</a></div>
-<div class="button021 copy-line"><a href="#">｜■　CT効果　　　　　　　■｜</div>
-<div class="button021 copy-line"><a href="#">｜■　・ファンブル打消し　　■｜</div>
-<div class="button021 copy-line"><a href="#">｜■　・技能+15　　　　 　 ■｜</div>
-
-<h3 id="house-fumble">ファンブル／戦闘以外</h3>
-<div class="button021 copy-line"><a href="#">1d2　ファンブルチョイス</a></div>
-<div class="button021 copy-line"><a href="#">:HP-1</a></div>
-<div class="button021 copy-line"><a href="#">:SAN-1</a></div>
-<div class="button021 copy-line"><a href="#">①転倒（1R行動不能。回避・受け流し1/2）</div>
-<div class="button021 copy-line"><a href="#">②自傷</div>
-<div class="button021 copy-line"><a href="#">③武器破壊など。</div>
-<div class="note line">①②③から選択／対人戦闘では基本的に①転倒を適用</div>
-  </div>
-</details>
-<!-- =========================
-     チャパレ（技能系）
-========================= -->
-<h2 id="chapare">チャパレ</h2>
-<details class="accordion-008">
-  <summary><h3 id="skills-often">よく使う</h3></summary>
-<div class="accordion-body">
-
-<div class="skill-line">CCB&lt;=80　〈アイデア〉</div>
-<div class="skill-line">CCB&lt;=80　〈幸運〉</div>
-<div class="skill-line">CCB&lt;=105　〈知識〉</div>
-<div class="skill-line">CCB&lt;=70　〈目星〉</div>
-<div class="skill-line">CCB&lt;=25　〈聞き耳〉</div>
-<div class="skill-line">CCB&lt;=70　〈図書館〉</div>
-<div class="skill-line">CCB&lt;=75　〈回避〉</div>
-<div class="skill-line">CCB&lt;=55　〈応急手当〉</div>
-  </div>
-</details>
-<details class="accordion-008">
-  <summary><h3 id="skills-combat">戦闘</h3></summary>
-<div class="accordion-body">
-<div class="skill-line">CCB&lt;=75　〈回避〉</div>
-<div class="skill-line">CCB&lt;=75　〈キック〉</div>
-<div class="skill-line">CCB&lt;=75　〈武道:サバット〉</div>
-<div class="skill-line">CCB&lt;=50　〈こぶし（パンチ）〉</div>
-<div class="skill-line">CCB&lt;=75　〈組み付き〉</div>
-<div class="skill-line">CCB&lt;=75　〈投擲〉</div>
-<div class="skill-line">CCB&lt;=75　〈ショットガン〉</div>
-<div class="skill-line">CCB&lt;=10　〈頭突き〉</div>
-<div class="skill-line">CCB&lt;=1　〈マーシャルアーツ〉</div>
-<div class="skill-line">CCB&lt;=20　〈拳銃〉</div>
-<div class="skill-line">CCB&lt;=15　〈サブマシンガン〉</div>
-<div class="skill-line">CCB&lt;=15　〈マシンガン〉</div>
-<div class="skill-line">CCB&lt;=25　〈ライフル〉</div>
-  </div>
-</details>
-<details class="accordion-008">
-  <summary><h3 id="skills-recovery">戦闘関連／回復</h3></summary>
-<div class="accordion-body">
-<div class="skill-line">CCB&lt;=55　〈応急手当〉</div>
-<div class="skill-line">CCB&lt;=5　〈医学〉</div>
-<div class="skill-line">CCB&lt;=1　〈精神分析〉</div>
-<div class="skill-line">CCB&lt;=1　〈薬学〉</div>
-  </div>
-</details>
-<details class="accordion-008">
-  <summary><h3 id="skills-talk">交渉</h3></summary>
-<div class="accordion-body">
-<div class="skill-line">CCB&lt;=15　〈信用〉</div>
-<div class="skill-line">CCB&lt;=15　〈説得〉</div>
-<div class="skill-line">CCB&lt;=5　〈言いくるめ〉</div>
-<div class="skill-line">CCB&lt;=5　〈値切り〉</div>
-  </div>
-</details>
-<details class="accordion-008">
-  <summary><h3 id="skills-search-move">探索／運動</h3></summary>
-<div class="accordion-body">
-<div class="skill-line">CCB&lt;=15　〈隠す〉</div>
-<div class="skill-line">CCB&lt;=10　〈隠れる〉</div>
-<div class="skill-line">CCB&lt;=1　〈変装〉</div>
-<div class="skill-line">CCB&lt;=10　〈忍び歩き〉</div>
-<div class="skill-line">CCB&lt;=10　〈ナビゲート〉</div>
-<div class="skill-line">CCB&lt;=10　〈追跡〉</div>
-<div class="skill-line">CCB&lt;=1　〈鍵開け〉</div>
-  </div>
-</details>
-<details class="accordion-008">
-  <summary><h3 id="skills-search-brain">探索／頭脳</h3></summary>
-<div class="accordion-body">
-<div class="skill-line">CCB&lt;=10　〈写真術〉</div>
-<div class="skill-line">CCB&lt;=5　〈芸術〉</div>
-<div class="skill-line">CCB&lt;=5　〈心理学〉</div>
-<div class="skill-line">CCB&lt;=1　〈人類学〉</div>
-  </div>
-</details>
-<details class="accordion-008">
-  <summary><h3 id="skills-athletics">運動</h3></summary>
-<div class="accordion-body">
-<div class="skill-line">CCB&lt;=25　〈跳躍〉</div>
-<div class="skill-line">CCB&lt;=40　〈登攀〉</div>
-<div class="skill-line">CCB&lt;=25　〈水泳〉</div>
-<div class="skill-line">CCB&lt;=5　〈乗馬〉</div>
-  </div>
-</details>
-<details class="accordion-008">
-  <summary><h3 id="skills-operate">操作</h3></summary>
-<div class="accordion-body">
-<div class="skill-line">CCB&lt;=75　〈機械修理〉</div>
-<div class="skill-line">CCB&lt;=10　〈電気修理〉</div>
-<div class="skill-line">CCB&lt;=1　〈重機械操作〉</div>
-<div class="skill-line">CCB&lt;=20　〈運転〉</div>
-<div class="skill-line">CCB&lt;=1　〈操縦〉</div>
-<div class="skill-line">CCB&lt;=5　〈製作〉</div>
-  </div>
-</details>
-<details class="accordion-008">
-  <summary><h3 id="skills-academic">学術</h3></summary>
-<div class="accordion-body">
-<div class="skill-line">CCB&lt;=73　〈オカルト〉</div>
-<div class="skill-line">CCB&lt;=10　〈経理〉</div>
-<div class="skill-line">CCB&lt;=5　〈法律〉</div>
-<div class="skill-line">CCB&lt;=20　〈歴史〉</div>
-<div class="skill-line">CCB&lt;=10　〈博物学〉</div>
-<div class="skill-line">CCB&lt;=1　〈考古学〉</div>
-<div class="skill-line">CCB&lt;=1　〈天文学〉</div>
-<div class="skill-line">CCB&lt;=1　〈地質学〉</div>
-<div class="skill-line">CCB&lt;=1　〈薬学〉</div>
-<div class="skill-line">CCB&lt;=1　〈生物学〉</div>
-<div class="skill-line">CCB&lt;=1　〈物理学〉</div>
-<div class="skill-line">CCB&lt;=1　〈化学〉</div>
-<div class="skill-line">CCB&lt;=1　〈電子工学〉</div>
-<div class="skill-line">CCB&lt;=1　〈コンピューター〉</div>
-<div class="skill-line">CCB&lt;=0　〈クトゥルフ神話〉</div>
-  </div>
-</details>
-<details class="accordion-008">
-  <summary><h3 id="skills-status5">ステータス（×5）</h3></summary>
-<div class="accordion-body">
-<div class="skill-line">CCB&lt;=90　〈STR × 5〉</div>
-<div class="skill-line">CCB&lt;=90　〈CON × 5〉</div>
-<div class="skill-line">CCB&lt;=80　〈POW × 5〉</div>
-<div class="skill-line">CCB&lt;=80　〈DEX × 5〉</div>
-<div class="skill-line">CCB&lt;=90　〈APP × 5〉</div>
-<div class="skill-line">CCB&lt;=90　〈SIZ × 5〉</div>
-<div class="skill-line">CCB&lt;=80　〈INT × 5〉</div>
-<div class="skill-line">CCB&lt;=105　〈EDU × 5〉</div>
-  </div>
-</details>
-<script src="../../03-js/chara.js" defer></script>
+  document.getElementById("dlBtn").onclick = () => {
+    const blob = new Blob([svg], { type: "image/svg+xml" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href = url;
+    a.download = `chalkboard_${Date.now()}.svg`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+};
+</script>
 </body>
 </html>
