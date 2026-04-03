@@ -285,7 +285,6 @@ function addRow() {
       <input type="text" class="after">
       <input type="range" class="start-after" value="1" min="1" max="40" oninput="updateKanaPreview()">
     </td>
-    <td class="td-start"></td>
     <td class="td-del"><button class="row-del-btn" onclick="delRow(this)" title="削除"><span class="chev-sp1"></span><span class="chev-sp2"></span></button></td>
   `;
   tbody.appendChild(row);
@@ -306,4 +305,4 @@ window.addEventListener('message', e => {
   updateAllPreviews();
 });
 
-document.addEventListener('DOMContentLoaded', () => updateAllPreviews());
+window.addEventListener('load', () => updateAllPreviews());
