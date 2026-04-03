@@ -128,6 +128,7 @@ function generateSVG() {
   object.height = 400;
   preview.appendChild(object);
   document.getElementById('svgCode').value = svg;
+  setTimeout(scalePreview, 50);
 }
 
 function copyCode() {
@@ -213,12 +214,6 @@ function scalePreview() {
   wrap.style.height          = (svgH * scale) + 'px';
   wrap.style.overflow        = 'hidden';
 }
-
-const _origGenerate = window.generateSVG;
-window.generateSVG = function() {
-  if (typeof _origGenerate === 'function') _origGenerate();
-  setTimeout(scalePreview, 50);
-};
 
 window.addEventListener('resize', scalePreview);
 
