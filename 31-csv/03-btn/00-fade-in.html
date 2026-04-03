@@ -4,83 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Fade プレビュー</title>
-  <link rel="stylesheet" href="../../01-css/01-main.css" />
-  <style>
-    body {
-      margin: 0;
-      padding: 20px 24px;
-      font-family: sans-serif;
-      font-size: 13px;
-    }
-    h2 { margin: 0 0 16px; font-size: 16px; }
-
-    .preview-wrap {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 32px;
-      background: #e8e8e8;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      min-height: 100px;
-    }
-
-    #preview-area { display: block; }
-
-    .dl-panel {
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 14px 16px;
-      margin-bottom: 16px;
-    }
-    .dl-panel h3 { margin: 0 0 10px; font-size: 13px; color: #444; }
-    .dl-row { display: flex; gap: 8px; }
-    .dl-btn {
-      flex: 1;
-      padding: 8px;
-      border: 1px solid #bbb;
-      border-radius: 5px;
-      background: #f8f8f8;
-      font-size: 12px;
-      cursor: pointer;
-      text-align: center;
-    }
-    .dl-btn:hover { background: #eef3ff; border-color: #7ab; }
-    .dl-btn.primary { background: #4a7fd4; color: #fff; border-color: #4a7fd4; }
-    .dl-btn.primary:hover { background: #3a6fc4; }
-
-    .code-panel {
-      background: #f6f6f6;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 10px 12px;
-    }
-    .code-panel h3 { margin: 0 0 6px; font-size: 12px; color: #666; }
-    textarea {
-      width: 100%;
-      height: 140px;
-      font-family: monospace;
-      font-size: 11px;
-      border: none;
-      background: transparent;
-      resize: vertical;
-      box-sizing: border-box;
-      color: #333;
-    }
-    .copy-btn {
-      margin-top: 4px;
-      padding: 4px 12px;
-      font-size: 11px;
-      border: 1px solid #bbb;
-      border-radius: 4px;
-      background: #fff;
-      cursor: pointer;
-    }
-    .copy-btn:hover { background: #eef3ff; }
-
-    .note { margin-top: 12px; font-size: 11px; color: #999; line-height: 1.6; }
-  </style>
+  <link rel="stylesheet" href="../../01-css/31-csv-03-btn.css" />
 </head>
 <body>
   <h2>Fade — プレビュー</h2>
@@ -104,12 +28,14 @@
   </div>
 
   <p class="note">
+    ※ 出力サイズ 24×24px・プレビューは 120×120px で表示しています。<br>
     ※ APNG はアニメーションなし（静止画）での保存になります。<br>
     ※ SVG ファイルはブラウザで開くとアニメーションが再生されます。
   </p>
 
   <script>
-    const SIZE = 24;
+    const OUT = 24;    // 出力サイズ
+    const PRV = 120;   // プレビュー表示サイズ
 
     let cfg = {
       color:   "#9a4fbf",
@@ -117,6 +43,8 @@
       hold:    0.6,
       fadeOut: 0.8,
       wait:    0.6,
+      loop:    true,
+      reverse: false,
     };
 
     function buildSVG(c) {
@@ -125,21 +53,45 @@
       const t2 = ((c.fadeIn + c.hold) / total).toFixed(3);
       const t3 = ((c.fadeIn + c.hold + c.fadeOut) / total).toFixed(3);
       const dur = total.toFixed(2);
+      const repeat = c.loop ? "indefinite" : "1";
 
-      return `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}">
-  <rect width="${SIZE}" height="${SIZE}" fill="${c.color}">
+      // 通常: 透明→色→透明  リバース: 色→透明→色
+      const opVals = c.reverse
+        ? "1;1;0;0;1;1"
+        : "0;0;1;1;0;0";
+
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="${OUT}" height="${OUT}" viewBox="0 0 ${OUT} ${OUT}">
+  <rect width="${OUT}" height="${OUT}" fill="${c.color}">
     <animate attributeName="opacity"
-      values="0;0;1;1;0;0"
+      values="${opVals}"
       keyTimes="0;0.05;${t1};${t2};${t3};1"
-      dur="${dur}s" repeatCount="indefinite"/>
+      dur="${dur}s" repeatCount="${repeat}"/>
+  </rect>
+</svg>`;
+    }
+
+    function buildPreviewSVG(c) {
+      const total = c.fadeIn + c.hold + c.fadeOut + c.wait;
+      const t1 = (c.fadeIn / total).toFixed(3);
+      const t2 = ((c.fadeIn + c.hold) / total).toFixed(3);
+      const t3 = ((c.fadeIn + c.hold + c.fadeOut) / total).toFixed(3);
+      const dur = total.toFixed(2);
+      const repeat = c.loop ? "indefinite" : "1";
+      const opVals = c.reverse ? "1;1;0;0;1;1" : "0;0;1;1;0;0";
+
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="${PRV}" height="${PRV}" viewBox="0 0 ${OUT} ${OUT}">
+  <rect width="${OUT}" height="${OUT}" fill="${c.color}">
+    <animate attributeName="opacity"
+      values="${opVals}"
+      keyTimes="0;0.05;${t1};${t2};${t3};1"
+      dur="${dur}s" repeatCount="${repeat}"/>
   </rect>
 </svg>`;
     }
 
     function render(c) {
-      const svgStr = buildSVG(c);
-      document.getElementById("preview-area").innerHTML = svgStr;
-      document.getElementById("svg-code").value = svgStr;
+      document.getElementById("preview-area").innerHTML = buildPreviewSVG(c);
+      document.getElementById("svg-code").value = buildSVG(c);
     }
 
     window.applyConfig = function(newCfg) {
@@ -157,14 +109,11 @@
       }
 
       if (e.target.id === "btn-apng") {
-        const svgStr = buildSVG(cfg);
-        const blob = new Blob([svgStr], { type: "image/svg+xml" });
-        const url = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(new Blob([buildSVG(cfg)], { type: "image/svg+xml" }));
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement("canvas");
-          canvas.width = SIZE;
-          canvas.height = SIZE;
+          canvas.width = OUT; canvas.height = OUT;
           canvas.getContext("2d").drawImage(img, 0, 0);
           URL.revokeObjectURL(url);
           const a = document.createElement("a");
