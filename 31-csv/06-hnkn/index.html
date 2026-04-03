@@ -25,12 +25,12 @@
     <tr>
       <td>
         <input type="text" class="before" value="れいとなる" oninput="updateInlinePreview(this)">
-        <div class="inline-preview"></div>
+        <div class="inline-preview" style="display:none"></div>
       </td>
       <td><input type="text" class="after" value="例となる"></td>
       <td><input type="checkbox" class="break"></td>
       <td class="td-start">
-        <input type="range" class="start" value="1" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value">
+        <input type="range" class="start" value="1" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value; updateKanaPreview();">
         <span class="start-val">1</span>
       </td>
       <td class="td-add"></td>
@@ -38,12 +38,12 @@
     <tr>
       <td>
         <input type="text" class="before" value="ぶんしょう" oninput="updateInlinePreview(this)">
-        <div class="inline-preview"></div>
+        <div class="inline-preview" style="display:none"></div>
       </td>
       <td><input type="text" class="after" value="文章"></td>
       <td><input type="checkbox" class="break" checked></td>
       <td class="td-start">
-        <input type="range" class="start" value="5" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value">
+        <input type="range" class="start" value="5" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value; updateKanaPreview();">
         <span class="start-val">5</span>
       </td>
       <td class="td-add">
@@ -89,27 +89,44 @@
     updateKanaPreview();
   }
 
-  // kanaPreviewArea：全行のへんかまえを結合して表示
+  // kanaPreviewArea：開始位置をpaddingで反映して表示
   function updateKanaPreview() {
     const area     = document.getElementById('kanaPreviewArea');
     const fontSize = parseInt(document.getElementById('fontSize').value) || 32;
     const color    = document.getElementById('fontColor').value || '#000';
     const family   = document.body.dataset.fontFamily || "'Noto Sans JP',sans-serif";
+    const charW    = fontSize * 0.6; // 1文字あたりの幅の目安
 
     area.innerHTML = '';
+    const lineDiv = document.createElement('div');
+    lineDiv.style.position = 'relative';
+    lineDiv.style.minHeight = (fontSize * 1.6) + 'px';
+    area.appendChild(lineDiv);
+
     document.querySelectorAll('#inputTable tbody tr').forEach(row => {
       const before   = row.querySelector('.before');
+      const startEl  = row.querySelector('.start');
       const hasBreak = row.querySelector('.break').checked;
       if (!before || !before.value) return;
 
+      const start = startEl ? (parseInt(startEl.value) || 1) : 1;
+      const indent = (start - 1) * charW;
+
       const span = document.createElement('span');
-      span.textContent  = before.value;
+      span.textContent      = before.value;
       span.style.fontSize   = fontSize + 'px';
       span.style.color      = color;
       span.style.fontFamily = family;
-      span.style.display    = 'inline-block';
-      area.appendChild(span);
-      if (hasBreak) area.appendChild(document.createElement('br'));
+      span.style.paddingLeft = indent + 'px';
+      span.style.display    = 'block';
+      span.style.lineHeight = '1.6';
+      lineDiv.appendChild(span);
+
+      if (hasBreak) {
+        const br = document.createElement('div');
+        br.style.height = '4px';
+        lineDiv.appendChild(br);
+      }
     });
   }
 
@@ -135,12 +152,12 @@
     row.innerHTML = `
       <td>
         <input type="text" class="before" oninput="updateInlinePreview(this)">
-        <div class="inline-preview"></div>
+        <div class="inline-preview" style="display:none"></div>
       </td>
       <td><input type="text" class="after"></td>
       <td><input type="checkbox" class="break"></td>
       <td class="td-start">
-        <input type="range" class="start" value="1" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value">
+        <input type="range" class="start" value="1" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value; updateKanaPreview();">
         <span class="start-val">1</span>
       </td>
       <td class="td-add">
