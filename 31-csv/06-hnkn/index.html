@@ -64,32 +64,5 @@
 
 <script src="../../03-js/31-csv-06-hnkn.js"></script>
 
-<script>
-  // プレビューをウィンドウ幅に合わせてスケール
-  function scalePreview() {
-    const wrap = document.getElementById('previewWrap');
-    const prev = document.getElementById('preview');
-    const svg  = prev.querySelector('svg');
-    if (!svg) return;
-    const svgW = Number(svg.getAttribute('width'))  || 720;
-    const svgH = Number(svg.getAttribute('height')) || 400;
-    const scale = Math.min(1, (wrap.offsetWidth - 4) / svgW);
-    prev.style.transformOrigin = 'top left';
-    prev.style.transform       = `scale(${scale})`;
-    prev.style.width           = svgW + 'px';
-    prev.style.height          = svgH + 'px';
-    wrap.style.height          = (svgH * scale) + 'px';
-    wrap.style.overflow        = 'hidden';
-  }
-
-  // generateSVG完了後にscalePreviewを呼ぶ
-  const _origGenerate = window.generateSVG;
-  window.generateSVG = function() {
-    if (typeof _origGenerate === 'function') _origGenerate();
-    setTimeout(scalePreview, 50);
-  };
-
-  window.addEventListener('resize', scalePreview);
-</script>
 </body>
 </html>
