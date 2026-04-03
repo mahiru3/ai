@@ -9,7 +9,7 @@
 </head>
 <body class="navi">
 
-<h3>設定パネル</h3>
+<button id="applyBtn">▶ 設定を反映</button>
 
 <section>
   <b>① 手書きテキスト</b>
@@ -20,11 +20,11 @@
     <input type="text"  id="color1hex"    value="#000000" class="hex-input">
   </div>
 
-  <label>サイズ①（px）</label>
-  <input id="size1" type="number" value="72" min="8" step="1">
+  <label>サイズ①（px）: <span id="size1val">72</span></label>
+  <input id="size1" type="range" min="8" max="120" value="72" oninput="upd('size1val',this.value); sendCfg();">
 
   <label>フォント①</label>
-  <select id="font1sel">
+  <select id="font1sel" onchange="sendCfg()">
     <option value="serif" selected>serif</option>
     <option value="sans-serif">sans-serif</option>
     <option value="monospace">monospace</option>
@@ -42,17 +42,17 @@
   </select>
 
   <label>任意フォント①（空なら上を使用）</label>
-  <input id="font1free" type="text" placeholder="例）'Yu Mincho',serif">
+  <input id="font1free" type="text" placeholder="例）'Yu Mincho',serif" oninput="sendCfg()">
 
-  <label>文字間①（px）</label>
-  <input id="letter1" type="number" value="2" step="0.5">
+  <label>文字間①（px）: <span id="letter1val">2</span></label>
+  <input id="letter1" type="range" min="-10" max="40" value="2" step="0.5" oninput="upd('letter1val',this.value); sendCfg();">
 
-  <label>基準描画秒①（s）</label>
-  <input id="baseDur1" type="number" value="0.75" step="0.05" min="0.05">
+  <label>基準描画秒①（s）: <span id="baseDur1val">0.75</span></label>
+  <input id="baseDur1" type="range" min="0.05" max="3" value="0.75" step="0.05" oninput="upd('baseDur1val',this.value); sendCfg();">
   <div class="hint">大きいほどゆっくり</div>
 
-  <label>上下分割・消滅の秒数（s）</label>
-  <input id="splitDur" type="number" value="1.2" step="0.1" min="0.1">
+  <label>上下分割・消滅（s）: <span id="splitDurval">1.2</span></label>
+  <input id="splitDur" type="range" min="0.1" max="5" value="1.2" step="0.1" oninput="upd('splitDurval',this.value); sendCfg();">
 </section>
 
 <section>
@@ -64,11 +64,11 @@
     <input type="text"  id="color2hex"    value="#000000" class="hex-input">
   </div>
 
-  <label>サイズ②（px）</label>
-  <input id="size2" type="number" value="56" min="8" step="1">
+  <label>サイズ②（px）: <span id="size2val">56</span></label>
+  <input id="size2" type="range" min="8" max="120" value="56" oninput="upd('size2val',this.value); sendCfg();">
 
   <label>フォント②</label>
-  <select id="font2sel">
+  <select id="font2sel" onchange="sendCfg()">
     <option value="serif" selected>serif</option>
     <option value="sans-serif">sans-serif</option>
     <option value="monospace">monospace</option>
@@ -86,34 +86,31 @@
   </select>
 
   <label>任意フォント②（空なら上を使用）</label>
-  <input id="font2free" type="text" placeholder="例）'Yu Gothic',sans-serif">
+  <input id="font2free" type="text" placeholder="例）'Yu Gothic',sans-serif" oninput="sendCfg()">
 
-  <label>文字間②（px）</label>
-  <input id="letter2" type="number" value="1" step="0.5">
+  <label>文字間②（px）: <span id="letter2val">1</span></label>
+  <input id="letter2" type="range" min="-10" max="40" value="1" step="0.5" oninput="upd('letter2val',this.value); sendCfg();">
 
-  <label>浮かび上がり秒数②（s）</label>
-  <input id="riseDur" type="number" value="0.9" step="0.1" min="0.1">
+  <label>浮かび上がり秒数②（s）: <span id="riseDurval">0.9</span></label>
+  <input id="riseDur" type="range" min="0.1" max="5" value="0.9" step="0.1" oninput="upd('riseDurval',this.value); sendCfg();">
 
-  <label>出現までの待ち秒（s）</label>
-  <input id="afterDelay" type="number" value="0.2" step="0.05" min="0">
+  <label>出現までの待ち秒（s）: <span id="afterDelayval">0.2</span></label>
+  <input id="afterDelay" type="range" min="0" max="5" value="0.2" step="0.05" oninput="upd('afterDelayval',this.value); sendCfg();">
 </section>
 
-<button id="applyBtn">▶ 設定を反映</button>
+<h3>設定パネル</h3>
 
 <script>
-  // カラーピッカー ↔ HEX 連動
+  function upd(id, val) {
+    document.getElementById(id).textContent = val;
+  }
+
   function bindColor(pickerId, hexId) {
     const picker = document.getElementById(pickerId);
     const hex    = document.getElementById(hexId);
-    picker.addEventListener('input', () => {
-      hex.value = picker.value.toUpperCase();
-      sendCfg();
-    });
+    picker.addEventListener('input', () => { hex.value = picker.value.toUpperCase(); sendCfg(); });
     hex.addEventListener('input', () => {
-      if (/^#[0-9A-Fa-f]{6}$/.test(hex.value)) {
-        picker.value = hex.value;
-        sendCfg();
-      }
+      if (/^#[0-9A-Fa-f]{6}$/.test(hex.value)) { picker.value = hex.value; sendCfg(); }
     });
   }
   bindColor('color1picker', 'color1hex');
