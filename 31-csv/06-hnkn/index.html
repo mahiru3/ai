@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<h1>タイピング風</h1>
+<h1>Typing SVG Generator</h1>
 
 <table id="inputTable">
   <thead>
@@ -23,11 +23,11 @@
     <tr class="input-row">
       <td>
         <input type="text" class="before" value="れいとなる" oninput="updateKanaPreview()">
-        <input type="range" class="start-before" value="1" min="1" max="40" oninput="updateKanaPreview()">
+        <div class="start-wrap"><input type="range" class="start-before" value="1" min="1" max="40" oninput="this.nextElementSibling.value=this.value; updateKanaPreview();"><input type="number" class="start-num" value="1" min="1" max="40" oninput="this.previousElementSibling.value=this.value; updateKanaPreview();"></div>
       </td>
       <td>
         <input type="text" class="after" value="例となる" oninput="updateKanaPreview()">
-        <input type="range" class="start-after" value="1" min="1" max="40" oninput="updateKanaPreview()">
+        <div class="start-wrap"><input type="range" class="start-after" value="1" min="1" max="40" oninput="this.nextElementSibling.value=this.value; updateKanaPreview();"><input type="number" class="start-num" value="1" min="1" max="40" oninput="this.previousElementSibling.value=this.value; updateKanaPreview();"></div>
         <label class="break-label"><input type="checkbox" class="break" onchange="updateKanaPreview()"> 改行</label>
       </td>
       <td class="td-del"><button class="row-del-btn" onclick="delRow(this)" title="削除"><span class="chev-sp1"></span><span class="chev-sp2"></span></button></td>
@@ -35,11 +35,11 @@
     <tr class="input-row">
       <td>
         <input type="text" class="before" value="ぶんしょう" oninput="updateKanaPreview()">
-        <input type="range" class="start-before" value="1" min="1" max="40" oninput="updateKanaPreview()">
+        <div class="start-wrap"><input type="range" class="start-before" value="1" min="1" max="40" oninput="this.nextElementSibling.value=this.value; updateKanaPreview();"><input type="number" class="start-num" value="1" min="1" max="40" oninput="this.previousElementSibling.value=this.value; updateKanaPreview();"></div>
       </td>
       <td>
         <input type="text" class="after" value="文章" oninput="updateKanaPreview()">
-        <input type="range" class="start-after" value="5" min="1" max="40" oninput="updateKanaPreview()">
+        <div class="start-wrap"><input type="range" class="start-after" value="5" min="1" max="40" oninput="this.nextElementSibling.value=this.value; updateKanaPreview();"><input type="number" class="start-num" value="5" min="1" max="40" oninput="this.previousElementSibling.value=this.value; updateKanaPreview();"></div>
         <label class="break-label"><input type="checkbox" class="break" onchange="updateKanaPreview()"> 改行</label>
       </td>
       <td class="td-del"><button class="row-del-btn" onclick="delRow(this)" title="削除"><span class="chev-sp1"></span><span class="chev-sp2"></span></button></td>
@@ -292,7 +292,7 @@ function updateKanaPreview() {
   wrapB.style.lineHeight = '1';
   area.appendChild(wrapB);
 
-  let yB = fontSize * 1.5;
+  let yB = fontSize;
   document.querySelectorAll('#inputTable tbody tr.input-row').forEach(row => {
     const before      = row.querySelector('.before');
     const startBefore = row.querySelector('.start-before');
@@ -305,12 +305,12 @@ function updateKanaPreview() {
       span.textContent    = before.value;
       span.style.position = 'absolute';
       span.style.left     = x + 'px';
-      span.style.top      = (yB - fontSize) + 'px';
+      span.style.top      = '0px';
       wrapB.appendChild(span);
     }
     if (doBreak) yB += lineH;
   });
-  if (yB === fontSize * 1.5) yB += lineH;
+  if (yB === fontSize) yB += lineH;
   wrapB.style.height    = yB + 'px';
 
   // ── 変化後 ──
@@ -327,7 +327,7 @@ function updateKanaPreview() {
   wrapA.style.lineHeight = '1';
   area.appendChild(wrapA);
 
-  let yA = fontSize * 1.5;
+  let yA = fontSize;
   document.querySelectorAll('#inputTable tbody tr.input-row').forEach(row => {
     const after      = row.querySelector('.after');
     const startAfter = row.querySelector('.start-after');
@@ -340,15 +340,15 @@ function updateKanaPreview() {
       span.textContent    = after.value;
       span.style.position = 'absolute';
       span.style.left     = x + 'px';
-      span.style.top      = (yA - fontSize) + 'px';
+      span.style.top      = '0px';
       wrapA.appendChild(span);
     }
     if (doBreak) yA += lineH;
   });
-  if (yA === fontSize * 1.5) yA += lineH;
+  if (yA === fontSize) yA += lineH;
   wrapA.style.height    = yA + 'px';
 
-  area.style.minHeight = (yB + yA + fontSize * 2) + 'px';
+  area.style.minHeight = (yB + yA + 24) + 'px';
 }
 
 function delRow(btn) {
@@ -366,11 +366,11 @@ function addRow() {
   row.innerHTML = `
     <td>
       <input type="text" class="before" oninput="updateKanaPreview()">
-      <input type="range" class="start-before" value="1" min="1" max="40" oninput="updateKanaPreview()">
+      <div class="start-wrap"><input type="range" class="start-before" value="1" min="1" max="40" oninput="this.nextElementSibling.value=this.value; updateKanaPreview();"><input type="number" class="start-num" value="1" min="1" max="40" oninput="this.previousElementSibling.value=this.value; updateKanaPreview();"></div>
     </td>
     <td>
       <input type="text" class="after" oninput="updateKanaPreview()">
-      <input type="range" class="start-after" value="1" min="1" max="40" oninput="updateKanaPreview()">
+      <div class="start-wrap"><input type="range" class="start-after" value="1" min="1" max="40" oninput="this.nextElementSibling.value=this.value; updateKanaPreview();"><input type="number" class="start-num" value="1" min="1" max="40" oninput="this.previousElementSibling.value=this.value; updateKanaPreview();"></div>
       <label class="break-label"><input type="checkbox" class="break" onchange="updateKanaPreview()"> 改行</label>
     </td>
     <td class="td-del"><button class="row-del-btn" onclick="delRow(this)" title="削除"><span class="chev-sp1"></span><span class="chev-sp2"></span></button></td>
