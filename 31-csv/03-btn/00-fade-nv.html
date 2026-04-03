@@ -5,6 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Fade 設定</title>
   <link rel="stylesheet" href="../../01-css/31-csv-03-btn.css" />
+  <style>
+    .dir-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .dir-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 5px;
+      border: 1.5px solid #ddd;
+      cursor: pointer;
+      font-size: 12px;
+      color: #555;
+      transition: background .15s, border-color .15s;
+    }
+    .dir-label input[type="radio"] { display: none; }
+    .dir-label.selected {
+      background: #eef3ff;
+      border-color: #4a7fd4;
+      color: #1a4fa0;
+      font-weight: 600;
+    }
+  </style>
 </head>
 <body class="nv-body">
   <h3>⚙ Fade 設定</h3>
@@ -16,26 +42,8 @@
 
   <div class="section">
     <label>フェードイン時間（秒）</label>
-    <input type="range" id="cfg-fade-in" min="0.1" max="3" step="0.1" value="0.8" />
-    <div class="val"><span id="val-fade-in">0.8</span> 秒</div>
-  </div>
-
-  <div class="section">
-    <label>表示キープ時間（秒）</label>
-    <input type="range" id="cfg-hold" min="0.1" max="3" step="0.1" value="0.6" />
-    <div class="val"><span id="val-hold">0.6</span> 秒</div>
-  </div>
-
-  <div class="section">
-    <label>フェードアウト時間（秒）</label>
-    <input type="range" id="cfg-fade-out" min="0.1" max="3" step="0.1" value="0.8" />
-    <div class="val"><span id="val-fade-out">0.8</span> 秒</div>
-  </div>
-
-  <div class="section">
-    <label>待機時間（秒）</label>
-    <input type="range" id="cfg-wait" min="0.1" max="3" step="0.1" value="0.6" />
-    <div class="val"><span id="val-wait">0.6</span> 秒</div>
+    <input type="range" id="cfg-duration" min="0.1" max="5" step="0.1" value="1.0" />
+    <div class="val"><span id="val-duration">1.0</span> 秒</div>
   </div>
 
   <div class="section">
@@ -45,48 +53,52 @@
     </div>
   </div>
 
+  <div class="section">
+    <label>方向</label>
+    <div class="dir-group">
+      <label class="dir-label selected" id="lbl-normal">
+        <input type="radio" name="dir" value="normal" checked />
+        透明 → 指定色
+      </label>
+      <label class="dir-label" id="lbl-reverse">
+        <input type="radio" name="dir" value="reverse" />
+        指定色 → 透明
+      </label>
+    </div>
+  </div>
+
   <button class="btn-apply" id="btn-apply">プレビューに反映</button>
-  <button class="btn-reverse" id="btn-reverse">リバース（色→透明）で反映</button>
 
   <p class="note">
-    ※ 出力サイズは 24×24px 固定です。<br>
-    ※ リバースは指定色から透明にフェードします。
+    ※ 出力サイズは 24×24px 固定です。
   </p>
 
   <script>
-    const sliders = [
-      { id: "cfg-fade-in",  val: "val-fade-in"  },
-      { id: "cfg-hold",     val: "val-hold"      },
-      { id: "cfg-fade-out", val: "val-fade-out"  },
-      { id: "cfg-wait",     val: "val-wait"      },
-    ];
-    sliders.forEach(({ id, val }) => {
-      const el = document.getElementById(id);
-      document.getElementById(id).addEventListener("input", () => {
-        document.getElementById(val).textContent = el.value;
+    // スライダー表示更新
+    const dur = document.getElementById("cfg-duration");
+    dur.addEventListener("input", () => {
+      document.getElementById("val-duration").textContent = dur.value;
+    });
+
+    // ラジオ選択ハイライト
+    document.querySelectorAll("input[name='dir']").forEach(radio => {
+      radio.addEventListener("change", () => {
+        document.getElementById("lbl-normal").classList.toggle("selected", document.querySelector("input[name='dir'][value='normal']").checked);
+        document.getElementById("lbl-reverse").classList.toggle("selected", document.querySelector("input[name='dir'][value='reverse']").checked);
       });
     });
 
-    function getConfig(reverse) {
-      return {
-        color:   document.getElementById("cfg-color").value,
-        fadeIn:  parseFloat(document.getElementById("cfg-fade-in").value),
-        hold:    parseFloat(document.getElementById("cfg-hold").value),
-        fadeOut: parseFloat(document.getElementById("cfg-fade-out").value),
-        wait:    parseFloat(document.getElementById("cfg-wait").value),
-        loop:    document.getElementById("cfg-loop").checked,
-        reverse: reverse,
+    document.getElementById("btn-apply").addEventListener("click", () => {
+      const cfg = {
+        color:    document.getElementById("cfg-color").value,
+        duration: parseFloat(dur.value),
+        loop:     document.getElementById("cfg-loop").checked,
+        reverse:  document.querySelector("input[name='dir']:checked").value === "reverse",
       };
-    }
-
-    function send(cfg) {
       if (parent && parent.frames && parent.frames["center"]) {
         parent.frames["center"].applyConfig(cfg);
       }
-    }
-
-    document.getElementById("btn-apply").addEventListener("click", () => send(getConfig(false)));
-    document.getElementById("btn-reverse").addEventListener("click", () => send(getConfig(true)));
+    });
   </script>
 </body>
 </html>
