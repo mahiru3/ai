@@ -22,7 +22,7 @@
     </tr>
   </thead>
   <tbody>
-    <tr>
+    <tr class="input-row">
       <td>
         <input type="text" class="before" value="れいとなる" oninput="updateInlinePreview(this)">
         <div class="inline-preview" style="display:none"></div>
@@ -33,9 +33,9 @@
         <input type="range" class="start" value="1" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value; updateKanaPreview();">
         <span class="start-val" style="display:none">1</span>
       </td>
-      <td class="td-del"><button class="del-btn svg-btn" onclick="delRow(this)">－</button></td>
+      <td class="td-del"><button class="row-del-btn" onclick="delRow(this)" title="削除"><span class="chev-sp1"></span><span class="chev-sp2"></span></button></td>
     </tr>
-    <tr>
+    <tr class="input-row">
       <td>
         <input type="text" class="before" value="ぶんしょう" oninput="updateInlinePreview(this)">
         <div class="inline-preview" style="display:none"></div>
@@ -46,16 +46,22 @@
         <input type="range" class="start" value="5" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value; updateKanaPreview();">
         <span class="start-val" style="display:none">5</span>
       </td>
-      <td class="td-del"><button class="del-btn svg-btn" onclick="delRow(this)">－</button></td>
+      <td class="td-del"><button class="row-del-btn" onclick="delRow(this)" title="削除"><span class="chev-sp1"></span><span class="chev-sp2"></span></button></td>
     </tr>
   </tbody>
 </table>
-<div class="table-add-row"><button class="add-btn svg-btn" onclick="addRow()">＋</button></div>
+
+<!-- 行追加ボタン：テーブル右下、シェブロン（V字）で展開イメージ -->
+<div class="table-add-row">
+  <button class="row-add-btn" onclick="addRow()" title="行を追加">
+    <span class="chev-sp1"></span><span class="chev-sp2"></span>
+  </button>
+</div>
 
 <!-- へんかまえのリアルタイムプレビューエリア -->
 <div id="kanaPreviewArea"></div>
 
-<!-- hidden controls（navi.htmlから値を受け取るためDOMは残す） -->
+<!-- hidden controls -->
 <input type="number" id="fontSize"  value="32"      style="display:none">
 <input type="color"  id="fontColor" value="#000000" style="display:none">
 <input type="color"  id="bgColor"   value="#ffffff" style="display:none">
@@ -77,18 +83,16 @@
 <script src="../../03-js/31-csv-06-hnkn.js"></script>
 
 <script>
-  // 入力欄直下のインラインプレビュー更新 + kanaPreviewAreaも更新
   function updateInlinePreview(input) {
     const prev = input.nextElementSibling;
     if (prev && prev.classList.contains('inline-preview')) {
-      prev.textContent  = input.value;
-      prev.style.color  = document.getElementById('fontColor').value || '#333';
+      prev.textContent      = input.value;
+      prev.style.color      = document.getElementById('fontColor').value || '#333';
       prev.style.fontFamily = document.body.dataset.fontFamily || "'Noto Sans JP',sans-serif";
     }
     updateKanaPreview();
   }
 
-  // kanaPreviewArea：SVG生成と同じ座標計算で表示
   function updateKanaPreview() {
     const area     = document.getElementById('kanaPreviewArea');
     const fontSize = parseInt(document.getElementById('fontSize').value) || 32;
@@ -96,12 +100,9 @@
     const family   = document.body.dataset.fontFamily || "'Noto Sans JP',sans-serif";
     const charW    = fontSize * 0.6;
     const lineH    = fontSize * 1.6;
-    const MARGIN_X = 20; // SVGと同じ左余白
-
+    const MARGIN_X = 20;
     area.innerHTML = '';
-    // SVGと同じ：y=fontSize*1.5からスタート、改行時にlineH加算
     let y = fontSize * 1.5;
-
     const wrapper = document.createElement('div');
     wrapper.style.position   = 'relative';
     wrapper.style.fontFamily = family;
@@ -109,61 +110,54 @@
     wrapper.style.color      = color;
     wrapper.style.lineHeight = '1';
     area.appendChild(wrapper);
-
-    const rows = document.querySelectorAll('#inputTable tbody tr');
-    rows.forEach((row, i) => {
-      const before  = row.querySelector('.before');
-      const startEl = row.querySelector('.start');
+    document.querySelectorAll('#inputTable tbody tr.input-row').forEach(row => {
+      const before   = row.querySelector('.before');
+      const startEl  = row.querySelector('.start');
       const hasBreak = row.querySelector('.break').checked;
       if (!before || !before.value) { if (hasBreak) y += lineH; return; }
-
-      const start  = startEl ? (parseInt(startEl.value) || 1) : 1;
-      const x      = (start - 1) * charW + MARGIN_X;
-
-      const span = document.createElement('span');
+      const start = startEl ? (parseInt(startEl.value) || 1) : 1;
+      const x     = (start - 1) * charW + MARGIN_X;
+      const span  = document.createElement('span');
       span.textContent      = before.value;
       span.style.position   = 'absolute';
       span.style.left       = x + 'px';
-      span.style.top        = (y - fontSize) + 'px'; // baselineをtopに変換
+      span.style.top        = (y - fontSize) + 'px';
       wrapper.appendChild(span);
-
       if (hasBreak) y += lineH;
     });
-
-    // wrapperの高さをyに合わせる
-    wrapper.style.height = y + 'px';
-    area.style.minHeight = y + 'px';
+    wrapper.style.height  = y + 'px';
+    area.style.minHeight  = y + 'px';
   }
 
-  // 全行のインラインプレビューを更新
   function updateAllPreviews() {
     document.querySelectorAll('#inputTable .before').forEach(input => {
       const prev = input.nextElementSibling;
       if (prev && prev.classList.contains('inline-preview')) {
-        prev.textContent  = input.value;
-        prev.style.color  = document.getElementById('fontColor').value || '#333';
+        prev.textContent      = input.value;
+        prev.style.color      = document.getElementById('fontColor').value || '#333';
         prev.style.fontFamily = document.body.dataset.fontFamily || "'Noto Sans JP',sans-serif";
       }
     });
     updateKanaPreview();
   }
 
-  // 行削除
+  // 行削除：スライドアップアニメーション
   function delRow(btn) {
-    const rows = document.querySelectorAll('#inputTable tbody tr');
-    if (rows.length <= 1) return; // 最低1行は残す
+    const rows = document.querySelectorAll('#inputTable tbody tr.input-row');
+    if (rows.length <= 1) return;
     const row = btn.closest('tr');
-    const isLast = !row.nextElementSibling;
-    row.remove();
-    updateKanaPreview();
+    row.classList.add('row-collapsing');
+    row.addEventListener('transitionend', () => {
+      row.remove();
+      updateKanaPreview();
+    }, { once: true });
   }
 
-  // ＋ボタンで行追加
-  function addRow(btn) {
-    document.querySelectorAll('.add-btn').forEach(b => b.remove());
-
+  // 行追加：スライドダウンアニメーション
+  function addRow() {
     const tbody = document.querySelector('#inputTable tbody');
     const row   = document.createElement('tr');
+    row.className = 'input-row row-expanding';
     row.innerHTML = `
       <td>
         <input type="text" class="before" oninput="updateInlinePreview(this)">
@@ -175,13 +169,18 @@
         <input type="range" class="start" value="1" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value; updateKanaPreview();">
         <span class="start-val" style="display:none">1</span>
       </td>
-      <td class="td-del"><button class="del-btn svg-btn" onclick="delRow(this)">－</button></td>
+      <td class="td-del"><button class="row-del-btn" onclick="delRow(this)" title="削除"><span class="chev-sp1"></span><span class="chev-sp2"></span></button></td>
     `;
     tbody.appendChild(row);
-    updateKanaPreview();
+    // 次フレームでクラスを外してトランジション発動
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        row.classList.remove('row-expanding');
+        updateKanaPreview();
+      });
+    });
   }
 
-  // navi.htmlからpostMessageで設定を受け取り反映
   window.addEventListener('message', e => {
     if (!e.data || e.data.type !== 'hnknCfg') return;
     const c = e.data.cfg;
@@ -193,7 +192,6 @@
     updateAllPreviews();
   });
 
-  // 初期プレビュー
   updateAllPreviews();
 </script>
 </body>
