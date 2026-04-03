@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<h1>Typing SVG Generator</h1>
+<h1>タイピング風</h1>
 
 <table id="inputTable">
   <thead>
@@ -26,7 +26,7 @@
         <input type="range" class="start-before" value="1" min="1" max="40" oninput="updateKanaPreview()">
       </td>
       <td>
-        <input type="text" class="after" value="例となる">
+        <input type="text" class="after" value="例となる" oninput="updateKanaPreview()">
         <input type="range" class="start-after" value="1" min="1" max="40" oninput="updateKanaPreview()">
         <label class="break-label"><input type="checkbox" class="break" onchange="updateKanaPreview()"> 改行</label>
       </td>
@@ -38,7 +38,7 @@
         <input type="range" class="start-before" value="1" min="1" max="40" oninput="updateKanaPreview()">
       </td>
       <td>
-        <input type="text" class="after" value="文章">
+        <input type="text" class="after" value="文章" oninput="updateKanaPreview()">
         <input type="range" class="start-after" value="5" min="1" max="40" oninput="updateKanaPreview()">
         <label class="break-label"><input type="checkbox" class="break" onchange="updateKanaPreview()"> 改行</label>
       </td>
@@ -277,15 +277,22 @@ function updateKanaPreview() {
   const lineH    = fontSize * 1.6;
   const MARGIN_X = 20;
   area.innerHTML = '';
-  let y = fontSize * 1.5;
-  const wrapper = document.createElement('div');
-  wrapper.style.position   = 'relative';
-  wrapper.style.fontFamily = family;
-  wrapper.style.fontSize   = fontSize + 'px';
-  wrapper.style.color      = color;
-  wrapper.style.lineHeight = '1';
-  area.appendChild(wrapper);
 
+  // ── へんかまえ ──
+  const labelB = document.createElement('div');
+  labelB.textContent  = 'へんかまえ';
+  labelB.style.cssText = 'font-size:11px;color:#888;margin-bottom:2px;';
+  area.appendChild(labelB);
+
+  const wrapB = document.createElement('div');
+  wrapB.style.position   = 'relative';
+  wrapB.style.fontFamily = family;
+  wrapB.style.fontSize   = fontSize + 'px';
+  wrapB.style.color      = color;
+  wrapB.style.lineHeight = '1';
+  area.appendChild(wrapB);
+
+  let yB = fontSize * 1.5;
   document.querySelectorAll('#inputTable tbody tr.input-row').forEach(row => {
     const before      = row.querySelector('.before');
     const startBefore = row.querySelector('.start-before');
@@ -298,15 +305,50 @@ function updateKanaPreview() {
       span.textContent    = before.value;
       span.style.position = 'absolute';
       span.style.left     = x + 'px';
-      span.style.top      = (y - fontSize) + 'px';
-      wrapper.appendChild(span);
+      span.style.top      = (yB - fontSize) + 'px';
+      wrapB.appendChild(span);
     }
-    if (doBreak) y += lineH;
+    if (doBreak) yB += lineH;
   });
+  if (yB === fontSize * 1.5) yB += lineH;
+  wrapB.style.height    = yB + 'px';
 
-  if (y === fontSize * 1.5) y += lineH;
-  wrapper.style.height = y + 'px';
-  area.style.minHeight = y + 'px';
+  // ── 変化後 ──
+  const labelA = document.createElement('div');
+  labelA.textContent  = '変化後';
+  labelA.style.cssText = 'font-size:11px;color:#888;margin-top:10px;margin-bottom:2px;';
+  area.appendChild(labelA);
+
+  const wrapA = document.createElement('div');
+  wrapA.style.position   = 'relative';
+  wrapA.style.fontFamily = family;
+  wrapA.style.fontSize   = fontSize + 'px';
+  wrapA.style.color      = color;
+  wrapA.style.lineHeight = '1';
+  area.appendChild(wrapA);
+
+  let yA = fontSize * 1.5;
+  document.querySelectorAll('#inputTable tbody tr.input-row').forEach(row => {
+    const after      = row.querySelector('.after');
+    const startAfter = row.querySelector('.start-after');
+    const breakEl    = row.querySelector('.break');
+    const doBreak    = breakEl ? breakEl.checked : false;
+    if (after && after.value) {
+      const start = startAfter ? (parseInt(startAfter.value) || 1) : 1;
+      const x     = (start - 1) * charW + MARGIN_X;
+      const span  = document.createElement('span');
+      span.textContent    = after.value;
+      span.style.position = 'absolute';
+      span.style.left     = x + 'px';
+      span.style.top      = (yA - fontSize) + 'px';
+      wrapA.appendChild(span);
+    }
+    if (doBreak) yA += lineH;
+  });
+  if (yA === fontSize * 1.5) yA += lineH;
+  wrapA.style.height    = yA + 'px';
+
+  area.style.minHeight = (yB + yA + fontSize * 2) + 'px';
 }
 
 function delRow(btn) {
@@ -327,7 +369,7 @@ function addRow() {
       <input type="range" class="start-before" value="1" min="1" max="40" oninput="updateKanaPreview()">
     </td>
     <td>
-      <input type="text" class="after">
+      <input type="text" class="after" oninput="updateKanaPreview()">
       <input type="range" class="start-after" value="1" min="1" max="40" oninput="updateKanaPreview()">
       <label class="break-label"><input type="checkbox" class="break" onchange="updateKanaPreview()"> 改行</label>
     </td>
