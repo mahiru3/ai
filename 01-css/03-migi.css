@@ -90,7 +90,7 @@ h3 {
 .eff-btn span.label {
   position: relative;
   z-index: 1;
-  pointer-events: none;
+  user-select: text;
 }
 .eff-btn::before,
 .eff-btn::after {
@@ -98,6 +98,26 @@ h3 {
   position: absolute;
   z-index: 0;
   pointer-events: none;
+}
+
+/* ===== 00 Fade ===== */
+.e-fade { color: #9a4fbf; }
+.e-fade::before {
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #9a4fbf;
+  opacity: 0;
+  animation: fade-anim 2.4s ease-in-out infinite;
+}
+.e-fade .label { color: #9a4fbf; animation: fade-txt 2.4s ease-in-out infinite; }
+@keyframes fade-anim {
+  0%,10%  { opacity: 0; }
+  40%,60% { opacity: 1; }
+  90%,100%{ opacity: 0; }
+}
+@keyframes fade-txt {
+  0%,10%  { color: #9a4fbf; }
+  40%,60% { color: #fff; }
+  90%,100%{ color: #9a4fbf; }
 }
 
 /* ===== 01 Swipe ===== */
@@ -186,25 +206,6 @@ h3 {
 .e-diag .label { color: #bf7a2a; animation: diag-txt 2.4s ease-in-out infinite; }
 @keyframes diag-anim { 0%,10%{transform:translateX(-110%)} 40%,60%{transform:translateX(0)} 90%,100%{transform:translateX(-110%)} }
 @keyframes diag-txt  { 0%,10%{color:#bf7a2a} 40%,60%{color:#fff} 90%,100%{color:#bf7a2a} }
-
-/* ===== 06 Diagonal Close ===== */
-.e-diagclose { color: #b03060; background: #b03060 !important; }
-.e-diagclose::before {
-  top: 0; left: 0; bottom: 0; width: 58%;
-  background: #b03060;
-  clip-path: polygon(0 0, 85% 0, 100% 100%, 0 100%);
-  animation: dc-l 2.4s ease-in-out infinite;
-}
-.e-diagclose::after {
-  top: 0; right: 0; bottom: 0; width: 58%;
-  background: #b03060;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 15% 100%);
-  animation: dc-r 2.4s ease-in-out infinite;
-}
-.e-diagclose .label { color: #fff; animation: dc-txt 2.4s ease-in-out infinite; }
-@keyframes dc-l  { 0%,10%{width:58%} 40%,60%{width:0} 90%,100%{width:58%} }
-@keyframes dc-r  { 0%,10%{width:58%} 40%,60%{width:0} 90%,100%{width:58%} }
-@keyframes dc-txt { 0%,10%{color:#fff} 40%,60%{color:#b03060} 90%,100%{color:#fff} }
 
 /* ===== 07 Slice ===== */
 .e-slice { color: #3a7a9e; }
