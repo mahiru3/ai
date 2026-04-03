@@ -18,6 +18,7 @@
       <th>変化後（漢字）</th>
       <th>改行</th>
       <th class="th-start">開始位置</th>
+      <th class="th-del"></th>
       <th class="th-add"></th>
     </tr>
   </thead>
@@ -31,9 +32,10 @@
       <td><input type="checkbox" class="break"></td>
       <td class="td-start">
         <input type="range" class="start" value="1" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value; updateKanaPreview();">
-        <span class="start-val">1</span>
+        <span class="start-val" style="display:none">1</span>
       </td>
-      <td class="td-add"><button class="del-btn svg-btn" onclick="delRow(this)">－</button></td>
+      <td class="td-del"><button class="del-btn svg-btn" onclick="delRow(this)">－</button></td>
+      <td class="td-add"></td>
     </tr>
     <tr>
       <td>
@@ -44,12 +46,10 @@
       <td><input type="checkbox" class="break" checked></td>
       <td class="td-start">
         <input type="range" class="start" value="5" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value; updateKanaPreview();">
-        <span class="start-val">5</span>
+        <span class="start-val" style="display:none">5</span>
       </td>
-      <td class="td-add">
-        <button class="del-btn svg-btn" onclick="delRow(this)">－</button>
-        <button class="add-btn svg-btn" onclick="addRow(this)">＋</button>
-      </td>
+      <td class="td-del"><button class="del-btn svg-btn" onclick="delRow(this)">－</button></td>
+      <td class="td-add"><button class="add-btn svg-btn" onclick="addRow(this)">＋</button></td>
     </tr>
   </tbody>
 </table>
@@ -187,12 +187,10 @@
       <td><input type="checkbox" class="break"></td>
       <td class="td-start">
         <input type="range" class="start" value="1" min="1" max="40" oninput="this.nextElementSibling.textContent=this.value; updateKanaPreview();">
-        <span class="start-val">1</span>
+        <span class="start-val" style="display:none">1</span>
       </td>
-      <td class="td-add">
-        <button class="del-btn svg-btn" onclick="delRow(this)">－</button>
-        <button class="add-btn svg-btn" onclick="addRow(this)">＋</button>
-      </td>
+      <td class="td-del"><button class="del-btn svg-btn" onclick="delRow(this)">－</button></td>
+      <td class="td-add"><button class="add-btn svg-btn" onclick="addRow(this)">＋</button></td>
     `;
     tbody.appendChild(row);
     updateKanaPreview();
