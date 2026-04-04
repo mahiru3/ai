@@ -139,7 +139,7 @@ function rewriteCommands(commands) {
     if (mv) {
       const expr  = mv[1].trim();
       const label = mv[2].trim().replace(/\s/g, "");
-      return `CCB<=${expr} 　〈${label}〉`;
+      return `CCB<=${expr}{BA} 　〈${label}〉`;
     }
     return line;
   }).join("\n");
