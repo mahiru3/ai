@@ -22,9 +22,16 @@
     name を必要なら変更してから ▶ 実行。
   </div>
 
-  <button class="button-29" onclick="top.frames['center'] && (top.frames['center'].location.href='index.html')">
-    いあきゃら変換を開く
-  </button>
+  <button class="button-29" onclick="call('doParse')">解析</button>
+  <button class="button-29" onclick="call('doRun')">▶ 実行</button>
+  <button class="button-29" onclick="call('doCopy')">📋 コピー</button>
+
+  <script>
+    function call(fn) {
+      const c = parent && parent.frames && parent.frames['center'];
+      if (c && typeof c[fn] === 'function') c[fn]();
+    }
+  </script>
 
 </body>
 </html>
