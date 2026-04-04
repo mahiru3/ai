@@ -141,3 +141,55 @@ th {
   border-bottom-color: #80c8d1;
   background: rgba(255,255,255,0.5);
 }
+
+/* =========================================
+   navi.html 用スタイル
+========================================= */
+
+.guide {
+  font-size: 11px;
+  color: #555;
+  line-height: 1.7;
+  margin-bottom: 10px;
+  border-left: 3px solid #80c8d1;
+  padding-left: 8px;
+}
+.guide b { color: #333; }
+
+.guide-sub {
+  font-size: 11px;
+  color: #777;
+  line-height: 1.6;
+  margin: 6px 0 14px;
+  padding-left: 4px;
+}
+
+/* ボタン29 */
+.button-29 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  max-width: 220px;
+  margin: 6px auto;
+  padding: .7em 1.2em;
+  overflow: hidden;
+  border: 1px solid #2589d0;
+  border-radius: 5px;
+  background-color: #fff;
+  color: #2589d0;
+  font-size: .9em;
+  cursor: pointer;
+}
+.button-29:hover { background-color: transparent; color: #fff; }
+.button-29::before {
+  position: absolute;
+  top: 0; left: 0;
+  z-index: -1;
+  width: 0; height: 100%;
+  background-color: #2589d0;
+  content: '';
+  transition: width .3s ease;
+}
+.button-29:hover::before { width: 100%; }
