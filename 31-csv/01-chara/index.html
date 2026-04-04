@@ -26,9 +26,6 @@
   </div>
 
   <div class="row">
-    <button id="parseBtn">解析（status表示）</button>
-    <button id="runBtn">▶ 実行</button>
-    <button id="copyBtn">📋 コピー</button>
     <span id="msg" class="small"></span>
   </div>
 
@@ -55,8 +52,7 @@
     <button id="addRowBtn" style="margin-top:8px">＋ 行を追加</button>
   </div>
 
-  <div id="error" class="err"></div>
-</div>
+
 
 <script>
 let _obj = null;
@@ -134,7 +130,7 @@ function rewriteCommands(commands) {
     const m = line.match(RE_FIXED_LINE);
     if (m) {
       const label = m[3].trim();
-      return `CCB<={${label}}${ideographicSpace}  〈${label}〉`;
+      return `CCB<={${label}}{BA} 　〈${label}〉`;
     }
     return line;
   }).join("\n");
@@ -217,20 +213,22 @@ function readStatusTable() {
 const inputEl   = document.getElementById("input");
 const outputEl  = document.getElementById("output");
 const msgEl     = document.getElementById("msg");
-const errEl     = document.getElementById("error");
 const statusBox = document.getElementById("statusBox");
 const metaBox   = document.getElementById("metaBox");
 const nameInput = document.getElementById("nameInput");
-const parseBtn  = document.getElementById("parseBtn");
-const runBtn    = document.getElementById("runBtn");
-const copyBtn   = document.getElementById("copyBtn");
 const addRowBtn = document.getElementById("addRowBtn");
 
-parseBtn.onclick = () => {
-  errEl.textContent = ""; msgEl.textContent = ""; outputEl.value = "";
+function showMsg(text, isErr) {
+  msgEl.textContent = text;
+  msgEl.className = isErr ? "err small" : "ok small";
+}
+
+// navi.htmlのボタンからparent.frames['center'].doParse() で呼び出す
+window.doParse = () => {
+  showMsg("", false); outputEl.value = "";
   try {
     const raw = inputEl.value.trim();
-    if (!raw) { errEl.textContent = "JSONを貼り付けてから押してください。"; return; }
+    if (!raw) { showMsg("JSONを貼り付けてから押してください。", true); return; }
     let obj = safeParse(raw);
     if (!("kind" in obj)) obj = { kind: "character", data: obj };
     if (obj.kind !== "character") obj = { kind: "character", data: obj.data || obj };
@@ -258,41 +256,37 @@ parseBtn.onclick = () => {
     renderStatusTable(Array.isArray(data.status) ? data.status : []);
     statusBox.style.display = "block";
   } catch (e) {
-    errEl.textContent = "解析エラー:\n" + (e && e.message ? e.message : String(e));
+    showMsg("解析エラー:\n" + (e && e.message ? e.message : String(e)), true);
+  }
+};
+
+window.doRun = () => {
+  if (!_obj) { showMsg("先に『解析』で読み込んでください。", true); return; }
+  try {
+    _obj.data.name   = nameInput.value;
+    _obj.data.status = readStatusTable();
+    const out = convertToClipboard(_obj);
+    outputEl.value = JSON.stringify(out);
+    showMsg("変換完了。コピーボタンでクリップボードへ。", false);
+  } catch (e) {
+    showMsg("変換エラー:\n" + (e && e.message ? e.message : String(e)), true);
+  }
+};
+
+window.doCopy = async () => {
+  const text = outputEl.value.trim();
+  if (!text) { showMsg("出力が空です。先に実行を押してください。", true); return; }
+  try {
+    await navigator.clipboard.writeText(text);
+    showMsg("コピーしました。ココフォリア上で Ctrl+V してください。", false);
+  } catch (e) {
+    showMsg("コピーに失敗しました。出力欄を全選択して手動コピーしてください。", true);
   }
 };
 
 addRowBtn.onclick = () => {
   const tbody = document.querySelector("#statusTable tbody");
   tbody.appendChild(buildRow({ label: "", value: 0, max: 0 }));
-};
-
-runBtn.onclick = () => {
-  errEl.textContent = "";
-  if (!_obj) { errEl.textContent = "先に『解析（status表示）』で読み込んでください。"; return; }
-  try {
-    _obj.data.name   = nameInput.value;
-    _obj.data.status = readStatusTable();
-    const out = convertToClipboard(_obj);
-    outputEl.value = JSON.stringify(out);
-    msgEl.textContent = "変換完了。📋 コピーでクリップボードへ送れます。";
-    msgEl.className = "ok small";
-  } catch (e) {
-    errEl.textContent = "変換エラー:\n" + (e && e.message ? e.message : String(e));
-  }
-};
-
-copyBtn.onclick = async () => {
-  errEl.textContent = "";
-  const text = outputEl.value.trim();
-  if (!text) { errEl.textContent = "出力が空です。先に ▶ 実行 を押してください。"; return; }
-  try {
-    await navigator.clipboard.writeText(text);
-    msgEl.textContent = "コピーしました。ココフォリア上で Ctrl+V してください。";
-    msgEl.className = "ok small";
-  } catch (e) {
-    errEl.textContent = "コピーに失敗しました。出力欄を全選択して手動コピーしてください。";
-  }
 };
 </script>
 </body>
