@@ -37,10 +37,10 @@ input[type="text"] {
 
 /* ① テキストエリアの高さを4行分に縮小 */
 textarea {
-  height: 5.5em;   /* 約4行 */
+  height: 2.8em;   /* 約2行 */
   line-height: 1.6;
   resize: vertical;
-  min-height: 4em;
+  min-height: 2.5em;
 }
 
 button {
