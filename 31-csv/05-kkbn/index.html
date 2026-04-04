@@ -8,7 +8,7 @@
 </head>
 <body>
 
-<h1>🧪 流れる行ジェネレーター</h1>
+<h1>🧪 黒板チョーク風SVGジェネレーター</h1>
 <textarea id="textInput">ここに文字をうって生成すればいいよ
 　　　改行もそのまま反映されるよ。</textarea>
 
@@ -24,7 +24,7 @@
 
 <script>
   let cfg = {
-    fontSize:   44,
+    fontSize:   24,
     lineH:      null,
     fontFamily: '"Noto Sans JP","Hiragino Sans","Yu Gothic Medium","Yu Gothic","Meiryo",sans-serif',
     textColor:  '#ffffff',
@@ -34,8 +34,8 @@
     baseDur:    0.18,
     animDur:    0.45,
     rise:       10,
-    marginX:    120,
-    marginY:    160,
+    marginX:    40,
+    marginY:    60,
   };
 
   let lastSvg = '';  // 最後に生成したSVG文字列を保持
