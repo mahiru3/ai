@@ -2,132 +2,132 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>設定（左）</title>
   <link rel="stylesheet" href="../../01-css/31-csv-05-kkbn.css">
-  <style>
-    body    { background:#202020; color:#ddd; padding:10px; text-align:left; }
-    h3      { margin:0 0 8px; font-size:13px; color:#aaa; }
-    section { margin-bottom:12px; border-bottom:1px solid #444; padding-bottom:10px; }
-    label   { display:block; font-size:12px; color:#bbb; margin:6px 0 2px; }
-    input[type="range"]  { width:100%; cursor:pointer; margin-top:2px; }
-    input[type="text"]   { width:100%; box-sizing:border-box; padding:4px 6px; border:1px solid #555; border-radius:4px; background:#333; color:#eee; font-size:12px; }
-    select  { width:100%; box-sizing:border-box; padding:4px 6px; border:1px solid #555; border-radius:4px; background:#333; color:#eee; font-size:12px; }
-    .color-row { display:flex; align-items:center; gap:6px; margin-top:2px; }
-    input[type="color"] { width:28px; height:28px; border:1px solid #555; border-radius:4px; padding:1px; cursor:pointer; background:none; }
-    .hex-input { width:80px; font-family:monospace; font-size:12px; }
-    button  { width:100%; margin:10px 0 0; padding:8px; border:2px solid #888; background:#333; color:#eee; font-size:13px; cursor:pointer; border-radius:4px; }
-    button:hover { background:#444; }
-    .hint   { font-size:11px; color:#888; margin-top:2px; }
-  </style>
 </head>
-<body>
+<body class="navi">
 
-<button id="applyBtn">▶ 設定を反映</button>
+<h3>⚙ 黒板設定</h3>
 
-<section>
-  <b style="font-size:13px">文字</b>
-
-  <label>文字色</label>
-  <div class="color-row">
-    <input type="color" id="textColorPicker" value="#ffffff">
-    <input type="text"  id="textColorHex"    value="#ffffff" class="hex-input">
+<!-- フォントサイズ -->
+<div class="section">
+  <div class="row">
+    <label>文字サイズ</label>
+    <span class="val" id="fontSizeVal">24</span>px
   </div>
+  <input type="range" id="fontSize" min="12" max="72" value="24">
+</div>
 
-  <label>フォントサイズ（px）: <span id="fontSizeVal">44</span></label>
-  <input id="fontSize" type="range" min="10" max="120" value="44" oninput="upd('fontSizeVal',this.value); sendCfg();">
-
-  <label>フォント</label>
-  <select id="fontFamily" onchange="sendCfg()">
-    <option value='"Noto Sans JP","Hiragino Sans","Yu Gothic Medium","Yu Gothic","Meiryo",sans-serif' selected style="font-family:'Yu Gothic'">Yu Gothic / Noto Sans JP</option>
-    <option value='"Yu Mincho","Hiragino Mincho ProN","MS Mincho",serif'                             style="font-family:'Yu Mincho'">Yu Mincho（明朝）</option>
-    <option value='"MS Gothic","MS PGothic",sans-serif'                                              style="font-family:'MS Gothic'">MS ゴシック</option>
-    <option value='"MS Mincho","MS PMincho",serif'                                                   style="font-family:'MS Mincho'">MS 明朝</option>
-    <option value='"Meiryo",sans-serif'                                                              style="font-family:'Meiryo'">メイリオ</option>
-    <option value="serif"                                                                            style="font-family:serif">serif</option>
-    <option value="sans-serif"                                                                       style="font-family:sans-serif">sans-serif</option>
-    <option value='"Courier New",monospace'                                                          style="font-family:'Courier New'">Courier New</option>
-    <option value='"Impact",sans-serif'                                                              style="font-family:'Impact'">Impact</option>
-  </select>
-</section>
-
-<section>
-  <b style="font-size:13px">黒板の色</b>
-
-  <label>色①（左上）</label>
-  <div class="color-row">
-    <input type="color" id="board0picker" value="#173628">
-    <input type="text"  id="board0hex"    value="#173628" class="hex-input">
+<!-- 余白 -->
+<div class="section">
+  <div class="row">
+    <label>左余白 (marginX)</label>
+    <span class="val" id="marginXVal">40</span>
   </div>
+  <input type="range" id="marginX" min="0" max="300" value="40">
 
-  <label>色②（中央）</label>
-  <div class="color-row">
-    <input type="color" id="board1picker" value="#1b402d">
-    <input type="text"  id="board1hex"    value="#1b402d" class="hex-input">
+  <div class="row" style="margin-top:6px">
+    <label>上余白 (marginY)</label>
+    <span class="val" id="marginYVal">60</span>
   </div>
+  <input type="range" id="marginY" min="0" max="300" value="60">
+</div>
 
-  <label>色③（右下）</label>
+<!-- 黒板色 -->
+<div class="color-section">
+  <label style="margin-bottom:6px; display:block;">黒板の色</label>
+
+  <!-- プリセット -->
+  <div class="preset-row" id="presetRow"></div>
+
+  <!-- カスタム -->
   <div class="color-row">
-    <input type="color" id="board2picker" value="#123021">
-    <input type="text"  id="board2hex"    value="#123021" class="hex-input">
+    <label>グラデ①（左上）</label>
+    <input type="color" id="boardColor0" value="#173628">
+    <input class="hex-input" id="boardColor0Hex" value="#173628">
   </div>
-</section>
+  <div class="color-row">
+    <label>グラデ②（中央）</label>
+    <input type="color" id="boardColor1" value="#1b402d">
+    <input class="hex-input" id="boardColor1Hex" value="#1b402d">
+  </div>
+  <div class="color-row">
+    <label>グラデ③（右下）</label>
+    <input type="color" id="boardColor2" value="#123021">
+    <input class="hex-input" id="boardColor2Hex" value="#123021">
+  </div>
+</div>
 
-<section>
-  <b style="font-size:13px">アニメーション</b>
-
-  <label>行間隔（基準x1.6）: <span id="lineHval">自動</span></label>
-  <input id="lineH" type="range" min="20" max="120" value="70" oninput="upd('lineHval',this.value); sendCfg();">
-
-  <label>出現間隔（s）: <span id="baseDurVal">0.18</span></label>
-  <input id="baseDur" type="range" min="0" max="2" value="0.18" step="0.01" oninput="upd('baseDurVal',this.value); sendCfg();">
-
-  <label>アニメ秒数（s）: <span id="animDurVal">0.45</span></label>
-  <input id="animDur" type="range" min="0.05" max="3" value="0.45" step="0.05" oninput="upd('animDurVal',this.value); sendCfg();">
-
-  <label>上昇量（px）: <span id="riseVal">10</span></label>
-  <input id="rise" type="range" min="0" max="60" value="10" oninput="upd('riseVal',this.value); sendCfg();">
-</section>
-
-<h3>設定パネル</h3>
+<button id="applyBtn">▶ 適用して生成</button>
 
 <script>
-  function upd(id, val) { document.getElementById(id).textContent = val; }
+  // ── プリセット定義 ──────────────────────────
+  const PRESETS = [
+    { label: '緑（黒板）',  c0:'#173628', c1:'#1b402d', c2:'#123021' },
+    { label: '濃緑',        c0:'#0d2a1a', c1:'#0f3320', c2:'#081c10' },
+    { label: '黒',          c0:'#1a1a1a', c1:'#222222', c2:'#111111' },
+    { label: '紺',          c0:'#0d1b2a', c1:'#1a2f45', c2:'#09131e' },
+    { label: '茶',          c0:'#2a1a0a', c1:'#3a2410', c2:'#1a0f05' },
+    { label: '赤紫',        c0:'#2a0a1a', c1:'#3d1228', c2:'#1a0510' },
+  ];
 
-  function bindColor(pickerId, hexId) {
-    const picker = document.getElementById(pickerId);
-    const hex    = document.getElementById(hexId);
-    picker.addEventListener('input', () => { hex.value = picker.value.toUpperCase(); sendCfg(); });
-    hex.addEventListener('input', () => {
-      if (/^#[0-9A-Fa-f]{6}$/.test(hex.value)) { picker.value = hex.value; sendCfg(); }
+  // プリセットボタンを動的生成
+  const presetRow = document.getElementById('presetRow');
+  PRESETS.forEach((p, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'preset-btn';
+    btn.title = p.label;
+    btn.style.background = p.c1;
+    if (i === 0) btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      setColor('boardColor0', p.c0);
+      setColor('boardColor1', p.c1);
+      setColor('boardColor2', p.c2);
     });
-  }
-  bindColor('textColorPicker', 'textColorHex');
-  bindColor('board0picker', 'board0hex');
-  bindColor('board1picker', 'board1hex');
-  bindColor('board2picker', 'board2hex');
+    presetRow.appendChild(btn);
+  });
 
-  function getCfg() {
-    return {
+  // ── カラーピッカー↔HEX入力の同期 ──────────
+  ['boardColor0','boardColor1','boardColor2'].forEach(id => {
+    const picker = document.getElementById(id);
+    const hex    = document.getElementById(id + 'Hex');
+    picker.addEventListener('input', () => { hex.value = picker.value; });
+    hex.addEventListener('change', () => {
+      if (/^#[0-9a-fA-F]{6}$/.test(hex.value)) picker.value = hex.value;
+    });
+  });
+
+  function setColor(id, val) {
+    document.getElementById(id).value = val;
+    document.getElementById(id + 'Hex').value = val;
+  }
+
+  // ── スライダー表示値の更新 ──────────────────
+  function bindRange(id, valId) {
+    const el  = document.getElementById(id);
+    const out = document.getElementById(valId);
+    el.addEventListener('input', () => out.textContent = el.value);
+  }
+  bindRange('fontSize', 'fontSizeVal');
+  bindRange('marginX',  'marginXVal');
+  bindRange('marginY',  'marginYVal');
+
+  // ── 適用ボタン → index.html へ postMessage ──
+  document.getElementById('applyBtn').addEventListener('click', () => {
+    const cfg = {
       fontSize:    Number(document.getElementById('fontSize').value),
-      fontFamily:  document.getElementById('fontFamily').value,
-      textColor:   document.getElementById('textColorHex').value,
-      boardColor0: document.getElementById('board0hex').value,
-      boardColor1: document.getElementById('board1hex').value,
-      boardColor2: document.getElementById('board2hex').value,
-      lineH:       Number(document.getElementById('lineH').value),
-      baseDur:     Number(document.getElementById('baseDur').value),
-      animDur:     Number(document.getElementById('animDur').value),
-      rise:        Number(document.getElementById('rise').value),
+      marginX:     Number(document.getElementById('marginX').value),
+      marginY:     Number(document.getElementById('marginY').value),
+      boardColor0: document.getElementById('boardColor0').value,
+      boardColor1: document.getElementById('boardColor1').value,
+      boardColor2: document.getElementById('boardColor2').value,
     };
-  }
-
-  function sendCfg() {
-    const center = parent && parent.frames && parent.frames['center'];
-    if (center) center.postMessage({ type: 'kkbnCfg', cfg: getCfg() }, '*');
-  }
-
-  document.getElementById('applyBtn').addEventListener('click', sendCfg);
+    if (parent && parent.frames && parent.frames['center']) {
+      parent.frames['center'].postMessage({ type: 'kkbnCfg', cfg }, '*');
+    }
+  });
 </script>
 </body>
 </html>
