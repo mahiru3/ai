@@ -123,14 +123,23 @@ function evaluateToken(tok, params, status) {
 }
 
 const RE_FIXED_LINE = /^(CCB<=)\s*(\d+)\s*【([^】]+)】\s*$/;
+const RE_FORM_LINE  = /^CCB<=\s*(\{[^}]+\}\s*\*\s*\d+)\s*【([^】]+)】\s*$/;
 function rewriteCommands(commands) {
   const lines = commands.split(/\r?\n/);
-  const ideographicSpace = "　";
   return lines.map(line => {
-    const m = line.match(RE_FIXED_LINE);
-    if (m) {
-      const label = m[3].trim();
-      return `CCB<={${label}}{BA} 　〈${label}〉`;
+    // CCB<=70 【アイデア】 → CCB<=70{BA} 　〈アイデア〉
+    const mf = line.match(RE_FIXED_LINE);
+    if (mf) {
+      const val   = mf[2].trim();
+      const label = mf[3].trim();
+      return `CCB<=${val}{BA} 　〈${label}〉`;
+    }
+    // CCB<={STR}*5 【STR × 5】 → CCB<={STR}*5 〈STR×5〉
+    const mv = line.match(RE_FORM_LINE);
+    if (mv) {
+      const expr  = mv[1].trim();
+      const label = mv[2].trim().replace(/\s/g, "");
+      return `CCB<=${expr} 　〈${label}〉`;
     }
     return line;
   }).join("\n");
@@ -242,17 +251,6 @@ window.doParse = () => {
       data.commands = data.commands.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n");
     }
 
-    const paramsMap = buildParamMap(data);
-    const powRaw = paramsMap["POW"];
-    const pow = powRaw != null && /^\-?\d+$/.test(powRaw) ? parseInt(powRaw, 10) : null;
-    if (Array.isArray(data.status) && pow !== null) {
-      const sanIdx = data.status.findIndex(s => String(s.label || "").trim().toUpperCase() === "SAN");
-      if (sanIdx >= 0) {
-        data.status[sanIdx].value = pow * 5;
-        data.status[sanIdx].max   = pow * 5;
-      }
-    }
-
     renderStatusTable(Array.isArray(data.status) ? data.status : []);
     statusBox.style.display = "block";
   } catch (e) {
@@ -276,11 +274,26 @@ window.doRun = () => {
 window.doCopy = async () => {
   const text = outputEl.value.trim();
   if (!text) { showMsg("出力が空です。先に実行を押してください。", true); return; }
+  // まずclipboard APIを試す
+  let ok = false;
   try {
     await navigator.clipboard.writeText(text);
+    ok = true;
+  } catch (_) {}
+  // 失敗したらexecCommandフォールバック
+  if (!ok) {
+    try {
+      outputEl.focus();
+      outputEl.select();
+      ok = document.execCommand("copy");
+    } catch (_) {}
+  }
+  if (ok) {
     showMsg("コピーしました。ココフォリア上で Ctrl+V してください。", false);
-  } catch (e) {
-    showMsg("コピーに失敗しました。出力欄を全選択して手動コピーしてください。", true);
+  } else {
+    outputEl.focus();
+    outputEl.select();
+    showMsg("自動コピー失敗。出力欄を選択しました → Ctrl+C でコピーしてください。", true);
   }
 };
 
