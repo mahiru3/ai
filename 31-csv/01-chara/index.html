@@ -251,7 +251,10 @@ window.doParse = () => {
       data.commands = data.commands.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n");
     }
 
-    renderStatusTable(Array.isArray(data.status) ? data.status : []);
+    // × 5 系（例: "STR × 5"）のstatusエントリを除外して元値（STR/CON等）だけ残す
+    const filteredStatus = (Array.isArray(data.status) ? data.status : [])
+      .filter(s => !/[×x]\s*\d/i.test(String(s.label || "")));
+    renderStatusTable(filteredStatus);
     statusBox.style.display = "block";
   } catch (e) {
     showMsg("解析エラー:\n" + (e && e.message ? e.message : String(e)), true);
