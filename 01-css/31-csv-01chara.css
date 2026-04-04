@@ -1,7 +1,8 @@
+/* 01-css/31-csv-01chara.css */
+
 body {
   font: 14px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
 }
-
 .sticky {
   position: sticky;
   top: 0;
@@ -11,26 +12,22 @@ body {
   margin: 0 0 10px;
   border-bottom: 1px solid #e5e5e5;
 }
-
 .title {
   font-size: 18px;
   font-weight: 700;
 }
-
 .box {
   border: 1px solid #ccc;
   border-radius: 10px;
   padding: 14px;
   margin: 8px 0;
 }
-
 .row {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   margin-top: 8px;
 }
-
 textarea,
 input[type="text"] {
   width: 100%;
@@ -38,8 +35,12 @@ input[type="text"] {
   font-size: 13px;
 }
 
+/* ① テキストエリアの高さを4行分に縮小 */
 textarea {
-  height: 220px;
+  height: 5.5em;   /* 約4行 */
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 4em;
 }
 
 button {
@@ -49,41 +50,91 @@ button {
   cursor: pointer;
   background: #fff;
 }
-
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 8px;
 }
-
 th, td {
   border: 1px solid #ddd;
   padding: 6px 8px;
   font-size: 13px;
 }
-
 th {
   background: #fafafa;
 }
-
 .drag {
   cursor: grab;
   width: 2rem;
   text-align: center;
 }
-
 .ok {
   color: #0a7a20;
   font-weight: 600;
 }
-
 .err {
   color: #b00020;
   font-weight: 600;
   white-space: pre-wrap;
 }
-
 .small {
   color: #555;
   font-size: 12px;
+}
+
+/* ② キャラクター名（name）見出し ― POINTスタイル */
+#metaBox {
+  margin-top: 14px;
+}
+
+/* POINTタブ付き見出し風ラベル */
+.name-heading {
+  position: relative;
+  border-top: solid 2px #80c8d1;
+  border-bottom: solid 2px #80c8d1;
+  background: #f4f4f4;
+  line-height: 1.4;
+  padding: 0.4em 0.5em 0.4em 0.6em;
+  margin: 1.4em 0 0.5em;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* タブ部分（POINTラベルに相当） */
+.name-heading::before {
+  content: '👤 NAME';
+  position: absolute;
+  background: #80c8d1;
+  color: #fff;
+  left: 0;
+  bottom: 100%;
+  border-radius: 5px 5px 0 0;
+  padding: 4px 8px 3px;
+  font-size: 0.65em;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* 名前入力フィールド（見出しの直下） */
+#nameInput {
+  width: 100%;
+  font-size: 15px;
+  font-family: system-ui, sans-serif;
+  font-weight: 600;
+  padding: 6px 10px;
+  border: 1px solid #b0d8e0;
+  border-radius: 6px;
+  background: #fff;
+  margin-top: 4px;
+  box-sizing: border-box;
+}
+#nameInput:focus {
+  outline: none;
+  border-color: #80c8d1;
+  box-shadow: 0 0 0 2px rgba(128, 200, 209, 0.25);
 }
