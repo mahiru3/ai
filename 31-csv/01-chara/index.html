@@ -11,10 +11,6 @@
 
 <div class="sticky">
   <div class="title">いあきゃら → ココフォリア 変換</div>
-  <div class="small">
-    1) いあきゃら貼り付け → <b>解析</b> statusの並び替え/追加/削除/編集 &amp; name編集 →
-    2) <b>▶ 実行</b> → 3) <b>📋 コピー</b>
-  </div>
 </div>
 
 <div class="box">
@@ -36,17 +32,14 @@
     <span id="msg" class="small"></span>
   </div>
 
-  <!-- ② キャラクター名：見出しの中に直接入力 -->
+  <!-- キャラクター名：inputのみ（name-heading内） -->
   <div id="metaBox" style="display:none">
     <div class="name-heading">
-      キャラクター名（name）
-      <input id="nameInput" type="text" placeholder="ここに名前が入ります">
+      <input id="nameInput" type="text" placeholder="キャラクター名">
     </div>
   </div>
 
   <div id="statusBox" class="small" style="display:none;margin-top:8px">
-    <b>status 並び替え・編集・追加/削除</b>
-    <div class="small">行をドラッグして並び替え可能。値は直接編集できます。</div>
     <table id="statusTable">
       <thead>
         <tr>
@@ -264,8 +257,6 @@ parseBtn.onclick = () => {
 
     renderStatusTable(Array.isArray(data.status) ? data.status : []);
     statusBox.style.display = "block";
-    msgEl.textContent = "status を並び替え／追加／削除／編集し、name を必要なら変更してから ▶ 実行。";
-    msgEl.className = "ok small";
   } catch (e) {
     errEl.textContent = "解析エラー:\n" + (e && e.message ? e.message : String(e));
   }
