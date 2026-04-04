@@ -120,21 +120,24 @@ th {
   white-space: nowrap;
 }
 
-/* 名前入力フィールド（見出しの直下） */
-#nameInput {
-  width: 100%;
-  font-size: 15px;
+
+/* 見出し内に一体化した名前入力フィールド */
+.name-heading #nameInput {
+  flex: 1;
+  font-size: 16px;
   font-family: system-ui, sans-serif;
-  font-weight: 600;
-  padding: 6px 10px;
-  border: 1px solid #b0d8e0;
-  border-radius: 6px;
-  background: #fff;
-  margin-top: 4px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border: none;
+  border-bottom: 2px dashed #b0d8e0;
+  border-radius: 0;
+  background: transparent;
+  color: #222;
   box-sizing: border-box;
+  min-width: 0;
 }
-#nameInput:focus {
+.name-heading #nameInput:focus {
   outline: none;
-  border-color: #80c8d1;
-  box-shadow: 0 0 0 2px rgba(128, 200, 209, 0.25);
+  border-bottom-color: #80c8d1;
+  background: rgba(255,255,255,0.5);
 }
