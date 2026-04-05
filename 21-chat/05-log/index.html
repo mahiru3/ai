@@ -23,7 +23,7 @@
         <input type="file" id="fileInput" accept=".html,.htm" />
       </div>
       <div class="file-name" id="fileName">ファイル未選択</div>
-      <button class="menu-btn primary" id="btnAnalyze" disabled>🔍 解析する</button>
+      <button class="btn-hover-21 bh-yellow" id="btnAnalyze" disabled><span>🔍 解析する</span></button>
       <div class="status-msg" id="loadStatus"></div>
     </div>
   </details>
@@ -72,10 +72,10 @@
     <summary>④ プレビュー・ダウンロード（元構造）</summary>
     <div class="accordion-body">
       <p style="font-size:11px;color:#888;margin:0 0 8px;">元のCCFolia HTML構造のまま出力。発言者名置換・非表示除去・&lt;br&gt;分割のみ。</p>
-      <div class="menu-btn-row">
-        <button class="menu-btn" id="btnPreview">👁 プレビュー更新</button>
-        <button class="menu-btn dl-orig" id="btnDownload">💾 HTMLダウンロード（元構造）</button>
-        <button class="menu-btn reset" id="btnReset">🔄 リセット</button>
+      <div class="btn-row-21">
+        <button class="btn-hover-21 bh-gray" id="btnPreview"><span>👁 プレビュー更新</span></button>
+        <button class="btn-hover-21 bh-green" id="btnDownload"><span>💾 HTMLダウンロード（元構造）</span></button>
+        <button class="btn-hover-21 bh-red" id="btnReset"><span>🔄 リセット</span></button>
       </div>
       <div class="preview-wrap" id="previewWrap" style="margin-top:10px;">
         <div class="preview-empty">「プレビュー更新」をクリックしてください</div>
@@ -103,7 +103,7 @@
           <span>種別が変わる前後に空行を入れる</span>
         </label>
       </div>
-      <button class="menu-btn dl-fmt" id="btnFormatDownload">💾 整形HTMLダウンロード</button>
+      <button class="btn-hover-21 bh-blue" id="btnFormatDownload"><span>💾 整形HTMLダウンロード</span></button>
       <div class="status-msg" id="formatStatus"></div>
     </div>
   </details>
@@ -273,7 +273,7 @@ function renderTable() {
         <input type="text" class="sp-input" id="bulkRenameInput" placeholder="変更後の名前">
       </td>
       <td>
-        <button class="menu-btn bulk-apply-btn" id="btnBulkApply" type="button">まとめて変更</button>
+        <button class="btn-hover-21 bh-gray bulk-apply-btn" id="btnBulkApply" type="button"><span>まとめて変更</span></button>
       </td>
     </tr>`;
 
