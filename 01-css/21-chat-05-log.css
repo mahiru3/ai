@@ -115,53 +115,10 @@ body {
 .file-name.loaded { color: #3d6e99; font-weight: 600; }
 
 /* =============================================
-   ボタン（03-migi.html準拠スタイル）
+   ボタン：btn-hover-21ベース ログツール内調整
    ============================================= */
-.menu-btn {
-  display: block;
-  padding: 8px 10px;
-  margin: 5px 0;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  color: #222;
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  width: 100%;
-  text-align: left;
-  transition: background .15s, border-color .15s;
-  font-family: inherit;
-}
-.menu-btn:hover { background: #f3f7ff; border-color: #bcd3ff; }
-.menu-btn:active { transform: translateY(1px); }
-.menu-btn:disabled { color: #bbb; border-color: #eee; cursor: not-allowed; background: #fafafa; }
-
-.menu-btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
-.menu-btn-row .menu-btn { width: auto; flex: 1 1 auto; }
-
-/* 解析ボタン（目立たせる） */
-.menu-btn.primary {
-  background: #fff9e0; border-color: #f0cc50; color: #7a5800; font-weight: 700;
-}
-.menu-btn.primary:hover { background: #fff3c0; border-color: #d0a800; }
-
-/* ダウンロード系 */
-.menu-btn.dl-orig {
-  background: #f0faf0; border-color: #8dcc8d; color: #2a6a2a;
-}
-.menu-btn.dl-orig:hover { background: #e0f5e0; border-color: #5aaa5a; }
-
-.menu-btn.dl-fmt {
-  background: #eef4ff; border-color: #9bbcf5; color: #1a4a9a;
-}
-.menu-btn.dl-fmt:hover { background: #ddeeff; border-color: #5a8ae0; }
-
-.menu-btn.reset {
-  background: #fff2ee; border-color: #f0a080; color: #a03820;
-}
-.menu-btn.reset:hover { background: #ffe8e0; border-color: #d06040; }
+.menu-btn-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.menu-btn-row .btn-hover-21 { flex: 1 1 auto; justify-content: center; }
 
 /* =============================================
    ステータス
@@ -253,7 +210,7 @@ table.sp-table tr:hover td { background: #f4f8ff; }
   padding: 3px 6px; border: 1px solid #ddd; border-radius: 4px;
   font-size: 12px; cursor: pointer;
 }
-.bulk-tab-bar .menu-btn { margin: 0; padding: 4px 12px; width: auto; }
+.bulk-tab-bar .btn-hover-21 { margin: 0; padding: 4px 12px; }
 
 /* =============================================
    整形オプション
@@ -391,9 +348,4 @@ table.sp-table tr:hover td { background: #f4f8ff; }
   display: flex; gap: 6px; align-items: center;
 }
 .bulk-action-row .sp-input { flex: 1; min-width: 0; }
-.bulk-apply-btn {
-  flex-shrink: 0; padding: 4px 12px; width: auto;
-  background: #3d6e99; color: #fff; border-color: #3d6e99;
-  font-weight: 700;
-}
-.bulk-apply-btn:hover { background: #2f5a80; border-color: #2f5a80; }
+.bulk-apply-btn { flex-shrink: 0; }
