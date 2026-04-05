@@ -10,7 +10,7 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">📝 ログ整形ツール</h1>
+  <h1 class="page-title">📝 ログ整形ツール！！</h1>
   <p class="page-subtitle">CCFoliaのHTMLログを読み込み、発言者を整理してHTMLでダウンロードします。ページ内完結・サーバー送信なし。</p>
 
   <!-- ① ファイル読み込み -->
@@ -32,27 +32,16 @@
   <details class="accordion-008 acc-color-2" id="acc-2">
     <summary>② 発言者一覧</summary>
     <div class="accordion-body">
-      <!-- 一括タブ変更バー -->
-      <div class="bulk-tab-bar">
-        <span style="font-size:12px;font-weight:700;color:#555;">一括変更：</span>
-        <label><input type="checkbox" class="tab-check" data-tabkey="[main]" /> [main]</label>
-        <label><input type="checkbox" class="tab-check" data-tabkey="[info]" /> [info]</label>
-        <label><input type="checkbox" class="tab-check" data-tabkey="[other]" /> [other]</label>
-        <span style="font-size:12px;color:#777;">→</span>
-        <select id="bulkTabValue">
-          <option value="[main]">[main]</option>
-          <option value="[info]">[info]</option>
-          <option value="[other]">[other]</option>
-        </select>
-        <button class="menu-btn" id="btnBulkTab" style="padding:4px 12px;width:auto;">まとめて変更</button>
-      </div>
 
-      <div class="sp-table-wrap" style="margin-top:8px;">
+      <div class="sp-table-wrap">
         <table class="sp-table" id="spTable">
           <thead>
             <tr>
+              <th class="no-sort cb-cell"></th>
               <th data-col="tab"  class="sort-none">タブ名<span class="sort-icon"></span></th>
+              <th class="no-sort cb-cell"></th>
               <th data-col="kind" class="sort-none">種別<span class="sort-icon"></span></th>
+              <th class="no-sort cb-cell"></th>
               <th data-col="name" class="sort-none">変更前<span class="sort-icon"></span></th>
               <th class="no-sort">変更後</th>
             </tr>
@@ -132,18 +121,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const col = th.dataset.col;
     sortDir = (sortCol === col && sortDir === "asc") ? "desc" : "asc";
     sortCol = col;
-    renderTable();
-  });
-
-  document.getElementById("btnBulkTab").addEventListener("click", () => {
-    const newTab  = document.getElementById("bulkTabValue").value;
-    const checks  = document.querySelectorAll(".tab-check:checked");
-    const targets = new Set([...checks].map(cb => cb.dataset.tabkey));
-    Object.keys(speakerMap).forEach(key => {
-      if (targets.has(speakerMap[key].dispTab)) {
-        speakerMap[key].dispTab = newTab;
-      }
-    });
     renderTable();
   });
 
