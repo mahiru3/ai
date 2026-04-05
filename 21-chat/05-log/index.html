@@ -10,7 +10,7 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">📝 ログ整形ツール📝</h1>
+  <h1 class="page-title">📝 ログ整形ツール！！</h1>
   <p class="page-subtitle">CCFoliaのHTMLログを読み込み、発言者を整理してHTMLでダウンロードします。ページ内完結・サーバー送信なし。</p>
 
   <!-- ① ファイル読み込み -->
@@ -30,7 +30,7 @@
 
   <!-- ② 発言者一覧 -->
   <details class="accordion-008 acc-color-2" id="acc-2">
-    <summary>② 発言者一覧</summary>
+    <summary>② 発言者一覧<button class="btn-hover-21 bh-green summary-btn" id="btnRefresh" type="button"><span>🔃 更新</span></button></summary>
     <div class="accordion-body">
       <div class="sp-table-wrap">
         <table class="sp-table" id="spTable">
@@ -242,10 +242,11 @@ function renderTable() {
   // 一括変更行HTML（4列）
   const bulkHtml = `
     <tr class="bulk-label-row">
-      <td colspan="3"><span class="bulk-label">▼ 一括変更</span></td>
-      <td><button class="btn-hover-21 bh-gray bulk-apply-btn" id="btnBulkApply" type="button"><span>まとめて変更</span></button></td>
+      <td colspan="4">
+        <button class="btn-hover-21 bh-gray bulk-toggle-btn" id="btnBulkToggle" type="button"><span>🔄 一括変更</span></button>
+      </td>
     </tr>
-    <tr class="bulk-row">
+    <tr class="bulk-row" id="bulkInputRow" style="display:none;">
       <td class="cb-with-val">
         <div class="bulk-tab-cell">
           <select class="bulk-tab-select" id="bulkTabSelect">${tabPresetOpts}</select>
@@ -255,7 +256,7 @@ function renderTable() {
       </td>
       <td><select class="kind-select k-chara" id="bulkKindSelect">${bulkKindOpts}</select></td>
       <td colspan="2">
-        <input type="text" class="sp-input" id="bulkRenameInput" placeholder="変更後の名前（変更前☐にチェックした行に適用）">
+        <input type="text" class="sp-input" id="bulkRenameInput" placeholder="変更後の名前">
       </td>
     </tr>`;
 
@@ -283,17 +284,25 @@ function renderTable() {
 
   /* --- 一括変更イベント --- */
 
+  // 🔄一括変更ボタン：トグルで入力行を開閉
+  document.getElementById("btnBulkToggle").addEventListener("click", () => {
+    const row = document.getElementById("bulkInputRow");
+    const btn = document.getElementById("btnBulkToggle");
+    const open = row.style.display === "none" || row.style.display === "";
+    row.style.display = open ? "" : "none";
+    btn.querySelector("span").textContent = open ? "✖ 一括変更を閉じる" : "🔄 一括変更";
+  });
+
   // タブselectが変わったらtextをクリア
   document.getElementById("bulkTabSelect").addEventListener("change", () => {
     document.getElementById("bulkTabInput").value = "";
   });
-  // text入力したらselectの見た目をリセット（値は後でtextを優先）
   document.getElementById("bulkTabInput").addEventListener("input", () => {
     document.getElementById("bulkTabSelect").selectedIndex = 0;
   });
 
-  // まとめて変更
-  document.getElementById("btnBulkApply").addEventListener("click", () => {
+  // 一括適用関数
+  function applyBulk() {
     const tabInput = document.getElementById("bulkTabInput").value.trim();
     const tabSel   = document.getElementById("bulkTabSelect").value;
     const newTab   = tabInput !== "" ? tabInput : tabSel;
@@ -311,16 +320,41 @@ function renderTable() {
       if (nameChecked.has(key) && newName !== "") { speakerMap[key].rename = newName; changed++; }
     });
 
-    renderTable();
-    if (changed > 0)
+    if (changed > 0) {
+      renderTable();
       showStatus(document.getElementById("analyzeStatus"), `${changed} 件を変更しました`, "ok");
-  });
+    }
+  }
+
+  // Enterキーで適用
+  document.getElementById("bulkTabInput").addEventListener("keydown",    e => { if (e.key==="Enter") applyBulk(); });
+  document.getElementById("bulkRenameInput").addEventListener("keydown", e => { if (e.key==="Enter") applyBulk(); });
+  document.getElementById("bulkKindSelect").addEventListener("change",   () => applyBulk());
+  document.getElementById("bulkTabSelect").addEventListener("change",    () => { document.getElementById("bulkTabInput").value=""; applyBulk(); });
 
   /* --- ソートアイコン更新 --- */
   document.querySelectorAll("#spTable th[data-col]").forEach(th => {
     th.className = th.dataset.col === sortCol ? "sort-" + sortDir : "sort-none";
   });
 }
+
+// 「更新」ボタン：renameをnameに昇格、renameをクリア
+document.getElementById("btnRefresh").addEventListener("click", () => {
+  let count = 0;
+  Object.keys(speakerMap).forEach(key => {
+    const sp = speakerMap[key];
+    if (sp.rename.trim() !== "") {
+      sp.name   = sp.rename.trim();
+      sp.rename = "";
+      // speakerMapのキーは変えないが表示名を更新
+      count++;
+    }
+  });
+  if (count > 0) {
+    renderTable();
+    showStatus(document.getElementById("analyzeStatus"), `${count} 件の変更前を更新しました`, "ok");
+  }
+});
 
 // ソートクリック
 document.getElementById("spTable").addEventListener("click", e => {
