@@ -10,7 +10,7 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">📝 ログ整形ツール！</h1>
+  <h1 class="page-title">📝 ログ整形ツール！！</h1>
   <p class="page-subtitle">CCFoliaのHTMLログを読み込み、発言者を整理してHTMLでダウンロードします。ページ内完結・サーバー送信なし。</p>
 
   <!-- ① ファイル読み込み -->
@@ -36,9 +36,27 @@
         <table class="sp-table" id="spTable">
           <thead>
             <tr>
-              <th data-col="tab"  class="sort-none">タブ名<span class="sort-icon"></span></th>
-              <th data-col="kind" class="sort-none">種別<span class="sort-icon"></span></th>
-              <th data-col="name" class="sort-none">変更前<span class="sort-icon"></span></th>
+              <th data-col="tab"  class="sort-none th-with-filter">
+                <div class="th-inner">
+                  <label class="th-cb-label"><input type="checkbox" id="chkAllTab" class="th-cb"><span>タブ名</span></label>
+                  <button class="filter-btn" data-col="tab"  title="フィルタ">▼</button>
+                </div>
+                <div class="filter-drop" id="filterDrop-tab"></div>
+              </th>
+              <th data-col="kind" class="sort-none th-with-filter">
+                <div class="th-inner">
+                  <label class="th-cb-label"><input type="checkbox" id="chkAllKind" class="th-cb"><span>種別</span></label>
+                  <button class="filter-btn" data-col="kind" title="フィルタ">▼</button>
+                </div>
+                <div class="filter-drop" id="filterDrop-kind"></div>
+              </th>
+              <th data-col="name" class="sort-none th-with-filter">
+                <div class="th-inner">
+                  <label class="th-cb-label"><input type="checkbox" id="chkAllName" class="th-cb"><span>変更前</span></label>
+                  <button class="filter-btn" data-col="name" title="フィルタ">▼</button>
+                </div>
+                <div class="filter-drop" id="filterDrop-name"></div>
+              </th>
               <th class="no-sort">変更後</th>
             </tr>
           </thead>
@@ -119,6 +137,10 @@ let speakerMap = {};  // key=origTab+"::"+name → {origTab,dispTab,name,kind,re
 let tableOrder = [];
 let sortCol    = null;
 let sortDir    = "asc";
+// フィルタ状態：null=全表示、Set=表示する値のセット
+let filterTab  = null;
+let filterKind = null;
+let filterName = null;
 
 /* ------------------------------------------
    ファイル読み込み
@@ -213,8 +235,17 @@ function renderTable() {
     return 0;
   });
 
-  // データ行HTML生成（4列：☐タブ名 | ☐種別 | ☐変更前 | 変更後）
-  const dataRowsHtml = sorted.map(key => {
+  // フィルタ更新（ドロップダウンの中身を現在の値で生成）
+  _buildFilterDrops(sorted);
+
+  // データ行HTML生成（4列：☐タブ名 | ☐種別 | ☐変更前 | 変更後）フィルタ適用
+  const dataRowsHtml = sorted.filter(key => {
+    const sp = speakerMap[key];
+    if (filterTab  && !filterTab.has(sp.dispTab))        return false;
+    if (filterKind && !filterKind.has(sp.kind))          return false;
+    if (filterName && !filterName.has(sp.name))          return false;
+    return true;
+  }).map(key => {
     const sp       = speakerMap[key];
     const tabRaw   = sp.dispTab.replace(/[\[\] ]/g, "");
     const tabClass = tabRaw==="main" ? "tab-main" : tabRaw==="info" ? "tab-info" : "tab-other";
@@ -346,15 +377,103 @@ document.getElementById("btnRefresh").addEventListener("click", () => {
   }
 });
 
-// ソートクリック
+// =============================================
+// フィルタ ドロップダウン構築
+// =============================================
+function _buildFilterDrops(sorted) {
+  // 各列のユニーク値収集
+  const vals = {
+    tab:  [...new Set(sorted.map(k => speakerMap[k].dispTab))],
+    kind: [...new Set(sorted.map(k => speakerMap[k].kind))],
+    name: [...new Set(sorted.map(k => speakerMap[k].name))]
+  };
+  const kindLabel = { chara:"キャラ", event:"テキスト", scene:"シーン", system:"非表示" };
+  const filters   = { tab: filterTab, kind: filterKind, name: filterName };
+
+  ["tab","kind","name"].forEach(col => {
+    const drop = document.getElementById("filterDrop-" + col);
+    if (!drop) return;
+    const cur = filters[col]; // 現在のフィルタSet or null
+    drop.innerHTML =
+      `<div class="fd-item"><label><input type="checkbox" class="fd-all" data-col="${col}"${!cur?" checked":""}> （すべて）</label></div>` +
+      vals[col].map(v => {
+        const disp = col==="kind" ? (kindLabel[v]||v) : v;
+        const checked = !cur || cur.has(v) ? " checked" : "";
+        return `<div class="fd-item"><label><input type="checkbox" class="fd-val" data-col="${col}" data-val="${e(v)}"${checked}> ${e(disp)}</label></div>`;
+      }).join("");
+
+    // イベント（再登録防止のためcloneで差し替え済みなのでそのまま登録）
+    drop.querySelectorAll(".fd-all").forEach(cb => {
+      cb.addEventListener("change", () => {
+        drop.querySelectorAll(".fd-val").forEach(v => v.checked = cb.checked);
+        _applyFilter(col);
+      });
+    });
+    drop.querySelectorAll(".fd-val").forEach(cb => {
+      cb.addEventListener("change", () => {
+        const all = [...drop.querySelectorAll(".fd-val")].every(v => v.checked);
+        drop.querySelector(".fd-all").checked = all;
+        _applyFilter(col);
+      });
+    });
+  });
+}
+
+function _applyFilter(col) {
+  const drop   = document.getElementById("filterDrop-" + col);
+  const checked = [...drop.querySelectorAll(".fd-val:checked")].map(v => v.dataset.val);
+  const all     = drop.querySelector(".fd-all").checked;
+  if      (col==="tab")  filterTab  = all ? null : new Set(checked);
+  else if (col==="kind") filterKind = all ? null : new Set(checked);
+  else if (col==="name") filterName = all ? null : new Set(checked);
+  // フィルタボタンに適用中マーク
+  const btn = document.querySelector(`.filter-btn[data-col="${col}"]`);
+  if (btn) btn.classList.toggle("filter-active", !all);
+  renderTable();
+}
+
+// フィルタドロップダウン 開閉
 document.getElementById("spTable").addEventListener("click", e => {
+  const btn = e.target.closest(".filter-btn");
+  if (btn) {
+    e.stopPropagation();
+    const col  = btn.dataset.col;
+    const drop = document.getElementById("filterDrop-" + col);
+    const open = drop.classList.contains("open");
+    // 全部閉じる
+    document.querySelectorAll(".filter-drop").forEach(d => d.classList.remove("open"));
+    if (!open) drop.classList.add("open");
+    return;
+  }
+  // ソートクリック（filter-btn以外のth）
   const th = e.target.closest("th[data-col]");
-  if (!th) return;
+  if (!th || e.target.closest(".filter-btn") || e.target.closest(".filter-drop") || e.target.closest(".th-cb-label")) return;
   const col = th.dataset.col;
   sortDir = sortCol === col && sortDir === "asc" ? "desc" : "asc";
   sortCol = col;
   renderTable();
 });
+
+// ドロップダウン外クリックで閉じる
+document.addEventListener("click", e => {
+  if (!e.target.closest(".th-with-filter")) {
+    document.querySelectorAll(".filter-drop").forEach(d => d.classList.remove("open"));
+  }
+});
+
+// 全選択チェックボックス
+document.getElementById("spTable").addEventListener("change", e => {
+  const cb = e.target;
+  if (cb.id === "chkAllTab") {
+    document.querySelectorAll(".cb-tab").forEach(c => c.checked = cb.checked);
+  } else if (cb.id === "chkAllKind") {
+    document.querySelectorAll(".cb-kind").forEach(c => c.checked = cb.checked);
+  } else if (cb.id === "chkAllName") {
+    document.querySelectorAll(".cb-name").forEach(c => c.checked = cb.checked);
+  }
+});
+
+// ソートはフィルタclickハンドラ内に統合済み
 
 /* ------------------------------------------
    ④ プレビュー
