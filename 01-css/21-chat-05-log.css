@@ -394,3 +394,22 @@ table.sp-table tr:hover td { background: #f4f8ff; }
 .bulk-label-row td {
   padding: 4px 6px !important;
 }
+
+/* 列ごとの🔄一括変更ボタン行 */
+.bulk-sep-row td {
+  border-top: 2px solid #d8d4ce !important;
+  padding: 0 !important;
+  height: 0;
+}
+.bulk-btn-row td { background: #f5f3f0; padding: 4px 6px !important; }
+.col-bulk-btn {
+  width: 100%; justify-content: center;
+  padding: 4px 6px; font-size: 11px; font-weight: 600;
+}
+.bulk-input-row td { background: #faf9f7; padding: 5px 6px !important; vertical-align: middle; }
+#bulkTabSelect, #bulkTabInput {
+  font-size: 11px; padding: 3px 4px;
+  border: 1px solid #ddd; border-radius: 4px;
+}
+#bulkTabInput { width: 70px; }
+#bulkTabInput:focus { outline: none; border-color: #7ba4c7; }
