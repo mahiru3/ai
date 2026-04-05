@@ -10,435 +10,148 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">📝 ログ整形ツール！</h1>
+  <h1 class="page-title">📝 ログ整形ツール</h1>
   <p class="page-subtitle">CCFoliaのHTMLログを読み込み、発言者を整理してHTMLでダウンロードします。ページ内完結・サーバー送信なし。</p>
 
   <!-- ① ファイル読み込み -->
-  <div class="section">
-    <div class="section-title">① ファイル読み込み</div>
-    <div class="drop-zone" id="dropZone">
-      <span class="drop-icon">📂</span>
-      ここにCCFoliaのHTMLファイルをドラッグ＆ドロップ<br>またはクリックして選択
-      <input type="file" id="fileInput" accept=".html,.htm" />
+  <details class="accordion-008 acc-color-1" id="acc-1" open>
+    <summary>① ファイル読み込み</summary>
+    <div class="accordion-body">
+      <div class="drop-zone" id="dropZone">
+        <span class="drop-icon">📂</span>
+        ここにCCFoliaのHTMLファイルをドラッグ＆ドロップ<br>またはクリックして選択
+        <input type="file" id="fileInput" accept=".html,.htm" />
+      </div>
+      <div class="file-name" id="fileName">ファイル未選択</div>
+      <button class="menu-btn primary" id="btnAnalyze" disabled style="margin-top:8px;">🔍 解析する</button>
+      <div class="status-msg" id="loadStatus"></div>
     </div>
-    <div class="file-name" id="fileName">ファイル未選択</div>
-    <div style="margin-top:10px;">
-      <button class="btn-primary" id="btnAnalyze" disabled>🔍 解析する</button>
-    </div>
-    <div class="status-msg" id="loadStatus"></div>
-  </div>
+  </details>
 
   <!-- ② 発言者一覧 -->
-  <div class="section" id="speakerSection" style="display:none;">
-    <div class="section-title">
-      ② 発言者一覧
-      <span class="sub">タブ名・変更前・種別 でソートできます／変更後に名前を入力すると整形時に置換されます</span>
-    </div>
-    <div class="sp-table-wrap">
-      <table class="sp-table" id="spTable">
-        <thead>
-          <tr>
-            <th data-col="tab" class="sort-none">タブ名<span class="sort-icon"></span></th>
-            <th data-col="name" class="sort-none">変更前<span class="sort-icon"></span></th>
-            <th data-col="kind" class="sort-none">種別<span class="sort-icon"></span></th>
-            <th class="no-sort">変更後</th>
-          </tr>
-        </thead>
-        <tbody id="spTbody"></tbody>
-      </table>
-    </div>
-    <div class="status-msg" id="analyzeStatus"></div>
-  </div>
+  <details class="accordion-008 acc-color-2" id="acc-2">
+    <summary>② 発言者一覧</summary>
+    <div class="accordion-body">
+      <!-- 一括タブ変更バー -->
+      <div class="bulk-tab-bar">
+        <span style="font-size:12px;font-weight:700;color:#555;">一括変更：</span>
+        <label><input type="checkbox" class="tab-check" data-tabkey="[main]" /> [main]</label>
+        <label><input type="checkbox" class="tab-check" data-tabkey="[info]" /> [info]</label>
+        <label><input type="checkbox" class="tab-check" data-tabkey="[other]" /> [other]</label>
+        <span style="font-size:12px;color:#777;">→</span>
+        <select id="bulkTabValue">
+          <option value="[main]">[main]</option>
+          <option value="[info]">[info]</option>
+          <option value="[other]">[other]</option>
+        </select>
+        <button class="menu-btn" id="btnBulkTab" style="padding:4px 12px;width:auto;">まとめて変更</button>
+      </div>
 
-  <!-- ③ 種別「非表示」設定のみ（④用） -->
-  <div class="section" id="optionSection" style="display:none;">
-    <div class="section-title">③ 除外設定</div>
-    <div class="option-grid">
+      <div class="sp-table-wrap" style="margin-top:8px;">
+        <table class="sp-table" id="spTable">
+          <thead>
+            <tr>
+              <th data-col="tab"  class="sort-none">タブ名<span class="sort-icon"></span></th>
+              <th data-col="kind" class="sort-none">種別<span class="sort-icon"></span></th>
+              <th data-col="name" class="sort-none">変更前<span class="sort-icon"></span></th>
+              <th class="no-sort">変更後</th>
+            </tr>
+          </thead>
+          <tbody id="spTbody"></tbody>
+        </table>
+      </div>
+      <div class="status-msg" id="analyzeStatus"></div>
+    </div>
+  </details>
+
+  <!-- ③ 除外設定 -->
+  <details class="accordion-008 acc-color-3" id="acc-3">
+    <summary>③ 除外設定</summary>
+    <div class="accordion-body">
       <label class="option-item">
         <input type="checkbox" id="optHideSystem" checked />
-        <span>種別「非表示」の発言者を除外する</span>
+        <span>種別「非表示」の発言者を出力から除外する</span>
       </label>
     </div>
-  </div>
+  </details>
 
-  <!-- ④ プレビュー・元構造のままダウンロード -->
-  <div class="section" id="previewSection" style="display:none;">
-    <div class="section-title">④ プレビュー・ダウンロード
-      <span class="sub">元のCCFolia HTML構造のまま出力（発言者名置換・非表示除去のみ）</span>
+  <!-- ④ プレビュー・元構造ダウンロード -->
+  <details class="accordion-008 acc-color-4" id="acc-4">
+    <summary>④ プレビュー・ダウンロード（元構造）</summary>
+    <div class="accordion-body">
+      <p style="font-size:11px;color:#888;margin:0 0 8px;">元のCCFolia HTML構造のまま出力。発言者名置換・非表示除去・&lt;br&gt;分割のみ。</p>
+      <div class="menu-btn-row">
+        <button class="menu-btn" id="btnPreview">👁 プレビュー更新</button>
+        <button class="menu-btn dl-orig" id="btnDownload">💾 HTMLダウンロード（元構造）</button>
+        <button class="menu-btn reset" id="btnReset">🔄 リセット</button>
+      </div>
+      <div class="preview-wrap" id="previewWrap" style="margin-top:10px;">
+        <div class="preview-empty">「プレビュー更新」をクリックしてください</div>
+      </div>
+      <div class="status-msg" id="processStatus"></div>
     </div>
-    <div class="btn-row" style="margin-bottom:12px;">
-      <button class="btn-primary" id="btnPreview">👁 プレビュー更新</button>
-      <button class="btn-primary" id="btnDownload">💾 HTMLダウンロード（元構造）</button>
-      <button class="btn-secondary" id="btnReset">🔄 リセット</button>
-    </div>
-    <div class="preview-wrap" id="previewWrap">
-      <div class="preview-empty">「プレビュー更新」をクリックしてください</div>
-    </div>
-    <div class="status-msg" id="processStatus"></div>
-  </div>
+  </details>
 
   <!-- ⑤ 整形ダウンロード -->
-  <div class="section" id="formatSection" style="display:none;">
-    <div class="section-title">⑤ 整形ダウンロード
-      <span class="sub">独自スタイルを付与した整形HTMLを出力</span>
+  <details class="accordion-008 acc-color-5" id="acc-5">
+    <summary>⑤ 整形ダウンロード</summary>
+    <div class="accordion-body">
+      <p style="font-size:11px;color:#888;margin:0 0 8px;">タグ装飾を付与した整形HTMLを出力します。</p>
+      <div class="option-grid" style="margin-bottom:10px;">
+        <label class="option-item">
+          <input type="checkbox" id="optTab" checked />
+          <span>タブ名（[main]等）を表示</span>
+        </label>
+        <label class="option-item">
+          <input type="checkbox" id="optSkill" checked />
+          <span>〈技能名〉を強調表示</span>
+        </label>
+        <label class="option-item">
+          <input type="checkbox" id="optSpaceBetween" checked />
+          <span>種別が変わる前後に空行を入れる</span>
+        </label>
+      </div>
+      <button class="menu-btn dl-fmt" id="btnFormatDownload">💾 整形HTMLダウンロード</button>
+      <div class="status-msg" id="formatStatus"></div>
     </div>
-    <div class="option-grid" style="margin-bottom:12px;">
-      <label class="option-item">
-        <input type="checkbox" id="optTab" checked />
-        <span>タブ名（[main]等）を表示</span>
-      </label>
-      <label class="option-item">
-        <input type="checkbox" id="optSkill" checked />
-        <span>〈技能名〉を強調表示</span>
-      </label>
-      <label class="option-item">
-        <input type="checkbox" id="optSpaceBetween" checked />
-        <span>種別が変わる前後に空行を入れる</span>
-      </label>
-    </div>
-    <div class="btn-row">
-      <button class="btn-primary" id="btnFormatDownload">💾 整形HTMLダウンロード</button>
-    </div>
-    <div class="status-msg" id="formatStatus"></div>
-  </div>
+  </details>
 
 </div><!-- /page-wrap -->
 
+<script src="../../03-js/21-chat-05-log.js"></script>
 <script>
-// =============================================
-// 定数・状態
-// =============================================
-const KIND_LABEL = { chara:"キャラ", event:"テキスト", scene:"シーン", system:"非表示" };
-const KIND_ORDER = { chara:0, event:1, scene:2, system:3 };
+document.addEventListener("DOMContentLoaded", () => {
 
-let rawHtml    = "";   // 元のHTML文字列（そのまま保持）
-let fileName   = "";
-let parsedDoc  = null; // 元HTMLをDOMParserで解析したDocument
-let speakerMap = {};   // key=tab+"::"+name → { tab, name, kind, rename }
-let tableOrder = [];
-let sortCol    = null;
-let sortDir    = "asc";
+  initFileInput();
 
-// =============================================
-// ファイル読み込み
-// =============================================
-const dropZone   = document.getElementById("dropZone");
-const fileInput  = document.getElementById("fileInput");
-const fileNameEl = document.getElementById("fileName");
-const loadStatus = document.getElementById("loadStatus");
+  document.getElementById("btnAnalyze").addEventListener("click", analyze);
 
-dropZone.addEventListener("click", () => fileInput.click());
-dropZone.addEventListener("dragover",  e => { e.preventDefault(); dropZone.classList.add("dragover"); });
-dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
-dropZone.addEventListener("drop", e => {
-  e.preventDefault(); dropZone.classList.remove("dragover");
-  if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
-});
-fileInput.addEventListener("change", () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
-
-function setFile(file) {
-  if (!file.name.match(/\.html?$/i)) {
-    showStatus(loadStatus, "HTMLファイルを選択してください", "err"); return;
-  }
-  fileName = file.name.replace(/\.html?$/i, "");
-  const reader = new FileReader();
-  reader.onload = e => {
-    rawHtml = e.target.result;
-    fileNameEl.textContent = "📄 " + file.name;
-    fileNameEl.className = "file-name loaded";
-    document.getElementById("btnAnalyze").disabled = false;
-    showStatus(loadStatus, "ファイルを読み込みました。「解析する」を押してください", "info");
-    // 再読込時リセット
-    speakerMap = {}; tableOrder = []; parsedDoc = null;
-    ["speakerSection","optionSection","previewSection","formatSection"]
-      .forEach(id => document.getElementById(id).style.display = "none");
-  };
-  reader.readAsText(file, "UTF-8");
-}
-
-// =============================================
-// ② 解析
-// =============================================
-document.getElementById("btnAnalyze").addEventListener("click", analyze);
-
-function analyze() {
-  speakerMap = {};
-  const parser = new DOMParser();
-  parsedDoc = parser.parseFromString(rawHtml, "text/html");
-
-  parsedDoc.querySelectorAll("p").forEach(p => {
-    const spans = p.querySelectorAll("span");
-    if (spans.length < 3) return;
-    const tab     = spans[0].textContent.trim();
-    const speaker = spans[1].textContent.trim();
-    const key = tab + "::" + speaker;
-    if (!(key in speakerMap)) {
-      speakerMap[key] = { tab, name: speaker, kind: "chara", rename: "" };
-    }
+  document.getElementById("spTable").addEventListener("click", e => {
+    const th = e.target.closest("th[data-col]");
+    if (!th) return;
+    const col = th.dataset.col;
+    sortDir = (sortCol === col && sortDir === "asc") ? "desc" : "asc";
+    sortCol = col;
+    renderTable();
   });
 
-  const spCount = Object.keys(speakerMap).length;
-  if (spCount === 0) {
-    showStatus(document.getElementById("analyzeStatus"),
-      "発言者が検出できませんでした。CCFoliaのHTMLログか確認してください", "err");
-    return;
-  }
-
-  tableOrder = Object.keys(speakerMap);
-  sortCol = null;
-
-  ["speakerSection","optionSection","previewSection","formatSection"]
-    .forEach(id => document.getElementById(id).style.display = "");
-
-  renderTable();
-  const pCount = parsedDoc.querySelectorAll("p").length;
-  showStatus(document.getElementById("analyzeStatus"),
-    `${pCount} ブロック ／ 発言者 ${spCount} 件を検出しました`, "ok");
-}
-
-// =============================================
-// テーブル描画・ソート
-// =============================================
-function renderTable() {
-  const tbody = document.getElementById("spTbody");
-
-  const sorted = [...tableOrder].sort((a, b) => {
-    if (!sortCol) return 0;
-    const sa = speakerMap[a], sb = speakerMap[b];
-    let va = sortCol === "kind" ? KIND_ORDER[sa.kind] : sa[sortCol];
-    let vb = sortCol === "kind" ? KIND_ORDER[sb.kind] : sb[sortCol];
-    if (va < vb) return sortDir === "asc" ? -1 : 1;
-    if (va > vb) return sortDir === "asc" ?  1 : -1;
-    return 0;
-  });
-
-  tbody.innerHTML = sorted.map(key => {
-    const sp = speakerMap[key];
-    const tabRaw = sp.tab.replace(/[\[\] ]/g, "");
-    const tabClass = tabRaw === "main" ? "tab-main" : tabRaw === "info" ? "tab-info" : "tab-other";
-    const kindOpts = Object.entries(KIND_LABEL).map(([k,l]) =>
-      `<option value="${k}" ${sp.kind===k?"selected":""}>${l}</option>`
-    ).join("");
-    return `<tr>
-      <td><span class="tab-badge ${tabClass}">${esc(sp.tab)}</span></td>
-      <td>${esc(sp.name)}</td>
-      <td><select class="kind-select k-${sp.kind}" data-key="${escAttr(key)}">${kindOpts}</select></td>
-      <td><input type="text" class="sp-input${sp.rename?" changed":""}"
-        placeholder="${escAttr(sp.name)}" value="${escAttr(sp.rename)}"
-        data-key="${escAttr(key)}" /></td>
-    </tr>`;
-  }).join("");
-
-  tbody.querySelectorAll(".kind-select").forEach(sel => {
-    sel.addEventListener("change", e => {
-      const key = e.target.dataset.key;
-      speakerMap[key].kind = e.target.value;
-      e.target.className = "kind-select k-" + e.target.value;
+  document.getElementById("btnBulkTab").addEventListener("click", () => {
+    const newTab  = document.getElementById("bulkTabValue").value;
+    const checks  = document.querySelectorAll(".tab-check:checked");
+    const targets = new Set([...checks].map(cb => cb.dataset.tabkey));
+    Object.keys(speakerMap).forEach(key => {
+      if (targets.has(speakerMap[key].dispTab)) {
+        speakerMap[key].dispTab = newTab;
+      }
     });
-  });
-  tbody.querySelectorAll(".sp-input").forEach(inp => {
-    inp.addEventListener("input", e => {
-      const key = e.target.dataset.key;
-      speakerMap[key].rename = e.target.value;
-      e.target.classList.toggle("changed", e.target.value !== "");
-    });
+    renderTable();
   });
 
-  document.querySelectorAll("#spTable th[data-col]").forEach(th => {
-    th.className = th.dataset.col === sortCol ? "sort-" + sortDir : "sort-none";
-  });
-}
-
-document.getElementById("spTable").addEventListener("click", e => {
-  const th = e.target.closest("th[data-col]");
-  if (!th) return;
-  const col = th.dataset.col;
-  sortDir = (sortCol === col && sortDir === "asc") ? "desc" : "asc";
-  sortCol = col;
-  renderTable();
+  document.getElementById("btnPreview").addEventListener("click", updatePreview);
+  document.getElementById("btnDownload").addEventListener("click", downloadOriginal);
+  document.getElementById("btnFormatDownload").addEventListener("click", downloadFormatted);
+  document.getElementById("btnReset").addEventListener("click", resetAll);
 });
-
-// =============================================
-// ④ プレビュー（元構造で表示）
-// =============================================
-document.getElementById("btnPreview").addEventListener("click", updatePreview);
-
-function updatePreview() {
-  if (!parsedDoc) return;
-  const optHideSys = document.getElementById("optHideSystem").checked;
-  const wrap = document.getElementById("previewWrap");
-
-  const lines = [];
-  parsedDoc.querySelectorAll("p").forEach(p => {
-    const spans = p.querySelectorAll("span");
-    if (spans.length < 3) return;
-    const tab     = spans[0].textContent.trim();
-    const speaker = spans[1].textContent.trim();
-    const key = tab + "::" + speaker;
-    const sp  = speakerMap[key] || { kind: "chara", rename: "" };
-    if (optHideSys && sp.kind === "system") return;
-    const dispName = sp.rename.trim() || speaker;
-    // 元のbody innerHTML（<br>含む）をそのまま使う
-    const bodyHtml = spans[2].innerHTML;
-    lines.push(
-      `<p style="color:#888888;"><span> ${esc(tab)}</span> <span>${esc(dispName)}</span> : <span>${bodyHtml}</span></p>`
-    );
-  });
-
-  if (lines.length === 0) {
-    wrap.innerHTML = `<div class="preview-empty">表示できる行がありません</div>`; return;
-  }
-  wrap.innerHTML = lines.join("\n");
-}
-
-// =============================================
-// ④ 元構造のままダウンロード
-// =============================================
-document.getElementById("btnDownload").addEventListener("click", () => {
-  if (!parsedDoc) { showStatus(document.getElementById("processStatus"), "先に解析してください", "err"); return; }
-  const optHideSys = document.getElementById("optHideSystem").checked;
-
-  // 元のHTMLから <p> を処理して再構築
-  // headは元のまま、titleだけ変える
-  const outDoc = parsedDoc.cloneNode(true);
-  const titleEl = outDoc.querySelector("title");
-  if (titleEl) titleEl.textContent = fileName;
-
-  outDoc.querySelectorAll("p").forEach(p => {
-    const spans = p.querySelectorAll("span");
-    if (spans.length < 3) { p.remove(); return; }
-    const tab     = spans[0].textContent.trim();
-    const speaker = spans[1].textContent.trim();
-    const key = tab + "::" + speaker;
-    const sp  = speakerMap[key] || { kind: "chara", rename: "" };
-
-    // 非表示 → <p>ごと除去
-    if (optHideSys && sp.kind === "system") { p.remove(); return; }
-
-    // 発言者名のみ置換（spans[1]のテキストだけ書き換え）
-    const dispName = sp.rename.trim() || speaker;
-    spans[1].textContent = dispName;
-  });
-
-  const html = "<!DOCTYPE html>\n" + outDoc.documentElement.outerHTML;
-  download(html, fileName + "_整形済み.html");
-  showStatus(document.getElementById("processStatus"), "ダウンロードしました！", "ok");
-});
-
-// =============================================
-// ⑤ 整形ダウンロード
-// =============================================
-document.getElementById("btnFormatDownload").addEventListener("click", () => {
-  if (!parsedDoc) { showStatus(document.getElementById("formatStatus"), "先に解析してください", "err"); return; }
-
-  const optTab     = document.getElementById("optTab").checked;
-  const optSkill   = document.getElementById("optSkill").checked;
-  const optHideSys = document.getElementById("optHideSystem").checked;
-  const optSpace   = document.getElementById("optSpaceBetween").checked;
-
-  const bodyLines = [];
-  let prevKind = null;
-
-  parsedDoc.querySelectorAll("p").forEach(p => {
-    const spans = p.querySelectorAll("span");
-    if (spans.length < 3) return;
-    const tab     = spans[0].textContent.trim();
-    const speaker = spans[1].textContent.trim();
-    const key = tab + "::" + speaker;
-    const sp  = speakerMap[key] || { kind: "chara", rename: "" };
-    const kind = sp.kind;
-
-    if (optHideSys && kind === "system") return;
-
-    // 種別変化で空行
-    if (optSpace && prevKind !== null && prevKind !== kind) {
-      bodyLines.push(`<p style="margin:0;line-height:1;">&nbsp;</p>`);
-    }
-    prevKind = kind;
-
-    // タブ
-    const tabRaw = tab.replace(/[\[\] ]/g, "");
-    const tabClass = tabRaw === "main" ? "log-tab-main" : tabRaw === "info" ? "log-tab-info" : "log-tab-other";
-    const tabHtml = optTab ? `<span class="log-tab ${tabClass}">${esc(tab)}</span>` : "";
-
-    // 発言者
-    const dispName = sp.rename.trim() || speaker;
-
-    // 本文：<br>保持のまま取得し〈〉処理
-    let bodyHtml = spans[2].innerHTML;
-    if (optSkill) {
-      bodyHtml = bodyHtml.replace(/〈([^〉]+)〉/g, `<span class="skill-hl">〈$1〉</span>`);
-    }
-
-    bodyLines.push(
-      `<p style="color:#888888;">${tabHtml}<span>${esc(dispName)}</span> : <span>${bodyHtml}</span></p>`
-    );
-  });
-
-  const html = `<!DOCTYPE html>
-<html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>${esc(fileName)}</title>
-    <style>
-      body { font-family: 'Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',sans-serif; font-size:15px; line-height:2.1; padding:40px 24px; max-width:800px; margin:0 auto; }
-      p { margin: 0 0 2px; }
-      .log-tab { font-size:10px; font-weight:700; margin-right:6px; padding:1px 6px; border-radius:3px; vertical-align:middle; display:inline-block; }
-      .log-tab-main  { background:#fff3e0; color:#a85400; }
-      .log-tab-info  { background:#e8f0fe; color:#1a56a0; }
-      .log-tab-other { background:#f0f0f0; color:#888; }
-      .skill-hl { background:#fff8e0; color:#7a5000; border-radius:3px; padding:0 2px; font-weight:600; font-size:13px; }
-    </style>
-  </head>
-  <body>
-${bodyLines.join("\n")}
-  </body>
-</html>`;
-
-  download(html, fileName + "_整形.html");
-  showStatus(document.getElementById("formatStatus"), "ダウンロードしました！", "ok");
-});
-
-// =============================================
-// リセット
-// =============================================
-document.getElementById("btnReset").addEventListener("click", () => {
-  rawHtml = ""; fileName = ""; parsedDoc = null; speakerMap = {}; tableOrder = [];
-  fileInput.value = "";
-  fileNameEl.textContent = "ファイル未選択";
-  fileNameEl.className = "file-name";
-  document.getElementById("btnAnalyze").disabled = true;
-  ["speakerSection","optionSection","previewSection","formatSection"]
-    .forEach(id => document.getElementById(id).style.display = "none");
-  ["loadStatus","analyzeStatus","processStatus","formatStatus"].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.className = "status-msg";
-  });
-});
-
-// =============================================
-// ユーティリティ
-// =============================================
-function esc(s) {
-  return String(s||"")
-    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;");
-}
-function escAttr(s) {
-  return String(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;");
-}
-function download(html, name) {
-  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href = url; a.download = name; a.click();
-  URL.revokeObjectURL(url);
-}
-function showStatus(el, msg, type) {
-  el.textContent = msg; el.className = "status-msg show " + type;
-}
 </script>
 </body>
 </html>
