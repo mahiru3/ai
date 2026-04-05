@@ -342,3 +342,58 @@ table.sp-table tr:hover td { background: #f4f8ff; }
   background: #fff8e0; color: #7a5000;
   border-radius: 3px; padding: 0 2px; font-weight: 600; font-size: .9em;
 }
+
+/* =============================================
+   テーブル：チェックボックス列・一括変更行
+   ============================================= */
+
+/* チェックボックスセル */
+.cb-cell {
+  width: 22px; text-align: center; padding: 4px 2px !important;
+}
+.cb-cell input[type="checkbox"] {
+  width: 14px; height: 14px; accent-color: #3d6e99; cursor: pointer;
+  vertical-align: middle;
+}
+
+/* タブバッジ：クリック不要になったのでcursorはデフォルト */
+.tab-badge { cursor: default; }
+
+/* 一括変更ラベル行 */
+.bulk-label-row td {
+  background: #f0ede8; padding: 4px 10px !important;
+  border-top: 2px solid #d8d4ce;
+}
+.bulk-label {
+  font-size: 11px; font-weight: 700; color: #666; letter-spacing: .04em;
+}
+
+/* 一括変更行 */
+.bulk-row td { background: #faf9f7; vertical-align: middle; padding: 6px 6px !important; }
+
+/* タブ列：プルダウン + or + テキスト */
+.bulk-tab-cell {
+  display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+}
+.bulk-tab-select {
+  padding: 3px 4px; border: 1px solid #ddd; border-radius: 4px;
+  font-size: 11px; cursor: pointer; min-width: 60px;
+}
+.bulk-or { font-size: 10px; color: #aaa; flex-shrink: 0; }
+.bulk-tab-input {
+  padding: 3px 6px; border: 1px solid #ddd; border-radius: 4px;
+  font-size: 11px; width: 70px; min-width: 0;
+}
+.bulk-tab-input:focus { outline: none; border-color: #7ba4c7; background: #f8fbff; }
+
+/* 変更後＋ボタン行 */
+.bulk-action-row {
+  display: flex; gap: 6px; align-items: center;
+}
+.bulk-action-row .sp-input { flex: 1; min-width: 0; }
+.bulk-apply-btn {
+  flex-shrink: 0; padding: 4px 12px; width: auto;
+  background: #3d6e99; color: #fff; border-color: #3d6e99;
+  font-weight: 700;
+}
+.bulk-apply-btn:hover { background: #2f5a80; border-color: #2f5a80; }
