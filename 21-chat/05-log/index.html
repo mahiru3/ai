@@ -10,7 +10,7 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">📝 ログ整形ツール！！</h1>
+  <h1 class="page-title">📝 ログ整形ツール！</h1>
   <p class="page-subtitle">CCFoliaのHTMLログを読み込み、発言者を整理してHTMLでダウンロードします。ページ内完結・サーバー送信なし。</p>
 
   <!-- ① ファイル読み込み -->
@@ -239,25 +239,26 @@ function renderTable() {
     `<option value="${k}">${l}</option>`
   ).join("");
 
-  // 一括変更行HTML（4列）
+  // 一括変更行HTML（ボタン行 → 入力行）
   const bulkHtml = `
-    <tr class="bulk-label-row">
-      <td colspan="4">
-        <button class="btn-hover-21 bh-gray bulk-toggle-btn" id="btnBulkToggle" type="button"><span>🔄 一括変更</span></button>
-      </td>
+    <tr class="bulk-sep-row"><td colspan="4"></td></tr>
+    <tr class="bulk-btn-row">
+      <td><button class="btn-hover-21 bh-gray col-bulk-btn" id="btnBulkTab"  type="button"><span>🔄 一括変更</span></button></td>
+      <td><button class="btn-hover-21 bh-gray col-bulk-btn" id="btnBulkKind" type="button"><span>🔄 一括変更</span></button></td>
+      <td><button class="btn-hover-21 bh-gray col-bulk-btn" id="btnBulkName" type="button"><span>🔄 一括変更</span></button></td>
+      <td></td>
     </tr>
-    <tr class="bulk-row" id="bulkInputRow" style="display:none;">
-      <td class="cb-with-val">
+    <tr class="bulk-input-row">
+      <td>
         <div class="bulk-tab-cell">
-          <select class="bulk-tab-select" id="bulkTabSelect">${tabPresetOpts}</select>
+          <select id="bulkTabSelect">${tabPresetOpts}</select>
           <span class="bulk-or">or</span>
-          <input type="text" class="bulk-tab-input" id="bulkTabInput" placeholder="新規タブ名">
+          <input type="text" id="bulkTabInput" placeholder="新規タブ名">
         </div>
       </td>
       <td><select class="kind-select k-chara" id="bulkKindSelect">${bulkKindOpts}</select></td>
-      <td colspan="2">
-        <input type="text" class="sp-input" id="bulkRenameInput" placeholder="変更後の名前">
-      </td>
+      <td><input type="text" class="sp-input" id="bulkRenameInput" placeholder="変更後の名前"></td>
+      <td></td>
     </tr>`;
 
   tbody.innerHTML = dataRowsHtml + bulkHtml;
@@ -284,15 +285,6 @@ function renderTable() {
 
   /* --- 一括変更イベント --- */
 
-  // 🔄一括変更ボタン：トグルで入力行を開閉
-  document.getElementById("btnBulkToggle").addEventListener("click", () => {
-    const row = document.getElementById("bulkInputRow");
-    const btn = document.getElementById("btnBulkToggle");
-    const open = row.style.display === "none" || row.style.display === "";
-    row.style.display = open ? "" : "none";
-    btn.querySelector("span").textContent = open ? "✖ 一括変更を閉じる" : "🔄 一括変更";
-  });
-
   // タブselectが変わったらtextをクリア
   document.getElementById("bulkTabSelect").addEventListener("change", () => {
     document.getElementById("bulkTabInput").value = "";
@@ -301,36 +293,34 @@ function renderTable() {
     document.getElementById("bulkTabSelect").selectedIndex = 0;
   });
 
-  // 一括適用関数
-  function applyBulk() {
+  // タブ列🔄 → チェック済みのタブを変更
+  document.getElementById("btnBulkTab").addEventListener("click", () => {
     const tabInput = document.getElementById("bulkTabInput").value.trim();
-    const tabSel   = document.getElementById("bulkTabSelect").value;
-    const newTab   = tabInput !== "" ? tabInput : tabSel;
-    const newKind  = document.getElementById("bulkKindSelect").value;
-    const newName  = document.getElementById("bulkRenameInput").value.trim();
+    const newTab   = tabInput !== "" ? tabInput : document.getElementById("bulkTabSelect").value;
+    const checked  = new Set([...tbody.querySelectorAll(".cb-tab:checked")].map(c => c.dataset.key));
+    let n = 0;
+    checked.forEach(key => { speakerMap[key].dispTab = newTab; n++; });
+    if (n > 0) { renderTable(); showStatus(document.getElementById("analyzeStatus"), `タブ名 ${n} 件を変更しました`, "ok"); }
+  });
 
-    const tabChecked  = new Set([...tbody.querySelectorAll(".cb-tab:checked")].map(c => c.dataset.key));
-    const kindChecked = new Set([...tbody.querySelectorAll(".cb-kind:checked")].map(c => c.dataset.key));
-    const nameChecked = new Set([...tbody.querySelectorAll(".cb-name:checked")].map(c => c.dataset.key));
+  // 種別列🔄 → チェック済みの種別を変更
+  document.getElementById("btnBulkKind").addEventListener("click", () => {
+    const newKind = document.getElementById("bulkKindSelect").value;
+    const checked = new Set([...tbody.querySelectorAll(".cb-kind:checked")].map(c => c.dataset.key));
+    let n = 0;
+    checked.forEach(key => { speakerMap[key].kind = newKind; n++; });
+    if (n > 0) { renderTable(); showStatus(document.getElementById("analyzeStatus"), `種別 ${n} 件を変更しました`, "ok"); }
+  });
 
-    let changed = 0;
-    Object.keys(speakerMap).forEach(key => {
-      if (tabChecked.has(key))  { speakerMap[key].dispTab = newTab;  changed++; }
-      if (kindChecked.has(key)) { speakerMap[key].kind    = newKind; changed++; }
-      if (nameChecked.has(key) && newName !== "") { speakerMap[key].rename = newName; changed++; }
-    });
-
-    if (changed > 0) {
-      renderTable();
-      showStatus(document.getElementById("analyzeStatus"), `${changed} 件を変更しました`, "ok");
-    }
-  }
-
-  // Enterキーで適用
-  document.getElementById("bulkTabInput").addEventListener("keydown",    e => { if (e.key==="Enter") applyBulk(); });
-  document.getElementById("bulkRenameInput").addEventListener("keydown", e => { if (e.key==="Enter") applyBulk(); });
-  document.getElementById("bulkKindSelect").addEventListener("change",   () => applyBulk());
-  document.getElementById("bulkTabSelect").addEventListener("change",    () => { document.getElementById("bulkTabInput").value=""; applyBulk(); });
+  // 変更前列🔄 → チェック済みの名前を変更
+  document.getElementById("btnBulkName").addEventListener("click", () => {
+    const newName = document.getElementById("bulkRenameInput").value.trim();
+    if (!newName) return;
+    const checked = new Set([...tbody.querySelectorAll(".cb-name:checked")].map(c => c.dataset.key));
+    let n = 0;
+    checked.forEach(key => { speakerMap[key].rename = newName; n++; });
+    if (n > 0) { renderTable(); showStatus(document.getElementById("analyzeStatus"), `変更後 ${n} 件を設定しました`, "ok"); }
+  });
 
   /* --- ソートアイコン更新 --- */
   document.querySelectorAll("#spTable th[data-col]").forEach(th => {
