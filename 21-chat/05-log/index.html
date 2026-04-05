@@ -1,1 +1,444 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ログ整形ツール</title>
+  <link rel="stylesheet" href="../../01-css/00-style.css" />
+  <link rel="stylesheet" href="../../01-css/21-chat-05-log.css" />
+</head>
+<body>
+<div class="page-wrap">
 
+  <h1 class="page-title">📝 ログ整形ツール</h1>
+  <p class="page-subtitle">CCFoliaのHTMLログを読み込み、発言者を整理してHTMLでダウンロードします。ページ内完結・サーバー送信なし。</p>
+
+  <!-- ① ファイル読み込み -->
+  <div class="section">
+    <div class="section-title">① ファイル読み込み</div>
+    <div class="drop-zone" id="dropZone">
+      <span class="drop-icon">📂</span>
+      ここにCCFoliaのHTMLファイルをドラッグ＆ドロップ<br>またはクリックして選択
+      <input type="file" id="fileInput" accept=".html,.htm" />
+    </div>
+    <div class="file-name" id="fileName">ファイル未選択</div>
+    <div style="margin-top:10px;">
+      <button class="btn-primary" id="btnAnalyze" disabled>🔍 解析する</button>
+    </div>
+    <div class="status-msg" id="loadStatus"></div>
+  </div>
+
+  <!-- ② 発言者一覧 -->
+  <div class="section" id="speakerSection" style="display:none;">
+    <div class="section-title">
+      ② 発言者一覧
+      <span class="sub">タブ名・変更前・種別 でソートできます／変更後に名前を入力すると整形時に置換されます</span>
+    </div>
+    <div class="sp-table-wrap">
+      <table class="sp-table" id="spTable">
+        <thead>
+          <tr>
+            <th data-col="tab" class="sort-none">タブ名<span class="sort-icon"></span></th>
+            <th data-col="name" class="sort-none">変更前<span class="sort-icon"></span></th>
+            <th data-col="kind" class="sort-none">種別<span class="sort-icon"></span></th>
+            <th class="no-sort">変更後</th>
+          </tr>
+        </thead>
+        <tbody id="spTbody"></tbody>
+      </table>
+    </div>
+    <div class="status-msg" id="analyzeStatus"></div>
+  </div>
+
+  <!-- ③ 整形オプション -->
+  <div class="section" id="optionSection" style="display:none;">
+    <div class="section-title">③ 整形オプション</div>
+    <div class="option-grid">
+      <label class="option-item">
+        <input type="checkbox" id="optTab" checked />
+        <span>タブ名（[main]等）を表示</span>
+      </label>
+      <label class="option-item">
+        <input type="checkbox" id="optSkill" checked />
+        <span>〈技能名〉を強調表示</span>
+      </label>
+      <label class="option-item">
+        <input type="checkbox" id="optHideSystem" checked />
+        <span>種別「非表示」を除外する</span>
+      </label>
+      <label class="option-item">
+        <input type="checkbox" id="optSpaceBetween" checked />
+        <span>種別が変わる前後に空行を入れる</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- ④ プレビュー・ダウンロード -->
+  <div class="section" id="previewSection" style="display:none;">
+    <div class="section-title">④ プレビュー・ダウンロード</div>
+    <div class="btn-row" style="margin-bottom:12px;">
+      <button class="btn-primary" id="btnPreview">👁 プレビュー更新</button>
+      <button class="btn-primary" id="btnDownload">💾 HTMLダウンロード</button>
+      <button class="btn-secondary" id="btnReset">🔄 リセット</button>
+    </div>
+    <div class="preview-wrap" id="previewWrap">
+      <div class="preview-empty">「プレビュー更新」をクリックしてください</div>
+    </div>
+    <div class="status-msg" id="processStatus"></div>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<script>
+// =============================================
+// 定数・状態
+// =============================================
+const KIND_LABEL = { chara:"キャラ", event:"テキスト", scene:"シーン", system:"非表示" };
+const KIND_ORDER = { chara:0, event:1, scene:2, system:3 };
+
+// 状態
+let rawHtml     = "";
+let fileName    = "";
+let allLines    = [];   // { tab, speaker, text }  全行
+let speakerMap  = {};   // key=tab+"::"+name → { tab, name, kind, rename }
+let tableOrder  = [];   // speakerMap のキー順（ソート後）
+let sortCol     = null; // "tab"|"name"|"kind"
+let sortDir     = "asc";
+
+// =============================================
+// ファイル読み込み
+// =============================================
+const dropZone  = document.getElementById("dropZone");
+const fileInput = document.getElementById("fileInput");
+const fileNameEl= document.getElementById("fileName");
+const loadStatus= document.getElementById("loadStatus");
+
+dropZone.addEventListener("click", () => fileInput.click());
+dropZone.addEventListener("dragover",  e => { e.preventDefault(); dropZone.classList.add("dragover"); });
+dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+dropZone.addEventListener("drop", e => {
+  e.preventDefault(); dropZone.classList.remove("dragover");
+  const f = e.dataTransfer.files[0];
+  if (f) setFile(f);
+});
+fileInput.addEventListener("change", () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
+
+function setFile(file) {
+  if (!file.name.match(/\.html?$/i)) {
+    showStatus(loadStatus, "HTMLファイルを選択してください", "err"); return;
+  }
+  fileName = file.name.replace(/\.html?$/i, "");
+  const reader = new FileReader();
+  reader.onload = e => {
+    rawHtml = e.target.result;
+    fileNameEl.textContent = "📄 " + file.name;
+    fileNameEl.className = "file-name loaded";
+    document.getElementById("btnAnalyze").disabled = false;
+    showStatus(loadStatus, "ファイルを読み込みました。「解析する」を押してください", "info");
+    // リセット（再読込時）
+    allLines = []; speakerMap = {}; tableOrder = [];
+    document.getElementById("speakerSection").style.display = "none";
+    document.getElementById("optionSection").style.display  = "none";
+    document.getElementById("previewSection").style.display = "none";
+  };
+  reader.readAsText(file, "UTF-8");
+}
+
+// =============================================
+// ② 解析
+// =============================================
+document.getElementById("btnAnalyze").addEventListener("click", analyze);
+
+function analyze() {
+  allLines   = [];
+  speakerMap = {};
+
+  const parser = new DOMParser();
+  const doc    = parser.parseFromString(rawHtml, "text/html");
+  const pElems = doc.querySelectorAll("p");
+
+  pElems.forEach(p => {
+    const spans = p.querySelectorAll("span");
+    if (spans.length < 3) return;
+
+    const tab     = spans[0].textContent.trim();   // "[main]" など
+    const speaker = spans[1].textContent.trim();   // 発言者名
+
+    // <br> で分割
+    const bodyHtml = spans[2].innerHTML;
+    const lines = bodyHtml
+      .split(/<br\s*\/?>/i)
+      .map(l => { const d = document.createElement("div"); d.innerHTML = l; return d.textContent.trim(); })
+      .filter(l => l.length > 0);
+
+    lines.forEach(text => {
+      allLines.push({ tab, speaker, text });
+    });
+
+    // 発言者マップ（tab::name をキーに重複排除）
+    const key = tab + "::" + speaker;
+    if (!(key in speakerMap)) {
+      speakerMap[key] = { tab, name: speaker, kind: "chara", rename: "" };
+    }
+  });
+
+  if (allLines.length === 0) {
+    showStatus(document.getElementById("analyzeStatus"), "ログ行が検出できませんでした。CCFoliaのHTMLログか確認してください", "err");
+    return;
+  }
+
+  tableOrder = Object.keys(speakerMap);
+  sortCol = null;
+
+  // セクション表示
+  document.getElementById("speakerSection").style.display = "";
+  document.getElementById("optionSection").style.display  = "";
+  document.getElementById("previewSection").style.display = "";
+
+  renderTable();
+  showStatus(document.getElementById("analyzeStatus"),
+    `${allLines.length} 行 ／ 発言者 ${tableOrder.length} 件を検出しました`, "ok");
+}
+
+// =============================================
+// テーブル描画・ソート
+// =============================================
+function renderTable() {
+  const tbody = document.getElementById("spTbody");
+
+  // ソート適用
+  const sorted = [...tableOrder].sort((a, b) => {
+    if (!sortCol) return 0;
+    const sa = speakerMap[a], sb = speakerMap[b];
+    let va = sa[sortCol === "tab" ? "tab" : sortCol === "name" ? "name" : "kind"];
+    let vb = sb[sortCol === "tab" ? "tab" : sortCol === "name" ? "name" : "kind"];
+    if (sortCol === "kind") { va = KIND_ORDER[va]; vb = KIND_ORDER[vb]; }
+    if (va < vb) return sortDir === "asc" ? -1 : 1;
+    if (va > vb) return sortDir === "asc" ?  1 : -1;
+    return 0;
+  });
+
+  tbody.innerHTML = sorted.map(key => {
+    const sp  = speakerMap[key];
+    const tab = sp.tab.replace(/[\[\] ]/g, ""); // "main" / "info"
+    const tabClass = tab === "main" ? "tab-main" : tab === "info" ? "tab-info" : "tab-other";
+    const kindOpts = Object.entries(KIND_LABEL).map(([k,l]) =>
+      `<option value="${k}" ${sp.kind===k?"selected":""}>${l}</option>`
+    ).join("");
+    return `
+    <tr>
+      <td><span class="tab-badge ${tabClass}">${esc(sp.tab)}</span></td>
+      <td>${esc(sp.name)}</td>
+      <td>
+        <select class="kind-select k-${sp.kind}" data-key="${esc(key)}">
+          ${kindOpts}
+        </select>
+      </td>
+      <td>
+        <input type="text" class="sp-input${sp.rename ? " changed" : ""}"
+          placeholder="${esc(sp.name)}"
+          value="${esc(sp.rename)}"
+          data-key="${esc(key)}" />
+      </td>
+    </tr>`;
+  }).join("");
+
+  // 種別変更
+  tbody.querySelectorAll(".kind-select").forEach(sel => {
+    sel.addEventListener("change", e => {
+      const key = e.target.dataset.key;
+      speakerMap[key].kind = e.target.value;
+      e.target.className = "kind-select k-" + e.target.value;
+    });
+  });
+
+  // 名前変更入力
+  tbody.querySelectorAll(".sp-input").forEach(inp => {
+    inp.addEventListener("input", e => {
+      const key = e.target.dataset.key;
+      speakerMap[key].rename = e.target.value.trim();
+      e.target.classList.toggle("changed", speakerMap[key].rename !== "");
+    });
+  });
+
+  // ヘッダーソートアイコン更新
+  document.querySelectorAll("#spTable th[data-col]").forEach(th => {
+    const col = th.dataset.col;
+    th.className = col === sortCol
+      ? "sort-" + sortDir
+      : "sort-none";
+  });
+}
+
+// ソートクリック
+document.getElementById("spTable").addEventListener("click", e => {
+  const th = e.target.closest("th[data-col]");
+  if (!th) return;
+  const col = th.dataset.col;
+  if (sortCol === col) {
+    sortDir = sortDir === "asc" ? "desc" : "asc";
+  } else {
+    sortCol = col; sortDir = "asc";
+  }
+  renderTable();
+});
+
+// =============================================
+// ログ行生成（プレビュー・DL共通）
+// =============================================
+function buildLogLines() {
+  const optTab     = document.getElementById("optTab").checked;
+  const optSkill   = document.getElementById("optSkill").checked;
+  const optHideSys = document.getElementById("optHideSystem").checked;
+  const optSpace   = document.getElementById("optSpaceBetween").checked;
+
+  const lines  = [];
+  let prevKind = null;
+
+  allLines.forEach(line => {
+    const key = line.tab + "::" + line.speaker;
+    const sp  = speakerMap[key] || { kind: "chara", rename: "" };
+    const kind= sp.kind;
+
+    // 非表示
+    if (optHideSys && kind === "system") return;
+
+    // 種別変化→空行
+    if (optSpace && prevKind !== null && prevKind !== kind) {
+      lines.push({ type: "spacer" });
+    }
+    prevKind = kind;
+
+    // タブ部分
+    const tabRaw = line.tab.replace(/[\[\] ]/g, "");
+    const tabClass = tabRaw === "main" ? "log-tab-main" : tabRaw === "info" ? "log-tab-info" : "log-tab-other";
+    const tabHtml = optTab ? `<span class="log-tab ${tabClass}">${esc(line.tab)}</span>` : "";
+
+    // 発言者名（変更後があれば置換）
+    const dispName = sp.rename || line.speaker;
+
+    // 本文：〈〉強調
+    let text = esc(line.text);
+    if (optSkill) {
+      text = text.replace(/〈([^〉]+)〉/g, `<span class="skill-hl">〈$1〉</span>`);
+    }
+
+    lines.push({
+      type: "line", tabHtml, dispName, kind, text
+    });
+  });
+
+  return lines;
+}
+
+// =============================================
+// プレビュー
+// =============================================
+document.getElementById("btnPreview").addEventListener("click", updatePreview);
+
+function updatePreview() {
+  const wrap  = document.getElementById("previewWrap");
+  const built = buildLogLines();
+  if (built.length === 0) {
+    wrap.innerHTML = `<div class="preview-empty">表示できる行がありません</div>`; return;
+  }
+  wrap.innerHTML = built.map(l => {
+    if (l.type === "spacer") return `<div class="log-spacer"></div>`;
+    return `<div class="log-line">` +
+      l.tabHtml +
+      `<span class="log-speaker log-text-${l.kind}">${esc(l.dispName)}</span>：` +
+      `<span class="log-text-${l.kind}">${l.text}</span>` +
+      `</div>`;
+  }).join("\n");
+}
+
+// =============================================
+// ダウンロード
+// =============================================
+document.getElementById("btnDownload").addEventListener("click", () => {
+  const built = buildLogLines();
+  if (built.length === 0) {
+    showStatus(document.getElementById("processStatus"), "出力できる行がありません", "err"); return;
+  }
+
+  const bodyHtml = built.map(l => {
+    if (l.type === "spacer") return `<div class="log-spacer"></div>`;
+    return `<div class="log-line">` +
+      l.tabHtml +
+      `<span class="log-speaker log-text-${l.kind}">${esc(l.dispName)}</span>：` +
+      `<span class="log-text-${l.kind}">${l.text}</span>` +
+      `</div>`;
+  }).join("\n");
+
+  const html = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>${esc(fileName)}</title>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;font-family:'Hiragino Kaku Gothic ProN','Noto Sans JP','Yu Gothic',sans-serif;font-size:15px;line-height:2.1;color:#2c2c2c;background:#faf9f7}
+.log-wrap{max-width:800px;margin:0 auto;padding:40px 24px 80px}
+.log-title{font-size:20px;font-weight:700;margin:0 0 28px;padding-bottom:10px;border-bottom:2px solid #ddd;color:#1a1a2e}
+.log-line{margin:0}
+.log-spacer{height:0.6em}
+.log-tab{font-size:10px;font-weight:700;margin-right:5px;padding:0 5px;border-radius:3px;vertical-align:middle;display:inline-block}
+.log-tab-main{background:#fff3e0;color:#a85400}
+.log-tab-info{background:#e8f0fe;color:#1a56a0}
+.log-tab-other{background:#f0f0f0;color:#888}
+.log-speaker{font-weight:700;margin-right:1px}
+.log-text-chara{}
+.log-text-event{color:#444}
+.log-text-scene{color:#1a56a0;font-weight:600}
+.skill-hl{background:#fff8e0;color:#7a5000;border-radius:3px;padding:0 2px;font-weight:600;font-size:13px}
+</style>
+</head>
+<body>
+<div class="log-wrap">
+<div class="log-title">${esc(fileName)}</div>
+${bodyHtml}
+</div>
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url; a.download = fileName + "_整形済み.html"; a.click();
+  URL.revokeObjectURL(url);
+  showStatus(document.getElementById("processStatus"), "ダウンロードしました！", "ok");
+});
+
+// =============================================
+// リセット
+// =============================================
+document.getElementById("btnReset").addEventListener("click", () => {
+  rawHtml = ""; fileName = ""; allLines = []; speakerMap = {}; tableOrder = [];
+  fileInput.value = "";
+  fileNameEl.textContent = "ファイル未選択";
+  fileNameEl.className = "file-name";
+  document.getElementById("btnAnalyze").disabled = true;
+  document.getElementById("speakerSection").style.display = "none";
+  document.getElementById("optionSection").style.display  = "none";
+  document.getElementById("previewSection").style.display = "none";
+  ["loadStatus","analyzeStatus","processStatus"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.className = "status-msg";
+  });
+});
+
+// =============================================
+// ユーティリティ
+// =============================================
+function esc(s) {
+  return String(s||"")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function showStatus(el, msg, type) {
+  el.textContent = msg; el.className = "status-msg show " + type;
+}
+</script>
+</body>
+</html>
