@@ -11,23 +11,81 @@
 <div class="navi-wrap">
 
   <div class="navi-tool-title">📝 ログ整形ツール</div>
-  <a class="navi-link active" href="index.html" target="center">▶ ツールを開く</a>
 
-  <div class="navi-label">使い方</div>
-  <div class="guide-step"><span class="guide-num">1</span><span>CCFoliaでログをHTMLでエクスポート</span></div>
-  <div class="guide-step"><span class="guide-num">2</span><span>ファイルをドロップして読み込む</span></div>
-  <div class="guide-step"><span class="guide-num">3</span><span>「解析する」で発言者一覧を取得</span></div>
-  <div class="guide-step"><span class="guide-num">4</span><span>種別・変更後の名前を設定する</span></div>
-  <div class="guide-step"><span class="guide-num">5</span><span>プレビューで確認してダウンロード</span></div>
+  <!-- ① ファイル読み込み -->
+  <details class="navi-acc navi-acc-1" open>
+    <summary>① ファイル読み込み</summary>
+    <div class="navi-acc-body">
+      CCFoliaログをHTMLでエクスポートして<br>
+      ドラッグ＆ドロップで読み込む<br>
+      <a class="navi-link" href="index.html" target="center"
+         onclick="openAccInCenter('acc-1')">▶ ファイル読み込みを開く</a>
+    </div>
+  </details>
 
-  <div class="navi-label">種別について</div>
-  <div class="guide-step"><span style="font-size:15px;">🟢</span><span><b>キャラ</b>：PC・NPCの発言</span></div>
-  <div class="guide-step"><span style="font-size:15px;">🟡</span><span><b>テキスト</b>：GMイベント文</span></div>
-  <div class="guide-step"><span style="font-size:15px;">🔵</span><span><b>シーン</b>：シーン名・待機</span></div>
-  <div class="guide-step"><span style="font-size:15px;">⚫</span><span><b>非表示</b>：出力から除外</span></div>
+  <!-- ② 発言者一覧 -->
+  <details class="navi-acc navi-acc-2">
+    <summary>② 発言者一覧</summary>
+    <div class="navi-acc-body">
+      タブ名・種別・変更前でソート可<br>
+      変更後に名前を入力すると置換<br>
+      タブ名はバッジをクリックで変更<br>
+      一括変更バーで複数まとめて変更可<br>
+      <a class="navi-link" href="index.html" target="center"
+         onclick="openAccInCenter('acc-2')">▶ 発言者一覧を開く</a>
+    </div>
+  </details>
 
-  <p class="navi-note">※ファイルはサーバーに<br>　送信されません</p>
+  <!-- ③ 除外設定 -->
+  <details class="navi-acc navi-acc-3">
+    <summary>③ 除外設定</summary>
+    <div class="navi-acc-body">
+      種別「非表示」の発言者を<br>
+      出力から除外するか設定<br>
+      <a class="navi-link" href="index.html" target="center"
+         onclick="openAccInCenter('acc-3')">▶ 除外設定を開く</a>
+    </div>
+  </details>
+
+  <!-- ④ プレビュー・ダウンロード（元構造） -->
+  <details class="navi-acc navi-acc-4">
+    <summary>④ プレビュー・DL（元構造）</summary>
+    <div class="navi-acc-body">
+      元のCCFolia HTML構造のままDL<br>
+      発言者名置換・非表示除去のみ<br>
+      &lt;br&gt;は別&lt;p&gt;に分割<br>
+      <a class="navi-link" href="index.html" target="center"
+         onclick="openAccInCenter('acc-4')">▶ プレビューを開く</a>
+    </div>
+  </details>
+
+  <!-- ⑤ 整形ダウンロード -->
+  <details class="navi-acc navi-acc-5">
+    <summary>⑤ 整形ダウンロード</summary>
+    <div class="navi-acc-body">
+      タブ名バッジ・〈技能〉強調・<br>
+      種別間空行などのオプション付き<br>
+      <a class="navi-link" href="index.html" target="center"
+         onclick="openAccInCenter('acc-5')">▶ 整形DLを開く</a>
+    </div>
+  </details>
+
+  <p class="navi-note">※ファイルはサーバーに送信されません</p>
 
 </div>
+
+<script>
+// naviから中央iframeのアコーディオンを開く
+function openAccInCenter(accId) {
+  const center = parent && parent.frames && parent.frames["center"];
+  if (!center) return;
+  // ページ遷移後にアコーディオンを開く（少し待つ）
+  setTimeout(() => {
+    try {
+      if (center.openAccordion) center.openAccordion(accId);
+    } catch(e) {}
+  }, 400);
+}
+</script>
 </body>
 </html>
