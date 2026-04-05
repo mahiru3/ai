@@ -10,7 +10,7 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">📝 ログ整形ツール！！</h1>
+  <h1 class="page-title">📝 ログ整形ツール</h1>
   <p class="page-subtitle">CCFoliaのHTMLログを読み込み、発言者を整理してHTMLでダウンロードします。ページ内完結・サーバー送信なし。</p>
 
   <!-- ① ファイル読み込み -->
@@ -36,16 +36,9 @@
         <table class="sp-table" id="spTable">
           <thead>
             <tr>
-              <!-- タブ名 -->
-              <th class="no-sort cb-cell"></th>
-              <th data-col="tab" class="sort-none">タブ名<span class="sort-icon"></span></th>
-              <!-- 種別 -->
-              <th class="no-sort cb-cell"></th>
+              <th data-col="tab"  class="sort-none">タブ名<span class="sort-icon"></span></th>
               <th data-col="kind" class="sort-none">種別<span class="sort-icon"></span></th>
-              <!-- 変更前 -->
-              <th class="no-sort cb-cell"></th>
               <th data-col="name" class="sort-none">変更前<span class="sort-icon"></span></th>
-              <!-- 変更後 -->
               <th class="no-sort">変更後</th>
             </tr>
           </thead>
@@ -200,12 +193,9 @@ btnAnalyze.addEventListener("click", () => {
 
 /* ------------------------------------------
    テーブル描画
-   列順（7列）:
-   [0] □(tab)  [1] タブ名
-   [2] □(kind) [3] 種別
-   [4] □(name) [5] 変更前
-   [6] 変更後
-   最下：一括変更行
+   列順（4列）:
+   [0] ☐タブ名  [1] ☐種別  [2] ☐変更前  [3] 変更後
+   最下：▼一括変更 [まとめて変更] / bulk入力行
 ------------------------------------------ */
 function renderTable() {
   const tbody = document.getElementById("spTbody");
@@ -223,7 +213,7 @@ function renderTable() {
     return 0;
   });
 
-  // データ行HTML生成
+  // データ行HTML生成（4列：☐タブ名 | ☐種別 | ☐変更前 | 変更後）
   const dataRowsHtml = sorted.map(key => {
     const sp       = speakerMap[key];
     const tabRaw   = sp.dispTab.replace(/[\[\] ]/g, "");
@@ -232,12 +222,9 @@ function renderTable() {
       `<option value="${k}"${sp.kind===k?" selected":""}>${l}</option>`
     ).join("");
     return `<tr data-key="${ea(key)}">
-      <td class="cb-cell"><input type="checkbox" class="cb-tab"  data-key="${ea(key)}"></td>
-      <td><span class="tab-badge ${tabClass}">${e(sp.dispTab)}</span></td>
-      <td class="cb-cell"><input type="checkbox" class="cb-kind" data-key="${ea(key)}"></td>
-      <td><select class="kind-select k-${sp.kind}" data-key="${ea(key)}">${kindOpts}</select></td>
-      <td class="cb-cell"><input type="checkbox" class="cb-name" data-key="${ea(key)}"></td>
-      <td>${e(sp.name)}</td>
+      <td class="cb-with-val"><label><input type="checkbox" class="cb-tab"  data-key="${ea(key)}"><span class="tab-badge ${tabClass}">${e(sp.dispTab)}</span></label></td>
+      <td class="cb-with-val"><label><input type="checkbox" class="cb-kind" data-key="${ea(key)}"><select class="kind-select k-${sp.kind}" data-key="${ea(key)}">${kindOpts}</select></label></td>
+      <td class="cb-with-val"><label><input type="checkbox" class="cb-name" data-key="${ea(key)}"><span class="sp-name-text">${e(sp.name)}</span></label></td>
       <td><input type="text" class="sp-input${sp.rename?" changed":""}"
             placeholder="${ea(sp.name)}" value="${ea(sp.rename)}"
             data-key="${ea(key)}"></td>
@@ -252,28 +239,23 @@ function renderTable() {
     `<option value="${k}">${l}</option>`
   ).join("");
 
-  // 一括変更行HTML（列順を7列に厳密に合わせる）
+  // 一括変更行HTML（4列）
   const bulkHtml = `
     <tr class="bulk-label-row">
-      <td colspan="7"><span class="bulk-label">▼ 一括変更</span></td>
+      <td colspan="3"><span class="bulk-label">▼ 一括変更</span></td>
+      <td><button class="btn-hover-21 bh-gray bulk-apply-btn" id="btnBulkApply" type="button"><span>まとめて変更</span></button></td>
     </tr>
     <tr class="bulk-row">
-      <td class="cb-cell"></td>
-      <td>
+      <td class="cb-with-val">
         <div class="bulk-tab-cell">
           <select class="bulk-tab-select" id="bulkTabSelect">${tabPresetOpts}</select>
           <span class="bulk-or">or</span>
           <input type="text" class="bulk-tab-input" id="bulkTabInput" placeholder="新規タブ名">
         </div>
       </td>
-      <td class="cb-cell"></td>
       <td><select class="kind-select k-chara" id="bulkKindSelect">${bulkKindOpts}</select></td>
-      <td class="cb-cell"></td>
-      <td>
-        <input type="text" class="sp-input" id="bulkRenameInput" placeholder="変更後の名前">
-      </td>
-      <td>
-        <button class="btn-hover-21 bh-gray bulk-apply-btn" id="btnBulkApply" type="button"><span>まとめて変更</span></button>
+      <td colspan="2">
+        <input type="text" class="sp-input" id="bulkRenameInput" placeholder="変更後の名前（変更前☐にチェックした行に適用）">
       </td>
     </tr>`;
 
