@@ -1,8 +1,83 @@
+/* === 強制グリッド（検証用） === */
+body.layout{
+  display: grid !important;
+  height: 100vh !important;
+  grid-template-rows: 64px 1fr 44px !important;
+  grid-template-columns: 220px 1fr 260px !important;
+  grid-template-areas:
+    "top top top"
+    "left center right"
+    "bottom bottom bottom" !important;
+}
+.area-top{ grid-area: top !important; }
+.area-left{ grid-area: left !important; }
+.area-center{ grid-area: center !important; }
+.area-right{ grid-area: right !important; }
+.area-bottom{ grid-area: bottom !important; }
+
+.frame{ width:100% !important; height:100% !important; border:0 !important; display:block !important; }
+.area{ border:1px solid #ddd !important; background:#fff !important; box-sizing:border-box !important; }
+/* === ここまで === */
+
+
+/* 5分割レイアウト：上・下は固定、中央だけスクロール（iframe内） */
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+.layout {
+  display: grid;
+  height: 100vh;
+  grid-template-rows: 64px 1fr 44px;     /* 上 / 中 / 下 */
+  grid-template-columns: 220px 1fr 260px; /* 左 / 中央 / 右 */
+  grid-template-areas:
+    "top top top"
+    "left center right"
+    "bottom bottom bottom";
+  background: #f6f6f6;
+}
+
+/* エリア割当 */
+.area-top    { grid-area: top; }
+.area-left   { grid-area: left; }
+.area-center { grid-area: center; }
+.area-right  { grid-area: right; }
+.area-bottom { grid-area: bottom; }
+
+/* iframe共通（枠の中身だけスクロール） */
+.frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #fff;
+}
+
+/* 見た目を少しブログっぽく（最小） */
+.area {
+  box-sizing: border-box;
+  border: 1px solid #ddd;
+  background: #fff;
+}
+
+/* 右と左は少し薄い背景 */
+.area-left, .area-right {
+  background: #fafafa;
+}
+
+/* 画面が狭い場合の最小対応（必要なら後で調整） */
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 180px 1fr 220px;
+  }
+
+
+
 /* =============================================
    btn-hover-21 ボタンデザイン（共通）
    ============================================= */
 
-/* ベース */
 .btn-hover-21 {
   display: inline-flex;
   justify-content: center;
@@ -19,7 +94,6 @@
   border-radius: 5px;
   overflow: hidden;
   white-space: nowrap;
-  /* デフォルト色（青） */
   border: 1px solid #2589d0;
   background-color: #fff;
   color: #2589d0;
@@ -47,55 +121,42 @@
 }
 .btn-hover-21:hover::before { width: 100%; }
 
-/* --- 黄：解析・primary --- */
+/* 黄：解析・primary */
 .btn-hover-21.bh-yellow {
-  border-color: #c9980a;
-  color: #7a5800;
-  background-color: #fffbf0;
+  border-color: #c9980a; color: #7a5800; background-color: #fffbf0;
 }
 .btn-hover-21.bh-yellow::before { background-color: #d4a017; }
 .btn-hover-21.bh-yellow:hover   { color: #fff; }
 
-/* --- 緑：元構造DL --- */
+/* 緑：元構造DL */
 .btn-hover-21.bh-green {
-  border-color: #4aaa4a;
-  color: #2a6a2a;
-  background-color: #f0faf0;
+  border-color: #4aaa4a; color: #2a6a2a; background-color: #f0faf0;
 }
 .btn-hover-21.bh-green::before { background-color: #4aaa4a; }
 .btn-hover-21.bh-green:hover   { color: #fff; }
 
-/* --- 青：整形DL（デフォルトと同じ） --- */
+/* 青：整形DL */
 .btn-hover-21.bh-blue {
-  border-color: #2589d0;
-  color: #1a4a9a;
-  background-color: #eef4ff;
+  border-color: #2589d0; color: #1a4a9a; background-color: #eef4ff;
 }
 .btn-hover-21.bh-blue::before { background-color: #2589d0; }
 .btn-hover-21.bh-blue:hover   { color: #fff; }
 
-/* --- 赤：リセット --- */
+/* 赤：リセット */
 .btn-hover-21.bh-red {
-  border-color: #d06040;
-  color: #a03820;
-  background-color: #fff2ee;
+  border-color: #d06040; color: #a03820; background-color: #fff2ee;
 }
 .btn-hover-21.bh-red::before { background-color: #d06040; }
 .btn-hover-21.bh-red:hover   { color: #fff; }
 
-/* --- グレー：汎用・まとめて変更等 --- */
+/* グレー：汎用 */
 .btn-hover-21.bh-gray {
-  border-color: #aaa;
-  color: #444;
-  background-color: #f8f8f8;
+  border-color: #aaa; color: #444; background-color: #f8f8f8;
 }
 .btn-hover-21.bh-gray::before { background-color: #777; }
 .btn-hover-21.bh-gray:hover   { color: #fff; }
 
 /* row配置用 */
 .btn-row-21 {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  align-items: center;
+  display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
 }
