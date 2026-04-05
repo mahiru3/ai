@@ -1,35 +1,29 @@
 /* ==============================================
    03-js/21-chat-05-log.js
-   ログ整形ツール ロジック（外部JS）
+   ログ整形ツール ロジック
    ============================================== */
 
-// =============================================
-// 定数
-// =============================================
 const KIND_LABEL = { chara:"キャラ", event:"テキスト", scene:"シーン", system:"非表示" };
 const KIND_ORDER = { chara:0, event:1, scene:2, system:3 };
-const TAB_LIST   = ["main","info","other"];
+const TAB_PRESETS = ["[main]","[info]","[other]"];
 
-// =============================================
-// 状態
-// =============================================
-let rawHtml    = "";
-let fileName   = "";
-let parsedDoc  = null;
-let speakerMap = {};   // key = origTab+"::"+name → { origTab, dispTab, name, kind, rename }
+let rawHtml   = "";
+let fileName  = "";
+let parsedDoc = null;
+let speakerMap = {};  // key=origTab+"::"+name → { origTab, dispTab, name, kind, rename }
 let tableOrder = [];
-let sortCol    = null;
-let sortDir    = "asc";
+let sortCol = null;
+let sortDir = "asc";
 
 // =============================================
 // ファイル読み込み
 // =============================================
 function initFileInput() {
-  const dropZone  = document.getElementById("dropZone");
-  const fileInput = document.getElementById("fileInput");
-  const fileNameEl= document.getElementById("fileName");
-  const loadStatus= document.getElementById("loadStatus");
-  const btnAnalyze= document.getElementById("btnAnalyze");
+  const dropZone   = document.getElementById("dropZone");
+  const fileInput  = document.getElementById("fileInput");
+  const fileNameEl = document.getElementById("fileName");
+  const loadStatus = document.getElementById("loadStatus");
+  const btnAnalyze = document.getElementById("btnAnalyze");
 
   dropZone.addEventListener("click", () => fileInput.click());
   dropZone.addEventListener("dragover",  e => { e.preventDefault(); dropZone.classList.add("dragover"); });
@@ -46,21 +40,15 @@ function initFileInput() {
     }
     fileName = file.name.replace(/\.html?$/i, "");
     const reader = new FileReader();
-    reader.onload = e => {
-      rawHtml = e.target.result;
+    reader.onload = ev => {
+      rawHtml = ev.target.result;
       fileNameEl.textContent = "📄 " + file.name;
       fileNameEl.className = "file-name loaded";
       btnAnalyze.disabled = false;
       showStatus(loadStatus, "読み込み完了。「解析する」を押してください", "info");
-      // 再読込時リセット
       speakerMap = {}; tableOrder = []; parsedDoc = null;
       ["acc-2","acc-3","acc-4","acc-5"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.removeAttribute("open");
-      });
-      ["speakerSection","optionSection","previewSection","formatSection"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = "none";
+        document.getElementById(id)?.removeAttribute("open");
       });
     };
     reader.readAsText(file, "UTF-8");
@@ -94,11 +82,8 @@ function analyze() {
 
   tableOrder = Object.keys(speakerMap);
   sortCol = null;
-
-  // アコーディオンを開く
   ["acc-2","acc-3","acc-4","acc-5"].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.setAttribute("open","");
+    document.getElementById(id)?.setAttribute("open","");
   });
 
   renderTable();
@@ -113,11 +98,12 @@ function renderTable() {
   const tbody = document.getElementById("spTbody");
   if (!tbody) return;
 
+  // ソート
   const sorted = [...tableOrder].sort((a, b) => {
     if (!sortCol) return 0;
     const sa = speakerMap[a], sb = speakerMap[b];
     let va, vb;
-    if (sortCol === "kind")   { va = KIND_ORDER[sa.kind]; vb = KIND_ORDER[sb.kind]; }
+    if      (sortCol === "kind") { va = KIND_ORDER[sa.kind]; vb = KIND_ORDER[sb.kind]; }
     else if (sortCol === "tab")  { va = sa.dispTab; vb = sb.dispTab; }
     else                         { va = sa.name;    vb = sb.name; }
     if (va < vb) return sortDir === "asc" ? -1 : 1;
@@ -125,57 +111,66 @@ function renderTable() {
     return 0;
   });
 
-  const tabOpts = TAB_LIST.map(t =>
-    `<option value="[${t}]">[${t}]</option>`
-  ).join("");
-
-  tbody.innerHTML = sorted.map(key => {
+  // データ行
+  const dataRows = sorted.map(key => {
     const sp = speakerMap[key];
-    const tabRaw = sp.dispTab.replace(/[\[\] ]/g,"");
-    const tabClass = tabRaw==="main"?"tab-main":tabRaw==="info"?"tab-info":"tab-other";
+    const tabRaw   = sp.dispTab.replace(/[\[\] ]/g, "");
+    const tabClass = tabRaw === "main" ? "tab-main" : tabRaw === "info" ? "tab-info" : "tab-other";
     const kindOpts = Object.entries(KIND_LABEL).map(([k,l]) =>
       `<option value="${k}" ${sp.kind===k?"selected":""}>${l}</option>`
     ).join("");
-    const tabOptsSel = TAB_LIST.map(t =>
-      `<option value="[${t}]" ${sp.dispTab==="["+t+"]"?"selected":""}>[${t}]</option>`
-    ).join("");
     return `<tr data-key="${escAttr(key)}">
-      <td>
-        <span class="tab-badge ${tabClass} tab-display">${esc(sp.dispTab)}</span>
-        <select class="tab-select" data-key="${escAttr(key)}" style="display:none;">${tabOptsSel}</select>
-      </td>
-      <td>${esc(sp.name)}</td>
+      <td class="cb-cell"><input type="checkbox" class="row-cb cb-tab" data-key="${escAttr(key)}" /></td>
+      <td><span class="tab-badge ${tabClass}">${esc(sp.dispTab)}</span></td>
+      <td class="cb-cell"><input type="checkbox" class="row-cb cb-kind" data-key="${escAttr(key)}" /></td>
       <td><select class="kind-select k-${sp.kind}" data-key="${escAttr(key)}">${kindOpts}</select></td>
+      <td class="cb-cell"><input type="checkbox" class="row-cb cb-name" data-key="${escAttr(key)}" /></td>
+      <td>${esc(sp.name)}</td>
       <td><input type="text" class="sp-input${sp.rename?" changed":""}"
         placeholder="${escAttr(sp.name)}" value="${escAttr(sp.rename)}"
         data-key="${escAttr(key)}" /></td>
     </tr>`;
   }).join("");
 
-  // タブバッジクリックでselectに切り替え
-  tbody.querySelectorAll(".tab-display").forEach(badge => {
-    badge.addEventListener("click", e => {
-      const row = e.target.closest("tr");
-      badge.style.display = "none";
-      row.querySelector(".tab-select").style.display = "";
-      row.querySelector(".tab-select").focus();
-    });
-  });
-  tbody.querySelectorAll(".tab-select").forEach(sel => {
-    sel.addEventListener("change", e => {
-      const key = e.target.dataset.key;
-      speakerMap[key].dispTab = e.target.value;
-      renderTable();
-    });
-    sel.addEventListener("blur", e => {
-      const row = e.target.closest("tr");
-      e.target.style.display = "none";
-      row.querySelector(".tab-display").style.display = "";
-    });
-  });
+  // 一括変更行（最下部固定）
+  const tabPresetOpts = TAB_PRESETS.map(t =>
+    `<option value="${escAttr(t)}">${esc(t)}</option>`
+  ).join("");
+  const bulkKindOpts = Object.entries(KIND_LABEL).map(([k,l]) =>
+    `<option value="${k}">${l}</option>`
+  ).join("");
 
-  // 種別変更
-  tbody.querySelectorAll(".kind-select").forEach(sel => {
+  const bulkRow = `<tr class="bulk-row">
+    <td class="cb-cell"></td>
+    <td>
+      <div class="bulk-tab-cell">
+        <select class="bulk-tab-select">${tabPresetOpts}</select>
+        <span class="bulk-or">or</span>
+        <input type="text" class="bulk-tab-input" placeholder="新規タブ名" />
+      </div>
+    </td>
+    <td class="cb-cell"></td>
+    <td><select class="kind-select k-chara bulk-kind-select">${bulkKindOpts}</select></td>
+    <td class="cb-cell"></td>
+    <td colspan="2">
+      <div class="bulk-action-row">
+        <input type="text" class="sp-input bulk-rename-input" placeholder="変更後の名前" />
+        <button class="menu-btn bulk-apply-btn" type="button">まとめて変更</button>
+      </div>
+    </td>
+  </tr>`;
+
+  // ラベル行（一括変更の見出し）
+  const labelRow = `<tr class="bulk-label-row">
+    <td colspan="7"><span class="bulk-label">▼ 一括変更</span></td>
+  </tr>`;
+
+  tbody.innerHTML = dataRows + labelRow + bulkRow;
+
+  // --- イベント登録 ---
+
+  // 種別セレクト（個別行）
+  tbody.querySelectorAll("tr[data-key] .kind-select").forEach(sel => {
     sel.addEventListener("change", e => {
       const key = e.target.dataset.key;
       speakerMap[key].kind = e.target.value;
@@ -183,13 +178,24 @@ function renderTable() {
     });
   });
 
-  // 名前変更
-  tbody.querySelectorAll(".sp-input").forEach(inp => {
+  // 変更後テキスト（個別行）
+  tbody.querySelectorAll(".sp-input:not(.bulk-rename-input)").forEach(inp => {
     inp.addEventListener("input", e => {
       const key = e.target.dataset.key;
       speakerMap[key].rename = e.target.value;
       e.target.classList.toggle("changed", e.target.value !== "");
     });
+  });
+
+  // 一括変更：bulkタブselectが変わったらbulkタブinputをクリア
+  const bulkTabSel   = tbody.querySelector(".bulk-tab-select");
+  const bulkTabInput = tbody.querySelector(".bulk-tab-input");
+  bulkTabSel.addEventListener("change", () => { bulkTabInput.value = ""; });
+  bulkTabInput.addEventListener("input", () => { bulkTabSel.value = TAB_PRESETS[0]; });
+
+  // まとめて変更ボタン
+  tbody.querySelector(".bulk-apply-btn").addEventListener("click", () => {
+    applyBulk();
   });
 
   // ソートアイコン更新
@@ -199,30 +205,43 @@ function renderTable() {
 }
 
 // =============================================
-// 一括タブ変更
+// 一括変更適用
 // =============================================
-function initBulkTab() {
-  const btnBulk   = document.getElementById("btnBulkTab");
-  const selectBulk= document.getElementById("bulkTabSelect");
-  if (!btnBulk || !selectBulk) return;
+function applyBulk() {
+  const tbody = document.getElementById("spTbody");
 
-  btnBulk.addEventListener("click", () => {
-    const newTab = selectBulkTab();
-    const checks = document.querySelectorAll(".tab-check:checked");
-    checks.forEach(cb => {
-      const tabKey = cb.dataset.tabkey; // "[main]" など
-      Object.keys(speakerMap).forEach(key => {
-        if (speakerMap[key].dispTab === tabKey) {
-          speakerMap[key].dispTab = newTab;
-        }
-      });
-    });
-    renderTable();
+  // チェック状態を取得
+  const tabChecked  = new Set([...tbody.querySelectorAll(".cb-tab:checked")].map(cb => cb.dataset.key));
+  const kindChecked = new Set([...tbody.querySelectorAll(".cb-kind:checked")].map(cb => cb.dataset.key));
+  const nameChecked = new Set([...tbody.querySelectorAll(".cb-name:checked")].map(cb => cb.dataset.key));
+
+  // 一括変更の値
+  const bulkTabInput = tbody.querySelector(".bulk-tab-input").value.trim();
+  const bulkTabSel   = tbody.querySelector(".bulk-tab-select").value;
+  const newTab       = bulkTabInput !== "" ? bulkTabInput : bulkTabSel;
+  const newKind      = tbody.querySelector(".bulk-kind-select").value;
+  const newName      = tbody.querySelector(".bulk-rename-input").value.trim();
+
+  let changed = 0;
+  Object.keys(speakerMap).forEach(key => {
+    if (tabChecked.has(key)) {
+      speakerMap[key].dispTab = newTab;
+      changed++;
+    }
+    if (kindChecked.has(key)) {
+      speakerMap[key].kind = newKind;
+      changed++;
+    }
+    if (nameChecked.has(key) && newName !== "") {
+      speakerMap[key].rename = newName;
+      changed++;
+    }
   });
-}
 
-function selectBulkTab() {
-  return document.getElementById("bulkTabValue")?.value || "[main]";
+  renderTable();
+  if (changed > 0) {
+    showStatus(document.getElementById("analyzeStatus"), `${changed} 件を変更しました`, "ok");
+  }
 }
 
 // =============================================
@@ -232,8 +251,8 @@ function updatePreview() {
   if (!parsedDoc) return;
   const optHideSys = document.getElementById("optHideSystem").checked;
   const wrap = document.getElementById("previewWrap");
-
   const lines = [];
+
   parsedDoc.querySelectorAll("p").forEach(p => {
     const spans = p.querySelectorAll("span");
     if (spans.length < 3) return;
@@ -245,11 +264,8 @@ function updatePreview() {
 
     const dispName = sp.rename.trim() || name;
     const dispTab  = sp.dispTab || origTab;
-
-    // <br>で分割して複数<p>に
     const bodyHtml = spans[2].innerHTML;
-    const parts = bodyHtml.split(/<br\s*\/?>/i)
-      .map(s => s.trim()).filter(s => s.length > 0);
+    const parts    = bodyHtml.split(/<br\s*\/?>/i).map(s => s.trim()).filter(s => s.length > 0);
 
     parts.forEach(part => {
       lines.push(
@@ -270,8 +286,8 @@ function updatePreview() {
 function downloadOriginal() {
   if (!parsedDoc) { showStatus(document.getElementById("processStatus"),"先に解析してください","err"); return; }
   const optHideSys = document.getElementById("optHideSystem").checked;
-
   const pBlocks = [];
+
   parsedDoc.querySelectorAll("p").forEach(p => {
     const spans = p.querySelectorAll("span");
     if (spans.length < 3) return;
@@ -284,10 +300,7 @@ function downloadOriginal() {
     const dispName = sp.rename.trim() || name;
     const dispTab  = sp.dispTab || origTab;
     const bodyHtml = spans[2].innerHTML;
-
-    // <br>で分割 → 空でない部分を別<p>に
-    const parts = bodyHtml.split(/<br\s*\/?>/i)
-      .map(s => s.trim()).filter(s => s.length > 0);
+    const parts    = bodyHtml.split(/<br\s*\/?>/i).map(s => s.trim()).filter(s => s.length > 0);
 
     parts.forEach(part => {
       pBlocks.push(
@@ -302,9 +315,8 @@ function downloadOriginal() {
     });
   });
 
-  // 元の<head>を取得してtitleだけ変更
-  const headSrc = parsedDoc.querySelector("head");
-  let headHtml = headSrc ? headSrc.outerHTML : "<head><meta charset=\"UTF-8\" /></head>";
+  const headEl = parsedDoc.querySelector("head");
+  let headHtml = headEl ? headEl.outerHTML : `<head><meta charset="UTF-8" /></head>`;
   headHtml = headHtml.replace(/<title>[^<]*<\/title>/, `<title>${esc(fileName)}</title>`);
 
   const html =
@@ -333,7 +345,6 @@ function downloadFormatted() {
   const optSkill = document.getElementById("optSkill").checked;
   const optHide  = document.getElementById("optHideSystem").checked;
   const optSpace = document.getElementById("optSpaceBetween").checked;
-
   const bodyLines = [];
   let prevKind = null;
 
@@ -350,40 +361,36 @@ function downloadFormatted() {
     const dispName = sp.rename.trim() || name;
     const dispTab  = sp.dispTab || origTab;
     const bodyHtml = spans[2].innerHTML;
-    const parts    = bodyHtml.split(/<br\s*\/?>/i)
-      .map(s => s.trim()).filter(s => s.length > 0);
+    const parts    = bodyHtml.split(/<br\s*\/?>/i).map(s => s.trim()).filter(s => s.length > 0);
 
     parts.forEach(part => {
       if (optSpace && prevKind !== null && prevKind !== kind) {
         bodyLines.push(`<p style="margin:0;line-height:1;">&nbsp;</p>`);
       }
       prevKind = kind;
-
       const tabRaw   = dispTab.replace(/[\[\] ]/g,"");
       const tabClass = tabRaw==="main"?"log-tab-main":tabRaw==="info"?"log-tab-info":"log-tab-other";
       const tabHtml  = optTab ? `<span class="log-tab ${tabClass}">${esc(dispTab)}</span>` : "";
-
       let text = part;
       if (optSkill) text = text.replace(/〈([^〉]+)〉/g, `<span class="skill-hl">〈$1〉</span>`);
-
       bodyLines.push(
         `<p style="color:#888888;">${tabHtml}<span>${esc(dispName)}</span> : <span> ${text} </span></p>`
       );
     });
   });
 
-  const headSrc = parsedDoc.querySelector("head");
-  let headHtml = headSrc ? headSrc.outerHTML : "<head><meta charset=\"UTF-8\" /></head>";
+  const headEl = parsedDoc.querySelector("head");
+  let headHtml = headEl ? headEl.outerHTML : `<head><meta charset="UTF-8" /></head>`;
   headHtml = headHtml.replace(/<title>[^<]*<\/title>/, `<title>${esc(fileName)}</title>`);
-  // styleを追加
-  headHtml = headHtml.replace("</head>", `  <style>
+  headHtml = headHtml.replace("</head>",
+    `  <style>
     .log-tab{font-size:10px;font-weight:700;margin-right:6px;padding:1px 6px;border-radius:3px;vertical-align:middle;display:inline-block}
     .log-tab-main{background:#fff3e0;color:#a85400}
     .log-tab-info{background:#e8f0fe;color:#1a56a0}
     .log-tab-other{background:#f0f0f0;color:#888}
     .skill-hl{background:#fff8e0;color:#7a5000;border-radius:3px;padding:0 2px;font-weight:600;font-size:.9em}
-  </style>
-</head>`);
+  </style>\n</head>`
+  );
 
   const html =
 `<!DOCTYPE html>
@@ -406,22 +413,27 @@ ${bodyLines.join("\n")}
 // =============================================
 function resetAll() {
   rawHtml = ""; fileName = ""; parsedDoc = null; speakerMap = {}; tableOrder = [];
-  const fileInput = document.getElementById("fileInput");
-  if (fileInput) fileInput.value = "";
-  const fileNameEl = document.getElementById("fileName");
-  if (fileNameEl) { fileNameEl.textContent = "ファイル未選択"; fileNameEl.className = "file-name"; }
-  const btnAnalyze = document.getElementById("btnAnalyze");
-  if (btnAnalyze) btnAnalyze.disabled = true;
-  ["acc-2","acc-3","acc-4","acc-5"].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.removeAttribute("open");
-  });
+  const fi = document.getElementById("fileInput");
+  if (fi) fi.value = "";
+  const fn = document.getElementById("fileName");
+  if (fn) { fn.textContent = "ファイル未選択"; fn.className = "file-name"; }
+  const ba = document.getElementById("btnAnalyze");
+  if (ba) ba.disabled = true;
+  ["acc-2","acc-3","acc-4","acc-5"].forEach(id => document.getElementById(id)?.removeAttribute("open"));
   ["loadStatus","analyzeStatus","processStatus","formatStatus"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.className = "status-msg";
   });
   const wrap = document.getElementById("previewWrap");
   if (wrap) wrap.innerHTML = `<div class="preview-empty">「プレビュー更新」をクリックしてください</div>`;
+}
+
+// =============================================
+// naviからアコーディオンを開く
+// =============================================
+function openAccordion(id) {
+  const el = document.getElementById(id);
+  if (el) { el.setAttribute("open",""); el.scrollIntoView({ behavior:"smooth", block:"start" }); }
 }
 
 // =============================================
@@ -443,13 +455,4 @@ function triggerDownload(html, name) {
 function showStatus(el, msg, type) {
   if (!el) return;
   el.textContent = msg; el.className = "status-msg show " + type;
-}
-
-// =============================================
-// naviからアコーディオンを開く
-// =============================================
-function openAccordion(id) {
-  const el = document.getElementById(id);
-  if (el) el.setAttribute("open","");
-  el?.scrollIntoView({ behavior:"smooth", block:"start" });
 }
