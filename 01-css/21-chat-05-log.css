@@ -116,9 +116,12 @@ body {
 /* =============================================
    ボタン配置
    ============================================= */
-/* 縦並び（③プレビューボタン・navi用） */
+/* 縦並び（navi用） */
 .btn-col-21 { display: flex; flex-direction: column; gap: 6px; }
 .btn-col-21 .btn-hover-21 { justify-content: flex-start; }
+
+/* 横並び（③プレビューボタン用） */
+.btn-row-21 { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 
 /* navi用ボタン縦並び */
 .navi-btn-col { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
