@@ -556,13 +556,3 @@ table.sp-table tr[data-key] { user-select: none; }
   cursor: col-resize; background: transparent; z-index: 10;
 }
 .th-resizable .col-resizer:hover { background: #9bbcf5; }
-
-/* チェックボックスをlabel外に出したため横並び調整 */
-.cb-with-val {
-  display: flex; align-items: center; gap: 6px;
-  padding: 5px 8px !important; vertical-align: middle;
-}
-.cb-with-val input[type="checkbox"] {
-  width: 14px; height: 14px; accent-color: #3d6e99;
-  cursor: pointer; flex-shrink: 0; margin: 0;
-}
