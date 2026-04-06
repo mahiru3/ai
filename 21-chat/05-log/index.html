@@ -10,21 +10,22 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">📝 ログ整形ツール！！</h1>
+  <h1 class="page-title">📝 ログ整形ツール！</h1>
   <p class="page-subtitle">CCFoliaのHTMLログを読み込み、発言者を整理してHTMLでダウンロードします。ページ内完結・サーバー送信なし。</p>
 
   <!-- ① ファイル読み込み -->
   <details class="accordion-008 acc-color-1" id="acc-1" open>
-    <summary>① ファイル読み込み</summary>
+    <summary>① ファイル読み込み <span class="summary-filename" id="fileName"></span></summary>
     <div class="accordion-body">
       <div class="drop-zone" id="dropZone">
         <span class="drop-icon">📂</span>
         ここにCCFoliaのHTMLファイルをドラッグ＆ドロップ<br>またはクリックして選択
         <input type="file" id="fileInput" accept=".html,.htm" />
       </div>
-      <div class="file-name" id="fileName">ファイル未選択</div>
-      <button class="btn-hover-21 bh-yellow" id="btnAnalyze" disabled><span>🔍 解析する</span></button>
-      <div class="status-msg" id="loadStatus"></div>
+      <div class="analyze-row">
+        <button class="btn-hover-21 bh-yellow" id="btnAnalyze" disabled><span>🔍 解析する</span></button>
+        <div class="status-msg" id="loadStatus"></div>
+      </div>
     </div>
   </details>
 
@@ -36,24 +37,27 @@
         <table class="sp-table" id="spTable">
           <thead>
             <tr>
-              <th data-col="tab"  class="sort-none th-with-filter">
+              <th class="no-sort th-with-filter">
                 <div class="th-inner">
-                  <label class="th-cb-label"><input type="checkbox" id="chkAllTab" class="th-cb"><span>タブ名</span></label>
-                  <button class="filter-btn" data-col="tab"  title="フィルタ">▼</button>
+                  <label class="th-cb-label" onclick="event.stopPropagation()"><input type="checkbox" id="chkAllTab" class="th-cb"><span>タブ名</span></label>
+                  <button class="sort-col-btn" data-col="tab"  title="ソート">⇅</button>
+                  <button class="filter-btn"   data-col="tab"  title="フィルタ">▼</button>
                 </div>
                 <div class="filter-drop" id="filterDrop-tab"></div>
               </th>
-              <th data-col="kind" class="sort-none th-with-filter">
+              <th class="no-sort th-with-filter">
                 <div class="th-inner">
-                  <label class="th-cb-label"><input type="checkbox" id="chkAllKind" class="th-cb"><span>種別</span></label>
-                  <button class="filter-btn" data-col="kind" title="フィルタ">▼</button>
+                  <label class="th-cb-label" onclick="event.stopPropagation()"><input type="checkbox" id="chkAllKind" class="th-cb"><span>種別</span></label>
+                  <button class="sort-col-btn" data-col="kind" title="ソート">⇅</button>
+                  <button class="filter-btn"   data-col="kind" title="フィルタ">▼</button>
                 </div>
                 <div class="filter-drop" id="filterDrop-kind"></div>
               </th>
-              <th data-col="name" class="sort-none th-with-filter">
+              <th class="no-sort th-with-filter">
                 <div class="th-inner">
-                  <label class="th-cb-label"><input type="checkbox" id="chkAllName" class="th-cb"><span>変更前</span></label>
-                  <button class="filter-btn" data-col="name" title="フィルタ">▼</button>
+                  <label class="th-cb-label" onclick="event.stopPropagation()"><input type="checkbox" id="chkAllName" class="th-cb"><span>変更前</span></label>
+                  <button class="sort-col-btn" data-col="name" title="ソート">⇅</button>
+                  <button class="filter-btn"   data-col="name" title="フィルタ">▼</button>
                 </div>
                 <div class="filter-drop" id="filterDrop-name"></div>
               </th>
@@ -67,20 +71,9 @@
     </div>
   </details>
 
-  <!-- ③ 除外設定 -->
-  <details class="accordion-008 acc-color-3" id="acc-3">
-    <summary>③ 除外設定</summary>
-    <div class="accordion-body">
-      <label class="option-item">
-        <input type="checkbox" id="optHideSystem" checked />
-        <span>種別「非表示」の発言者を出力から除外する</span>
-      </label>
-    </div>
-  </details>
-
-  <!-- ④ プレビュー・元構造ダウンロード -->
+  <!-- ③ プレビュー・元構造ダウンロード（旧④） -->
   <details class="accordion-008 acc-color-4" id="acc-4">
-    <summary>④ プレビュー・ダウンロード（元構造）</summary>
+    <summary>③ プレビュー・ダウンロード（元構造）</summary>
     <div class="accordion-body">
       <p style="font-size:11px;color:#888;margin:0 0 8px;">元のCCFolia HTML構造のまま出力。発言者名置換・非表示除去・&lt;br&gt;分割のみ。</p>
       <div class="btn-row-21">
@@ -92,6 +85,17 @@
         <div class="preview-empty">「プレビュー更新」をクリックしてください</div>
       </div>
       <div class="status-msg" id="processStatus"></div>
+    </div>
+  </details>
+
+  <!-- ④ 除外設定（旧③） -->
+  <details class="accordion-008 acc-color-3" id="acc-3">
+    <summary>④ 除外設定</summary>
+    <div class="accordion-body">
+      <label class="option-item">
+        <input type="checkbox" id="optHideSystem" checked />
+        <span>種別「非表示」の発言者を出力から除外する</span>
+      </label>
     </div>
   </details>
 
@@ -452,26 +456,33 @@ function _applyFilter(col) {
   document.getElementById("filterDrop-" + col)?.classList.add("open");
 }
 
-// フィルタドロップダウン 開閉
+// フィルタドロップダウン 開閉 ＆ ソートボタン
 document.getElementById("spTable").addEventListener("click", e => {
-  const btn = e.target.closest(".filter-btn");
-  if (btn) {
+  // フィルタ▼ボタン
+  const filterBtn = e.target.closest(".filter-btn");
+  if (filterBtn) {
     e.stopPropagation();
-    const col  = btn.dataset.col;
+    const col  = filterBtn.dataset.col;
     const drop = document.getElementById("filterDrop-" + col);
     const open = drop.classList.contains("open");
-    // 全部閉じる
     document.querySelectorAll(".filter-drop").forEach(d => d.classList.remove("open"));
     if (!open) drop.classList.add("open");
     return;
   }
-  // ソートクリック（filter-btn以外のth）
-  const th = e.target.closest("th[data-col]");
-  if (!th || e.target.closest(".filter-btn") || e.target.closest(".filter-drop") || e.target.closest(".th-cb-label")) return;
-  const col = th.dataset.col;
-  sortDir = sortCol === col && sortDir === "asc" ? "desc" : "asc";
-  sortCol = col;
-  renderTable();
+  // ソート⇅ボタン
+  const sortBtn = e.target.closest(".sort-col-btn");
+  if (sortBtn) {
+    e.stopPropagation();
+    const col = sortBtn.dataset.col;
+    sortDir = sortCol === col && sortDir === "asc" ? "desc" : "asc";
+    sortCol = col;
+    // アイコン更新
+    document.querySelectorAll(".sort-col-btn").forEach(b => b.textContent = "⇅");
+    sortBtn.textContent = sortDir === "asc" ? "▲" : "▼";
+    renderTable();
+    rebuildFilterDrops();
+    return;
+  }
 });
 
 // ドロップダウン外クリックで閉じる
@@ -493,7 +504,6 @@ document.getElementById("spTable").addEventListener("change", e => {
   }
 });
 
-// ソートはフィルタclickハンドラ内に統合済み
 
 /* ------------------------------------------
    ④ プレビュー
