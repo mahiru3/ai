@@ -10,7 +10,7 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">📝 ログ整形ツール！！</h1>
+  <h1 class="page-title">📝 ログ整形ツールです！</h1>
   <p class="page-subtitle">CCFoliaのHTMLログを読み込み、発言者を整理してHTMLでダウンロードします。ページ内完結・サーバー送信なし。</p>
 
   <!-- ① ファイル読み込み -->
@@ -321,9 +321,17 @@ function renderTable() {
   // 種別セレクト
   tbody.querySelectorAll("tr[data-key] .kind-select").forEach(sel => {
     sel.addEventListener("change", e => {
-      const key = e.target.dataset.key;
-      speakerMap[key].kind = e.target.value;
-      e.target.className = "kind-select k-" + e.target.value;
+      const key  = e.target.dataset.key;
+      const kind = e.target.value;
+      speakerMap[key].kind = kind;
+      e.target.className = "kind-select k-" + kind;
+      // 「テキスト」に変更したら変更後に★0000★を自動入力（未入力の場合のみ）
+      if (kind === "event" && !speakerMap[key].rename) {
+        speakerMap[key].rename = "★0000★";
+        // 同じ行のsp-inputを更新
+        const inp = e.target.closest("tr")?.querySelector(".sp-input");
+        if (inp) { inp.value = "★0000★"; inp.classList.add("changed"); }
+      }
     });
   });
 
@@ -361,7 +369,14 @@ function renderTable() {
     const newKind = document.getElementById("bulkKindSelect").value;
     const checked = new Set([...tbody.querySelectorAll(".cb-kind:checked")].map(c => c.dataset.key));
     let n = 0;
-    checked.forEach(key => { speakerMap[key].kind = newKind; n++; });
+    checked.forEach(key => {
+      speakerMap[key].kind = newKind;
+      // 「テキスト」に変更したら変更後に★0000★を自動入力（未入力の場合のみ）
+      if (newKind === "event" && !speakerMap[key].rename) {
+        speakerMap[key].rename = "★0000★";
+      }
+      n++;
+    });
     if (n > 0) { renderTable(); showStatus(document.getElementById("analyzeStatus"), `種別 ${n} 件を変更しました`, "ok"); }
   });
 
@@ -532,14 +547,13 @@ document.getElementById("spTable").addEventListener("change", e => {
 
 
 /* ------------------------------------------
-   ④ プレビュー
+   共通：出力行生成（プレビュー・元構造DL共通）
+   種別「テキスト」の場合：
+     1行目: [tab] dispName : 元の発言者名
+     2行目: [tab] dispName : 元の本文
 ------------------------------------------ */
-document.getElementById("btnPreview").addEventListener("click", () => {
-  if (!parsedDoc) return;
-  const optHide = document.getElementById("optHideSystem").checked;
-  const wrap    = document.getElementById("previewWrap");
-  const lines   = [];
-
+function buildOriginalLines(optHide) {
+  const lines = [];
   parsedDoc.querySelectorAll("p").forEach(p => {
     const spans = p.querySelectorAll("span");
     if (spans.length < 3) return;
@@ -551,13 +565,31 @@ document.getElementById("btnPreview").addEventListener("click", () => {
 
     const dispName = sp.rename.trim() || name;
     const dispTab  = sp.dispTab || origTab;
-    spans[2].innerHTML.split(/<br\s*\/?>/i)
-      .map(s => s.trim()).filter(s => s)
-      .forEach(part => {
+    const parts    = spans[2].innerHTML.split(/<br\s*\/?>/i).map(s => s.trim()).filter(s => s);
+
+    if (sp.kind === "event") {
+      // テキスト種別：発言者名を1行目として追加、本文を続ける
+      lines.push(`<p style="color:#888888;"><span> ${e(dispTab)}</span> <span>${e(dispName)}</span> : <span> ${e(name)} </span></p>`);
+      parts.forEach(part => {
         lines.push(`<p style="color:#888888;"><span> ${e(dispTab)}</span> <span>${e(dispName)}</span> : <span> ${part} </span></p>`);
       });
+    } else {
+      parts.forEach(part => {
+        lines.push(`<p style="color:#888888;"><span> ${e(dispTab)}</span> <span>${e(dispName)}</span> : <span> ${part} </span></p>`);
+      });
+    }
   });
+  return lines;
+}
 
+/* ------------------------------------------
+   ④ プレビュー
+------------------------------------------ */
+document.getElementById("btnPreview").addEventListener("click", () => {
+  if (!parsedDoc) return;
+  const optHide = document.getElementById("optHideSystem").checked;
+  const wrap    = document.getElementById("previewWrap");
+  const lines   = buildOriginalLines(optHide);
   wrap.innerHTML = lines.length
     ? lines.join("\n")
     : `<div class="preview-empty">表示できる行がありません</div>`;
@@ -569,31 +601,11 @@ document.getElementById("btnPreview").addEventListener("click", () => {
 document.getElementById("btnDownload").addEventListener("click", () => {
   if (!parsedDoc) { showStatus(document.getElementById("processStatus"),"先に解析してください","err"); return; }
   const optHide  = document.getElementById("optHideSystem").checked;
-  const pBlocks  = [];
 
-  parsedDoc.querySelectorAll("p").forEach(p => {
-    const spans = p.querySelectorAll("span");
-    if (spans.length < 3) return;
-    const origTab = spans[0].textContent.trim();
-    const name    = spans[1].textContent.trim();
-    const key     = origTab + "::" + name;
-    const sp      = speakerMap[key] || { kind:"chara", rename:"", dispTab:origTab };
-    if (optHide && sp.kind === "system") return;
-
-    const dispName = sp.rename.trim() || name;
-    const dispTab  = sp.dispTab || origTab;
-    spans[2].innerHTML.split(/<br\s*\/?>/i)
-      .map(s => s.trim()).filter(s => s)
-      .forEach(part => {
-        pBlocks.push(
-`<p style="color:#888888;">
-  <span> ${e(dispTab)}</span>
-  <span>${e(dispName)}</span> :
-  <span>
-    ${part}
-  </span>
-</p>`);
-      });
+  // buildOriginalLinesの結果を<p>形式に変換
+  const pBlocks = buildOriginalLines(optHide).map(line => {
+    // すでに<p>タグ形式なのでそのまま使う（インデント整形）
+    return line;
   });
 
   const headEl = parsedDoc.querySelector("head");
@@ -633,9 +645,17 @@ document.getElementById("btnFormatDownload").addEventListener("click", () => {
     const tabClass = tabRaw==="main"?"log-tab-main":tabRaw==="info"?"log-tab-info":"log-tab-other";
     const tabHtml  = optTab ? `<span class="log-tab ${tabClass}">${e(dispTab)}</span>` : "";
 
-    spans[2].innerHTML.split(/<br\s*\/?>/i)
-      .map(s => s.trim()).filter(s => s)
-      .forEach(part => {
+    const parts = spans[2].innerHTML.split(/<br\s*\/?>/i).map(s => s.trim()).filter(s => s);
+
+    // テキスト種別：発言者名を1行目として追加
+    if (kind === "event") {
+      if (optSpace && prevKind !== null && prevKind !== kind)
+        lines.push(`<p style="margin:0;line-height:1;">&nbsp;</p>`);
+      prevKind = kind;
+      lines.push(`<p style="color:#888888;">${tabHtml}<span>${e(dispName)}</span> : <span> ${e(name)} </span></p>`);
+    }
+
+    parts.forEach(part => {
         if (optSpace && prevKind !== null && prevKind !== kind)
           lines.push(`<p style="margin:0;line-height:1;">&nbsp;</p>`);
         prevKind = kind;
