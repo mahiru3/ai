@@ -10,7 +10,7 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">📝 ログ整形ツールかも！</h1>
+  <h1 class="page-title">📝 ログ整形ツール！！</h1>
   <p class="page-subtitle">CCFoliaのHTMLログを読み込み、発言者を整理してHTMLでダウンロードします。ページ内完結・サーバー送信なし。</p>
 
   <!-- ① ファイル読み込み -->
@@ -65,6 +65,7 @@
                 <div class="col-resizer" data-col="name"></div>
               </th>
               <th class="no-sort">変更後</th>
+              <th class="no-sort">チャット</th>
             </tr>
           </thead>
           <tbody id="spTbody"></tbody>
@@ -201,8 +202,14 @@ btnAnalyze.addEventListener("click", () => {
     const origTab = spans[0].textContent.trim();
     const name    = spans[1].textContent.trim();
     const key     = origTab + "::" + name;
-    if (!(key in speakerMap))
-      speakerMap[key] = { origTab, dispTab: origTab, name, kind:"chara", rename:"" };
+    if (!(key in speakerMap)) {
+      // 元の本文テキスト（brで分割→改行結合）をchatの初期値として格納
+      const rawParts = spans[2].innerHTML.split(/<br\s*\/?>/i)
+        .map(s => { const d = document.createElement("div"); d.innerHTML = s; return d.textContent.trim(); })
+        .filter(s => s);
+      speakerMap[key] = { origTab, dispTab: origTab, name, kind:"chara", rename:"", chat: rawParts.join("
+") };
+    }
   });
 
   const spCount = Object.keys(speakerMap).length;
@@ -270,6 +277,7 @@ function renderTable() {
       <td><input type="text" class="sp-input${sp.rename?" changed":""}"
             placeholder="${ea(sp.name)}" value="${ea(sp.rename)}"
             data-key="${ea(key)}"></td>
+      <td><textarea class="chat-input" rows="2" data-key="${ea(key)}">${e(sp.chat||"")}</textarea></td>
     </tr>`;
   }).join("");
 
@@ -283,12 +291,12 @@ function renderTable() {
 
   // 一括変更行HTML（ボタン行 → 入力行）
   const bulkHtml = `
-    <tr class="bulk-sep-row"><td colspan="4"></td></tr>
+    <tr class="bulk-sep-row"><td colspan="5"></td></tr>
     <tr class="bulk-btn-row">
       <td><button class="btn-hover-21 bh-gray col-bulk-btn" id="btnBulkTab"  type="button"><span>🔄 一括変更</span></button></td>
       <td><button class="btn-hover-21 bh-gray col-bulk-btn" id="btnBulkKind" type="button"><span>🔄 一括変更</span></button></td>
       <td><button class="btn-hover-21 bh-gray col-bulk-btn" id="btnBulkName" type="button"><span>🔄 一括変更</span></button></td>
-      <td></td>
+      <td></td><td></td>
     </tr>
     <tr class="bulk-input-row">
       <td>
@@ -300,7 +308,7 @@ function renderTable() {
       </td>
       <td><select class="kind-select k-chara" id="bulkKindSelect">${bulkKindOpts}</select></td>
       <td><input type="text" class="sp-input" id="bulkRenameInput" placeholder="変更後の名前"></td>
-      <td></td>
+      <td></td><td></td>
     </tr>`;
 
   tbody.innerHTML = dataRowsHtml + bulkHtml;
@@ -341,6 +349,14 @@ function renderTable() {
       const key = e.target.dataset.key;
       speakerMap[key].rename = e.target.value;
       e.target.classList.toggle("changed", e.target.value !== "");
+    });
+  });
+
+  // チャット欄
+  tbody.querySelectorAll("tr[data-key] .chat-input").forEach(ta => {
+    ta.addEventListener("input", e => {
+      const key = e.target.dataset.key;
+      speakerMap[key].chat = e.target.value;
     });
   });
 
@@ -565,14 +581,14 @@ function buildOriginalLines(optHide) {
 
     const dispName = sp.rename.trim() || name;
     const dispTab  = sp.dispTab || origTab;
-    // innerHTML(<br>含む)をテキスト行に分割
-    const rawHtml = spans[2].innerHTML;
-    const parts   = rawHtml.split(/<br\s*\/?>/i)
-      .map(s => { const d = document.createElement("div"); d.innerHTML = s; return d.textContent.trim(); })
-      .filter(s => s);
+    // チャット欄の内容を本文として使う（
+で複数行）
+    const chatText = (sp.chat || "").trim();
+    const parts    = chatText ? chatText.split("
+").map(s => s.trim()).filter(s => s) : [];
 
     if (sp.kind === "event") {
-      // テキスト種別：発言者名を1行目として追加、本文を続ける
+      // テキスト種別：発言者名を1行目として追加、chatの各行を続ける
       lines.push(`<p style="color:#888888;"><span> ${e(dispTab)}</span> <span>${e(dispName)}</span> : <span> ${e(name)} </span></p>`);
       parts.forEach(part => {
         lines.push(`<p style="color:#888888;"><span> ${e(dispTab)}</span> <span>${e(dispName)}</span> : <span> ${e(part)} </span></p>`);
@@ -649,7 +665,9 @@ document.getElementById("btnFormatDownload").addEventListener("click", () => {
     const tabClass = tabRaw==="main"?"log-tab-main":tabRaw==="info"?"log-tab-info":"log-tab-other";
     const tabHtml  = optTab ? `<span class="log-tab ${tabClass}">${e(dispTab)}</span>` : "";
 
-    const parts = spans[2].innerHTML.split(/<br\s*\/?>/i).map(s => s.trim()).filter(s => s);
+    const chatText = (sp.chat || "").trim();
+    const parts    = chatText ? chatText.split("
+").map(s => s.trim()).filter(s => s) : [];
 
     // テキスト種別：発言者名を1行目として追加
     if (kind === "event") {
@@ -660,13 +678,13 @@ document.getElementById("btnFormatDownload").addEventListener("click", () => {
     }
 
     parts.forEach(part => {
-        if (optSpace && prevKind !== null && prevKind !== kind)
-          lines.push(`<p style="margin:0;line-height:1;">&nbsp;</p>`);
-        prevKind = kind;
-        let text = part;
-        if (optSkill) text = text.replace(/〈([^〉]+)〉/g,`<span class="skill-hl">〈$1〉</span>`);
-        lines.push(`<p style="color:#888888;">${tabHtml}<span>${e(dispName)}</span> : <span> ${text} </span></p>`);
-      });
+      if (optSpace && prevKind !== null && prevKind !== kind)
+        lines.push(`<p style="margin:0;line-height:1;">&nbsp;</p>`);
+      prevKind = kind;
+      let text = e(part);
+      if (optSkill) text = text.replace(/〈([^〉]+)〉/g,`<span class="skill-hl">〈$1〉</span>`);
+      lines.push(`<p style="color:#888888;">${tabHtml}<span>${e(dispName)}</span> : <span> ${text} </span></p>`);
+    });
   });
 
   const headEl = parsedDoc.querySelector("head");
