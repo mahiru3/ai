@@ -10,7 +10,7 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">📝 ログ整形ツール！</h1>
+  <h1 class="page-title">📝 ログ整形ツール！！</h1>
   <p class="page-subtitle">CCFoliaのHTMLログを読み込み、発言者を整理してHTMLでダウンロードします。ページ内完結・サーバー送信なし。</p>
 
   <!-- ① ファイル読み込み -->
@@ -44,6 +44,7 @@
                   <button class="filter-btn"   data-col="tab"  title="フィルタ">▼</button>
                 </div>
                 <div class="filter-drop" id="filterDrop-tab"></div>
+                <div class="col-resizer" data-col="tab"></div>
               </th>
               <th class="no-sort th-with-filter">
                 <div class="th-inner">
@@ -52,6 +53,7 @@
                   <button class="filter-btn"   data-col="kind" title="フィルタ">▼</button>
                 </div>
                 <div class="filter-drop" id="filterDrop-kind"></div>
+                <div class="col-resizer" data-col="kind"></div>
               </th>
               <th class="no-sort th-with-filter">
                 <div class="th-inner">
@@ -60,6 +62,7 @@
                   <button class="filter-btn"   data-col="name" title="フィルタ">▼</button>
                 </div>
                 <div class="filter-drop" id="filterDrop-name"></div>
+                <div class="col-resizer" data-col="name"></div>
               </th>
               <th class="no-sort">変更後</th>
             </tr>
@@ -213,6 +216,8 @@ btnAnalyze.addEventListener("click", () => {
   );
   renderTable();
   initFilterDrops();
+  initColResize();
+  initRowDragSelect();
   const pCount = parsedDoc.querySelectorAll("p").length;
   showStatus(document.getElementById("analyzeStatus"),
     `${pCount} ブロック ／ 発言者 ${spCount} 件を検出`, "ok");
@@ -299,6 +304,7 @@ function renderTable() {
     </tr>`;
 
   tbody.innerHTML = dataRowsHtml + bulkHtml;
+  initRowDragSelect();
 
   /* --- 個別行イベント --- */
 
@@ -402,7 +408,7 @@ function initFilterDrops() {
   rebuildFilterDrops();
 }
 
-// フィルタドロップダウンの中身を全speakerMapから生成（フィルタ状態は保持）
+// フィルタドロップダウンの中身を全speakerMapから生成
 function rebuildFilterDrops() {
   const allKeys = Object.keys(speakerMap);
   const vals = {
@@ -416,44 +422,64 @@ function rebuildFilterDrops() {
     const drop = document.getElementById("filterDrop-" + col);
     if (!drop) return;
     const cur = filters[col];
+    const allChecked = !cur;
+
     drop.innerHTML =
-      `<div class="fd-item fd-all-item"><label><input type="checkbox" class="fd-all" data-col="${col}"${!cur?" checked":""}> （すべて）</label></div>` +
+      // すべて選択・解除ボタン行
+      `<div class="fd-ctrl-row">
+        <button class="fd-ctrl-btn" data-col="${col}" data-act="all">すべて選択</button>
+        <button class="fd-ctrl-btn" data-col="${col}" data-act="none">解除</button>
+      </div>` +
+      // （すべて）チェックボックス
+      `<div class="fd-item fd-all-item"><label><input type="checkbox" class="fd-all" data-col="${col}"${allChecked?" checked":""}> （すべて）</label></div>` +
       vals[col].map(v => {
-        const disp = col==="kind" ? (KIND_LABEL[v]||v) : v;
+        const disp    = col==="kind" ? (KIND_LABEL[v]||v) : v;
         const checked = !cur || cur.has(v) ? " checked" : "";
         return `<div class="fd-item"><label><input type="checkbox" class="fd-val" data-col="${col}" data-val="${ea(v)}"${checked}> ${e(disp)}</label></div>`;
       }).join("");
 
-    // 「すべて」チェック
+    // すべて選択・解除ボタン
+    drop.querySelectorAll(".fd-ctrl-btn").forEach(btn => {
+      btn.addEventListener("click", e => {
+        e.stopPropagation();
+        const act = btn.dataset.act;
+        drop.querySelectorAll(".fd-val").forEach(cb => cb.checked = act==="all");
+        drop.querySelector(".fd-all").checked = act==="all";
+        _applyFilter(col, true); // keepOpenフラグ
+      });
+    });
+
+    // 「すべて」チェックボックス
     drop.querySelector(".fd-all").addEventListener("change", function() {
       drop.querySelectorAll(".fd-val").forEach(v => v.checked = this.checked);
-      _applyFilter(col);
+      _applyFilter(col, true);
     });
+
     // 個別チェック
     drop.querySelectorAll(".fd-val").forEach(cb => {
       cb.addEventListener("change", () => {
         const all = [...drop.querySelectorAll(".fd-val")].every(v => v.checked);
         drop.querySelector(".fd-all").checked = all;
-        _applyFilter(col);
+        _applyFilter(col, true);
       });
     });
   });
 }
 
-function _applyFilter(col) {
+function _applyFilter(col, keepOpen=false) {
   const drop    = document.getElementById("filterDrop-" + col);
-  const checked = [...drop.querySelectorAll(".fd-val:checked")].map(v => v.dataset.val);
-  const all     = drop.querySelector(".fd-all").checked;
-  if      (col==="tab")  filterTab  = all ? null : new Set(checked);
-  else if (col==="kind") filterKind = all ? null : new Set(checked);
-  else if (col==="name") filterName = all ? null : new Set(checked);
+  if (!drop) return;
+  const checkedVals = [...drop.querySelectorAll(".fd-val:checked")].map(v => v.dataset.val);
+  const allChecked  = drop.querySelector(".fd-all")?.checked ?? true;
+  if      (col==="tab")  filterTab  = allChecked ? null : new Set(checkedVals);
+  else if (col==="kind") filterKind = allChecked ? null : new Set(checkedVals);
+  else if (col==="name") filterName = allChecked ? null : new Set(checkedVals);
   const btn = document.querySelector(`.filter-btn[data-col="${col}"]`);
-  if (btn) btn.classList.toggle("filter-active", !all);
+  if (btn) btn.classList.toggle("filter-active", !allChecked);
   renderTable();
-  // renderTable後にドロップを再構築してチェック状態を復元
+  // チェック状態を保持して再描画
   rebuildFilterDrops();
-  // 適用中のドロップは開いたままにする
-  document.getElementById("filterDrop-" + col)?.classList.add("open");
+  if (keepOpen) document.getElementById("filterDrop-" + col)?.classList.add("open");
 }
 
 // フィルタドロップダウン 開閉 ＆ ソートボタン
@@ -664,6 +690,80 @@ function openAccordion(id) {
 /* ------------------------------------------
    ユーティリティ
 ------------------------------------------ */
+// =============================================
+// ② 列幅リサイズ
+// =============================================
+function initColResize() {
+  const table = document.getElementById("spTable");
+  if (!table) return;
+  table.querySelectorAll(".col-resizer").forEach(handle => {
+    let startX, startW, th;
+    handle.addEventListener("mousedown", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      th     = handle.closest("th");
+      startX = e.clientX;
+      startW = th.offsetWidth;
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+
+      const onMove = ev => {
+        const w = Math.max(60, startW + ev.clientX - startX);
+        th.style.width    = w + "px";
+        th.style.minWidth = w + "px";
+      };
+      const onUp = () => {
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup",   onUp);
+      };
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup",   onUp);
+    });
+  });
+}
+
+// =============================================
+// ③ 行ドラッグ選択（cb-tab / cb-kind / cb-name をまとめてON/OFF）
+// =============================================
+function initRowDragSelect() {
+  const tbody = document.getElementById("spTbody");
+  if (!tbody) return;
+  let dragging  = false;
+  let startKey  = null;
+  let dragState = null; // true=チェックON, false=チェックOFF
+
+  // どのチェックボックスクラスを操作するか（最初に触ったcb-xxxで決定）
+  let targetCbClass = null;
+
+  tbody.addEventListener("mousedown", e => {
+    const cb = e.target.closest(".cb-tab, .cb-kind, .cb-name");
+    if (!cb) return;
+    const row = cb.closest("tr[data-key]");
+    if (!row) return;
+    dragging       = true;
+    startKey       = row.dataset.key;
+    dragState      = !cb.checked; // 最初の状態を反転
+    targetCbClass  = [...cb.classList].find(cls => cls.startsWith("cb-"));
+    cb.checked     = dragState;
+    e.preventDefault();
+  });
+
+  tbody.addEventListener("mousemove", e => {
+    if (!dragging || !targetCbClass) return;
+    const td  = e.target.closest("td");
+    const row = td ? td.closest("tr[data-key]") : null;
+    if (!row) return;
+    const cb = row.querySelector("." + targetCbClass);
+    if (cb) cb.checked = dragState;
+  });
+
+  document.addEventListener("mouseup", () => {
+    dragging = false; startKey = null; dragState = null; targetCbClass = null;
+  });
+}
+
 // タブ値→CSSクラス
 function _tabClass(tab) {
   const raw = tab.replace(/[\[\] ]/g,"");
