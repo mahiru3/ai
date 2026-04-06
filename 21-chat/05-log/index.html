@@ -253,8 +253,9 @@ function renderTable() {
     const tabOptsSel = TAB_PRESETS.map(t =>
       `<option value="${ea(t)}"${sp.dispTab===t?" selected":""}>${e(t)}</option>`
     ).join("");
+    const tabSelClass = _tabClass(sp.dispTab);
     return `<tr data-key="${ea(key)}">
-      <td class="cb-with-val"><label><input type="checkbox" class="cb-tab"  data-key="${ea(key)}"><select class="tab-select tab-select-row" data-key="${ea(key)}">${tabOptsSel}</select></label></td>
+      <td class="cb-with-val"><label><input type="checkbox" class="cb-tab"  data-key="${ea(key)}"><select class="tab-select tab-select-row ${tabSelClass}" data-key="${ea(key)}">${tabOptsSel}</select></label></td>
       <td class="cb-with-val"><label><input type="checkbox" class="cb-kind" data-key="${ea(key)}"><select class="kind-select k-${sp.kind}" data-key="${ea(key)}">${kindOpts}</select></label></td>
       <td class="cb-with-val"><label><input type="checkbox" class="cb-name" data-key="${ea(key)}"><span class="sp-name-text">${e(sp.name)}</span></label></td>
       <td><input type="text" class="sp-input${sp.rename?" changed":""}"
@@ -299,10 +300,11 @@ function renderTable() {
 
   // タブセレクト（個別）
   tbody.querySelectorAll(".tab-select-row").forEach(sel => {
-    sel.addEventListener("change", e => {
-      const key = e.target.dataset.key;
-      speakerMap[key].dispTab = e.target.value;
-      // バッジ色はselectのclassで管理しないのでそのまま
+    sel.addEventListener("change", ev => {
+      const key = ev.target.dataset.key;
+      speakerMap[key].dispTab = ev.target.value;
+      // 色クラスを更新
+      ev.target.className = "tab-select tab-select-row " + _tabClass(ev.target.value);
     });
   });
 
@@ -652,6 +654,15 @@ function openAccordion(id) {
 /* ------------------------------------------
    ユーティリティ
 ------------------------------------------ */
+// タブ値→CSSクラス
+function _tabClass(tab) {
+  const raw = tab.replace(/[\[\] ]/g,"");
+  if (raw==="main")  return "t-main";
+  if (raw==="info")  return "t-info";
+  if (raw==="other") return "t-other";
+  return "t-other2";
+}
+
 function e(s)  { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 function ea(s) { return String(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;"); }
 function dl(html, name) {
