@@ -208,6 +208,7 @@ btnAnalyze.addEventListener("click", () => {
     document.getElementById(id)?.setAttribute("open","")
   );
   renderTable();
+  initFilterDrops();
   const pCount = parsedDoc.querySelectorAll("p").length;
   showStatus(document.getElementById("analyzeStatus"),
     `${pCount} ブロック ／ 発言者 ${spCount} 件を検出`, "ok");
@@ -235,9 +236,6 @@ function renderTable() {
     return 0;
   });
 
-  // フィルタ更新（ドロップダウンの中身を現在の値で生成）
-  _buildFilterDrops(sorted);
-
   // データ行HTML生成（4列：☐タブ名 | ☐種別 | ☐変更前 | 変更後）フィルタ適用
   const dataRowsHtml = sorted.filter(key => {
     const sp = speakerMap[key];
@@ -252,8 +250,11 @@ function renderTable() {
     const kindOpts = Object.entries(KIND_LABEL).map(([k,l]) =>
       `<option value="${k}"${sp.kind===k?" selected":""}>${l}</option>`
     ).join("");
+    const tabOptsSel = TAB_PRESETS.map(t =>
+      `<option value="${ea(t)}"${sp.dispTab===t?" selected":""}>${e(t)}</option>`
+    ).join("");
     return `<tr data-key="${ea(key)}">
-      <td class="cb-with-val"><label><input type="checkbox" class="cb-tab"  data-key="${ea(key)}"><span class="tab-badge ${tabClass}">${e(sp.dispTab)}</span></label></td>
+      <td class="cb-with-val"><label><input type="checkbox" class="cb-tab"  data-key="${ea(key)}"><select class="tab-select tab-select-row" data-key="${ea(key)}">${tabOptsSel}</select></label></td>
       <td class="cb-with-val"><label><input type="checkbox" class="cb-kind" data-key="${ea(key)}"><select class="kind-select k-${sp.kind}" data-key="${ea(key)}">${kindOpts}</select></label></td>
       <td class="cb-with-val"><label><input type="checkbox" class="cb-name" data-key="${ea(key)}"><span class="sp-name-text">${e(sp.name)}</span></label></td>
       <td><input type="text" class="sp-input${sp.rename?" changed":""}"
@@ -295,6 +296,15 @@ function renderTable() {
   tbody.innerHTML = dataRowsHtml + bulkHtml;
 
   /* --- 個別行イベント --- */
+
+  // タブセレクト（個別）
+  tbody.querySelectorAll(".tab-select-row").forEach(sel => {
+    sel.addEventListener("change", e => {
+      const key = e.target.dataset.key;
+      speakerMap[key].dispTab = e.target.value;
+      // バッジ色はselectのclassで管理しないのでそのまま
+    });
+  });
 
   // 種別セレクト
   tbody.querySelectorAll("tr[data-key] .kind-select").forEach(sel => {
@@ -380,35 +390,40 @@ document.getElementById("btnRefresh").addEventListener("click", () => {
 // =============================================
 // フィルタ ドロップダウン構築
 // =============================================
-function _buildFilterDrops(sorted) {
-  // 各列のユニーク値収集
+// フィルタ初期化（解析後に1回だけ呼ぶ）
+function initFilterDrops() {
+  filterTab = null; filterKind = null; filterName = null;
+  rebuildFilterDrops();
+}
+
+// フィルタドロップダウンの中身を全speakerMapから生成（フィルタ状態は保持）
+function rebuildFilterDrops() {
+  const allKeys = Object.keys(speakerMap);
   const vals = {
-    tab:  [...new Set(sorted.map(k => speakerMap[k].dispTab))],
-    kind: [...new Set(sorted.map(k => speakerMap[k].kind))],
-    name: [...new Set(sorted.map(k => speakerMap[k].name))]
+    tab:  [...new Set(allKeys.map(k => speakerMap[k].dispTab))],
+    kind: [...new Set(allKeys.map(k => speakerMap[k].kind))],
+    name: [...new Set(allKeys.map(k => speakerMap[k].name))]
   };
-  const kindLabel = { chara:"キャラ", event:"テキスト", scene:"シーン", system:"非表示" };
-  const filters   = { tab: filterTab, kind: filterKind, name: filterName };
+  const filters = { tab: filterTab, kind: filterKind, name: filterName };
 
   ["tab","kind","name"].forEach(col => {
     const drop = document.getElementById("filterDrop-" + col);
     if (!drop) return;
-    const cur = filters[col]; // 現在のフィルタSet or null
+    const cur = filters[col];
     drop.innerHTML =
-      `<div class="fd-item"><label><input type="checkbox" class="fd-all" data-col="${col}"${!cur?" checked":""}> （すべて）</label></div>` +
+      `<div class="fd-item fd-all-item"><label><input type="checkbox" class="fd-all" data-col="${col}"${!cur?" checked":""}> （すべて）</label></div>` +
       vals[col].map(v => {
-        const disp = col==="kind" ? (kindLabel[v]||v) : v;
+        const disp = col==="kind" ? (KIND_LABEL[v]||v) : v;
         const checked = !cur || cur.has(v) ? " checked" : "";
-        return `<div class="fd-item"><label><input type="checkbox" class="fd-val" data-col="${col}" data-val="${e(v)}"${checked}> ${e(disp)}</label></div>`;
+        return `<div class="fd-item"><label><input type="checkbox" class="fd-val" data-col="${col}" data-val="${ea(v)}"${checked}> ${e(disp)}</label></div>`;
       }).join("");
 
-    // イベント（再登録防止のためcloneで差し替え済みなのでそのまま登録）
-    drop.querySelectorAll(".fd-all").forEach(cb => {
-      cb.addEventListener("change", () => {
-        drop.querySelectorAll(".fd-val").forEach(v => v.checked = cb.checked);
-        _applyFilter(col);
-      });
+    // 「すべて」チェック
+    drop.querySelector(".fd-all").addEventListener("change", function() {
+      drop.querySelectorAll(".fd-val").forEach(v => v.checked = this.checked);
+      _applyFilter(col);
     });
+    // 個別チェック
     drop.querySelectorAll(".fd-val").forEach(cb => {
       cb.addEventListener("change", () => {
         const all = [...drop.querySelectorAll(".fd-val")].every(v => v.checked);
@@ -420,16 +435,19 @@ function _buildFilterDrops(sorted) {
 }
 
 function _applyFilter(col) {
-  const drop   = document.getElementById("filterDrop-" + col);
+  const drop    = document.getElementById("filterDrop-" + col);
   const checked = [...drop.querySelectorAll(".fd-val:checked")].map(v => v.dataset.val);
   const all     = drop.querySelector(".fd-all").checked;
   if      (col==="tab")  filterTab  = all ? null : new Set(checked);
   else if (col==="kind") filterKind = all ? null : new Set(checked);
   else if (col==="name") filterName = all ? null : new Set(checked);
-  // フィルタボタンに適用中マーク
   const btn = document.querySelector(`.filter-btn[data-col="${col}"]`);
   if (btn) btn.classList.toggle("filter-active", !all);
   renderTable();
+  // renderTable後にドロップを再構築してチェック状態を復元
+  rebuildFilterDrops();
+  // 適用中のドロップは開いたままにする
+  document.getElementById("filterDrop-" + col)?.classList.add("open");
 }
 
 // フィルタドロップダウン 開閉
