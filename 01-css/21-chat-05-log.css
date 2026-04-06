@@ -461,3 +461,16 @@ table.sp-table tr:hover td { background: #f4f8ff; }
 .fd-item label:hover { color: #1a4a9a; }
 .fd-item input[type="checkbox"] { width: 13px; height: 13px; accent-color: #3d6e99; margin: 0; cursor: pointer; }
 .fd-item:first-child { border-bottom: 1px solid #eee; margin-bottom: 2px; padding-bottom: 5px; }
+
+/* タブ列の個別プルダウン */
+.tab-select-row {
+  padding: 2px 5px;
+  border: 1px solid #f5c878;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #fff3e0;
+  color: #a85400;
+  cursor: pointer;
+}
+.tab-select-row:focus { outline: none; border-color: #d4a017; }
