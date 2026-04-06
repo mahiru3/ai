@@ -10,7 +10,7 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">📝 ログ整形ツールです！</h1>
+  <h1 class="page-title">📝 ログ整形ツールかも！</h1>
   <p class="page-subtitle">CCFoliaのHTMLログを読み込み、発言者を整理してHTMLでダウンロードします。ページ内完結・サーバー送信なし。</p>
 
   <!-- ① ファイル読み込み -->
@@ -565,17 +565,21 @@ function buildOriginalLines(optHide) {
 
     const dispName = sp.rename.trim() || name;
     const dispTab  = sp.dispTab || origTab;
-    const parts    = spans[2].innerHTML.split(/<br\s*\/?>/i).map(s => s.trim()).filter(s => s);
+    // innerHTML(<br>含む)をテキスト行に分割
+    const rawHtml = spans[2].innerHTML;
+    const parts   = rawHtml.split(/<br\s*\/?>/i)
+      .map(s => { const d = document.createElement("div"); d.innerHTML = s; return d.textContent.trim(); })
+      .filter(s => s);
 
     if (sp.kind === "event") {
       // テキスト種別：発言者名を1行目として追加、本文を続ける
       lines.push(`<p style="color:#888888;"><span> ${e(dispTab)}</span> <span>${e(dispName)}</span> : <span> ${e(name)} </span></p>`);
       parts.forEach(part => {
-        lines.push(`<p style="color:#888888;"><span> ${e(dispTab)}</span> <span>${e(dispName)}</span> : <span> ${part} </span></p>`);
+        lines.push(`<p style="color:#888888;"><span> ${e(dispTab)}</span> <span>${e(dispName)}</span> : <span> ${e(part)} </span></p>`);
       });
     } else {
       parts.forEach(part => {
-        lines.push(`<p style="color:#888888;"><span> ${e(dispTab)}</span> <span>${e(dispName)}</span> : <span> ${part} </span></p>`);
+        lines.push(`<p style="color:#888888;"><span> ${e(dispTab)}</span> <span>${e(dispName)}</span> : <span> ${e(part)} </span></p>`);
       });
     }
   });
