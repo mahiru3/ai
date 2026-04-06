@@ -154,8 +154,9 @@ th.sort-desc .sort-icon::after { content: "▼"; color: #3d6e99; }
 table.sp-table td {
   padding: 5px 8px; border: 1px solid #e8e4de; vertical-align: middle;
 }
-table.sp-table tr:nth-child(even) td { background: #faf9f7; }
-table.sp-table tr:hover td { background: #f4f8ff; }
+table.sp-table tr:nth-child(odd)  td { background: #fbfdfb; }
+table.sp-table tr:nth-child(even) td { background: #f0f7f0; }
+table.sp-table tr:hover td { background: #fdfbe8; }
 
 /* タブバッジ */
 .tab-badge {
@@ -164,14 +165,14 @@ table.sp-table tr:hover td { background: #f4f8ff; }
   cursor: pointer;
 }
 .tab-badge:hover { opacity: 0.8; }
-.tab-main  { background: #fff3e0; color: #a85400; border-color: #f5c878; }
-.tab-info  { background: #e8f0fe; color: #1a56a0; border-color: #9bbcf5; }
-.tab-other { background: #f3f3f3; color: #666;    border-color: #ccc; }
+.tab-main  { background: #fdecea; color: #b03020; border-color: #e8a098; }
+.tab-info  { background: #f0f0f0; color: #555;    border-color: #bbb; }
+.tab-other { background: #edf7ed; color: #2a6a2a; border-color: #90cc90; }
 
 /* タブselectインライン */
 .tab-select {
-  padding: 2px 4px; border: 1px solid #9bbcf5; border-radius: 4px;
-  font-size: 11px; cursor: pointer; background: #eef4ff; color: #1a4a9a;
+  padding: 2px 4px; border: 1px solid #bbb; border-radius: 4px;
+  font-size: 11px; cursor: pointer; background: #f0f0f0; color: #555;
 }
 .tab-select:focus { outline: none; }
 
@@ -180,10 +181,10 @@ table.sp-table tr:hover td { background: #f4f8ff; }
   padding: 2px 5px; border: 1px solid #ddd; border-radius: 4px;
   font-size: 11px; color: #333; background: #fff; cursor: pointer;
 }
-.kind-select.k-chara  { background: #f0faf0; color: #2a6a2a; border-color: #9dd49d; }
-.kind-select.k-event  { background: #fff8e8; color: #7a5000; border-color: #f5cc70; }
-.kind-select.k-scene  { background: #eef3fa; color: #1a4a8a; border-color: #9bbcf5; }
-.kind-select.k-system { background: #f8f8f8; color: #aaa;    border-color: #ddd; }
+.kind-select.k-chara  { background: #fdecea; color: #b03020; border-color: #e8a098; }
+.kind-select.k-event  { background: #f0f0f0; color: #555;    border-color: #bbb; }
+.kind-select.k-scene  { background: #e8f0fc; color: #1a4a9a; border-color: #7aaae0; }
+.kind-select.k-system { background: #e0e0e0; color: #666;    border-color: #aaa; }
 
 /* 変更後入力 */
 .sp-input {
@@ -464,13 +465,12 @@ table.sp-table tr:hover td { background: #f4f8ff; }
 
 /* タブ列の個別プルダウン */
 .tab-select-row {
-  padding: 2px 5px;
-  border: 1px solid #f5c878;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 700;
-  background: #fff3e0;
-  color: #a85400;
-  cursor: pointer;
+  padding: 2px 5px; border-radius: 4px;
+  font-size: 11px; font-weight: 700; cursor: pointer;
+  border: 1px solid #bbb; background: #f0f0f0; color: #555;
 }
-.tab-select-row:focus { outline: none; border-color: #d4a017; }
+.tab-select-row:focus { outline: none; }
+.tab-select-row.t-main  { background: #fdecea; color: #b03020; border-color: #e8a098; }
+.tab-select-row.t-info  { background: #f0f0f0; color: #555;    border-color: #bbb; }
+.tab-select-row.t-other { background: #edf7ed; color: #2a6a2a; border-color: #90cc90; }
+.tab-select-row.t-other2{ background: #fefde8; color: #7a6800; border-color: #d4c840; }
