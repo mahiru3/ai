@@ -1,4 +1,12 @@
 <!DOCTYPE html>
+<!-- =============================================
+   21-chat/05-log/index.html
+   ログ整形ツール本体
+   CCFolia HTMLログを読み込み、発言者を整理して
+   HTMLでダウンロードするツール。
+   依存CSS: 01-css/00-style.css
+            01-css/21-chat-05-log.css
+   ============================================= -->
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
@@ -10,7 +18,7 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">📝 ログ整形ツールでしたね！</h1>
+  <h1 class="page-title">📝 ログ整形ツール！！</h1>
   <p class="page-subtitle">CCFoliaのHTMLログを読み込み、発言者を整理してHTMLでダウンロードします。ページ内完結・サーバー送信なし。</p>
 
   <!-- ① ファイル読み込み -->
@@ -270,9 +278,9 @@ function renderTable() {
         `<option value="${k}"${sp.kind===k?" selected":""}>${l}</option>`
       ).join("");
       return `<tr data-key="${ea(key)}">
-        <td class="cb-with-val"><input type="checkbox" class="cb-tab"  data-key="${ea(key)}"><select class="tab-select tab-select-row ${tabCls}" data-key="${ea(key)}">${tabOpts}</select></td>
-        <td class="cb-with-val"><input type="checkbox" class="cb-kind" data-key="${ea(key)}"><select class="kind-select k-${sp.kind}" data-key="${ea(key)}">${kindOpts}</select></td>
-        <td class="cb-with-val"><input type="checkbox" class="cb-name" data-key="${ea(key)}"><span class="sp-name-text">${e(sp.name)}</span></td>
+        <td style="vertical-align:middle;padding:4px 6px;white-space:nowrap;"><input type="checkbox" class="cb-tab"  data-key="${ea(key)}" style="width:14px;height:14px;accent-color:#3d6e99;cursor:pointer;margin-right:5px;flex-shrink:0;vertical-align:middle;"><select class="tab-select tab-select-row ${tabCls}" data-key="${ea(key)}">${tabOpts}</select></td>
+        <td style="vertical-align:middle;padding:4px 6px;white-space:nowrap;"><input type="checkbox" class="cb-kind" data-key="${ea(key)}" style="width:14px;height:14px;accent-color:#3d6e99;cursor:pointer;margin-right:5px;flex-shrink:0;vertical-align:middle;"><select class="kind-select k-${sp.kind}" data-key="${ea(key)}">${kindOpts}</select></td>
+        <td style="vertical-align:middle;padding:4px 6px;white-space:nowrap;"><input type="checkbox" class="cb-name" data-key="${ea(key)}" style="width:14px;height:14px;accent-color:#3d6e99;cursor:pointer;margin-right:5px;flex-shrink:0;vertical-align:middle;"><span class="sp-name-text">${e(sp.name)}</span></td>
         <td><input type="text" class="sp-input${sp.rename?" changed":""}" placeholder="${ea(sp.name)}" value="${ea(sp.rename)}" data-key="${ea(key)}"></td>
         <td><textarea class="chat-input" rows="2" data-key="${ea(key)}">${e(sp.chat||"")}</textarea></td>
       </tr>`;
@@ -306,6 +314,7 @@ function renderTable() {
       const key = ev.target.dataset.key;
       speakerMap[key].dispTab = ev.target.value;
       ev.target.className = "tab-select tab-select-row " + _tabClass(ev.target.value);
+      if (parsedDoc) updatePreview();
     });
   });
 
@@ -321,6 +330,7 @@ function renderTable() {
         const inp = e.target.closest("tr")?.querySelector(".sp-input");
         if (inp) { inp.value = STAR_NAME; inp.classList.add("changed"); }
       }
+      if (parsedDoc) updatePreview();
     });
   });
 
@@ -330,6 +340,7 @@ function renderTable() {
       const key = e.target.dataset.key;
       speakerMap[key].rename = e.target.value;
       e.target.classList.toggle("changed", e.target.value !== "");
+      if (parsedDoc) updatePreview();
     });
   });
 
@@ -337,6 +348,7 @@ function renderTable() {
   tbody.querySelectorAll("tr[data-key] .chat-input").forEach(ta => {
     ta.addEventListener("input", e => {
       speakerMap[e.target.dataset.key].chat = e.target.value;
+      if (parsedDoc) updatePreview();
     });
   });
 
@@ -493,7 +505,10 @@ function _applyFilter(col, keepOpen=false) {
   document.querySelector(`.filter-btn[data-col="${col}"]`)?.classList.toggle("filter-active", !isAll);
   renderTable();
   rebuildFilterDrops();
-  if (keepOpen) $id("filterDrop-" + col)?.classList.add("open");
+  if (keepOpen) {
+    const d = $id("filterDrop-" + col);
+    if (d) d.classList.add("open");
+  }
 }
 
 /* =============================================
@@ -632,12 +647,22 @@ function initColResize() {
     let startX, startW, th;
     handle.addEventListener("mousedown", e => {
       e.preventDefault(); e.stopPropagation();
-      th=handle.closest("th"); startX=e.clientX; startW=th.offsetWidth;
-      document.body.style.cursor=document.body.style.userSelect="";
-      document.body.style.cursor="col-resize";
-      document.body.style.userSelect="none";
-      const onMove = ev => { const w=Math.max(60,startW+ev.clientX-startX); th.style.width=th.style.minWidth=w+"px"; };
-      const onUp   = ()  => { document.body.style.cursor=document.body.style.userSelect=""; document.removeEventListener("mousemove",onMove); document.removeEventListener("mouseup",onUp); };
+      th = handle.closest("th");
+      if (!th) return;
+      startX = e.clientX;
+      startW = th.offsetWidth;
+      document.body.style.cursor    = "col-resize";
+      document.body.style.userSelect = "none";
+      const onMove = ev => {
+        const w = Math.max(40, startW + ev.clientX - startX);
+        th.style.width = th.style.minWidth = w + "px";
+      };
+      const onUp = () => {
+        document.body.style.cursor    = "";
+        document.body.style.userSelect = "";
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup",   onUp);
+      };
       document.addEventListener("mousemove", onMove);
       document.addEventListener("mouseup",   onUp);
     });
