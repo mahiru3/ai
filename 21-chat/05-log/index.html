@@ -10,7 +10,7 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">📝 ログ整形ツールです</h1>
+  <h1 class="page-title">📝 ログ整形ツールだ！</h1>
   <p class="page-subtitle">CCFoliaのHTMLログを読み込み、発言者を整理してHTMLでダウンロードします。ページ内完結・サーバー送信なし。</p>
 
   <!-- ① ファイル読み込み -->
@@ -24,6 +24,7 @@
       </div>
       <div class="analyze-row">
         <button class="btn-hover-21 bh-yellow" id="btnAnalyze" disabled><span>🔍 解析する</span></button>
+        <button class="btn-hover-21 bh-red"    id="btnReset"><span>🔄 リセット</span></button>
         <div class="status-msg" id="loadStatus"></div>
       </div>
     </div>
@@ -64,8 +65,8 @@
                 <div class="filter-drop" id="filterDrop-name"></div>
                 <div class="col-resizer"></div>
               </th>
-              <th class="no-sort">変更後</th>
-              <th class="no-sort">チャット</th>
+              <th class="no-sort th-resizable">変更後<div class="col-resizer"></div></th>
+              <th class="no-sort th-resizable">チャット<div class="col-resizer"></div></th>
             </tr>
           </thead>
           <tbody id="spTbody"></tbody>
@@ -82,8 +83,7 @@
       <p style="font-size:11px;color:#888;margin:0 0 8px;">元のCCFolia HTML構造のまま出力。発言者名置換・非表示除去・&lt;br&gt;分割のみ。</p>
       <div class="btn-row-21">
         <button class="btn-hover-21 bh-gray"  id="btnPreview"><span>👁 プレビュー更新</span></button>
-        <button class="btn-hover-21 bh-green" id="btnDownload"><span>💾 HTMLダウンロード（元構造）</span></button>
-        <button class="btn-hover-21 bh-red"   id="btnReset"><span>🔄 リセット</span></button>
+        <button class="btn-hover-21 bh-green" id="btnDownload"><span>📁 ログDL</span></button>
       </div>
       <div class="preview-wrap" id="previewWrap" style="margin-top:10px;">
         <div class="preview-empty">「プレビュー更新」をクリックしてください</div>
@@ -275,9 +275,9 @@ function renderTable() {
         `<option value="${k}"${sp.kind===k?" selected":""}>${l}</option>`
       ).join("");
       return `<tr data-key="${ea(key)}">
-        <td class="cb-with-val"><label><input type="checkbox" class="cb-tab"  data-key="${ea(key)}"><select class="tab-select tab-select-row ${tabSelCls}" data-key="${ea(key)}">${tabOpts}</select></label></td>
-        <td class="cb-with-val"><label><input type="checkbox" class="cb-kind" data-key="${ea(key)}"><select class="kind-select k-${sp.kind}" data-key="${ea(key)}">${kindOpts}</select></label></td>
-        <td class="cb-with-val"><label><input type="checkbox" class="cb-name" data-key="${ea(key)}"><span class="sp-name-text">${e(sp.name)}</span></label></td>
+        <td class="cb-with-val"><input type="checkbox" class="cb-tab"  data-key="${ea(key)}"><select class="tab-select tab-select-row ${tabSelCls}" data-key="${ea(key)}">${tabOpts}</select></td>
+        <td class="cb-with-val"><input type="checkbox" class="cb-kind" data-key="${ea(key)}"><select class="kind-select k-${sp.kind}" data-key="${ea(key)}">${kindOpts}</select></td>
+        <td class="cb-with-val"><input type="checkbox" class="cb-name" data-key="${ea(key)}"><span class="sp-name-text">${e(sp.name)}</span></td>
         <td><input type="text" class="sp-input${sp.rename?" changed":""}" placeholder="${ea(sp.name)}" value="${ea(sp.rename)}" data-key="${ea(key)}"></td>
         <td><textarea class="chat-input" rows="2" data-key="${ea(key)}">${e(sp.chat||"")}</textarea></td>
       </tr>`;
@@ -397,6 +397,15 @@ document.getElementById("btnRefresh").addEventListener("click", () => {
   if (count > 0) {
     renderTable();
     showStatus(document.getElementById("analyzeStatus"), `${count} 件の変更前を更新しました`, "ok");
+    // プレビューを自動更新
+    if (parsedDoc) {
+      const optHide = document.getElementById("optHideSystem").checked;
+      const lines   = buildOutputLines(optHide);
+      document.getElementById("previewWrap").innerHTML = lines.length
+        ? lines.join("
+")
+        : `<div class="preview-empty">表示できる行がありません</div>`;
+    }
   }
 });
 
