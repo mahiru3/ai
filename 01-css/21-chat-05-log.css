@@ -499,3 +499,39 @@ table.sp-table tr:hover td { background: #fdfbe8; }
 .tab-select-row.t-info  { background: #f0f0f0; color: #555;    border-color: #bbb; }
 .tab-select-row.t-other { background: #edf7ed; color: #2a6a2a; border-color: #90cc90; }
 .tab-select-row.t-other2{ background: #fefde8; color: #7a6800; border-color: #d4c840; }
+
+/* =============================================
+   フィルタ：すべて選択・解除ボタン行
+   ============================================= */
+.fd-ctrl-row {
+  display: flex; gap: 6px;
+  padding: 5px 8px 4px;
+  border-bottom: 1px solid #eee;
+}
+.fd-ctrl-btn {
+  flex: 1; padding: 3px 6px; font-size: 11px; font-weight: 600;
+  border: 1px solid #ccc; border-radius: 4px; background: #f8f8f8;
+  cursor: pointer; color: #444; transition: background .12s;
+}
+.fd-ctrl-btn:hover { background: #eef3f8; border-color: #9bbcf5; color: #1a4a9a; }
+
+/* =============================================
+   ② 列幅リサイズハンドル
+   ============================================= */
+.th-with-filter { position: relative; }
+.col-resizer {
+  position: absolute; top: 0; right: 0;
+  width: 5px; height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 10;
+}
+.col-resizer:hover,
+.col-resizer:active { background: #9bbcf5; }
+table.sp-table { table-layout: fixed; }
+table.sp-table th, table.sp-table td { overflow: hidden; }
+
+/* =============================================
+   ③ 行ドラッグ選択：選択中の視覚フィードバック
+   ============================================= */
+table.sp-table tr[data-key] { user-select: none; }
