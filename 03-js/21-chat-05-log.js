@@ -321,31 +321,8 @@ table.sp-table tr:hover td { background: #fdfbe8; }
    テーブル：チェックボックス列・一括変更行
    ============================================= */
 
-/* チェックボックス＋値を同一セルに */
-.cb-with-val {
-  padding: 5px 8px !important;
-  vertical-align: middle;
-}
-.cb-with-val label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  margin: 0;
-  font-size: 12px;
-}
-.cb-with-val input[type="checkbox"] {
-  width: 14px; height: 14px;
-  accent-color: #3d6e99;
-  cursor: pointer;
-  flex-shrink: 0;
-  margin: 0;
-}
-/* チェック済みの行をハイライト */
-.cb-with-val input[type="checkbox"]:checked ~ *,
-.cb-with-val input[type="checkbox"]:checked + * {
-  font-weight: 600;
-}
+/* チェックボックスセル（インラインstyleで制御） */
+.cb-with-val { vertical-align: middle; padding: 4px 6px !important; white-space: nowrap; }
 
 /* タブバッジ */
 .tab-badge { cursor: default; }
@@ -548,11 +525,5 @@ table.sp-table tr[data-key] { user-select: none; }
 }
 .chat-input:focus { outline: none; border-color: #7ba4c7; background: #fff; }
 
-/* 変更後・チャット列のリサイザー */
+/* 変更後・チャット列のリサイザー（.col-resizerを流用） */
 .th-resizable { position: relative; }
-.th-resizable .col-resizer {
-  position: absolute; top: 0; right: 0;
-  width: 5px; height: 100%;
-  cursor: col-resize; background: transparent; z-index: 10;
-}
-.th-resizable .col-resizer:hover { background: #9bbcf5; }
