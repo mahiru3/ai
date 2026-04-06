@@ -19,7 +19,10 @@
        data-left="31-csv/01-chara/navi.html"
        target="center">いあきゃら変換</a>
     
-<a href="21-chat/05-log/index.html" target="center">ログ整形</a>
+    <a class="solo-link"
+       href="21-chat/05-log/index.html"
+       data-center="21-chat/05-log/index.html"
+       target="center">ログ整形</a>
 
     <a class="dual-link"
        href="31-csv/02-txt.bun/index.html"
@@ -108,16 +111,54 @@
   </p>
 
   <script>
+    // 左エリアの表示/非表示を切り替える
+    function setLeftVisible(visible) {
+      if (!parent || !parent.document) return;
+      const layout  = parent.document.querySelector(".layout");
+      const areaLeft = parent.document.querySelector(".area-left");
+      if (!layout || !areaLeft) return;
+      if (visible) {
+        areaLeft.style.display = "";
+        layout.style.gridTemplateColumns = "";
+      } else {
+        areaLeft.style.display = "none";
+        layout.style.gridTemplateColumns = "0 1fr 260px";
+      }
+    }
+
     document.addEventListener("click", (e) => {
-      const a = e.target.closest("a.dual-link");
-      if (!a) return;
-      const leftUrl = a.dataset.left;
-      const centerUrl = a.dataset.center;
-      if (!leftUrl || !centerUrl) return;
-      e.preventDefault();
-      if (parent && parent.frames) {
-        if (parent.frames["left"])   parent.frames["left"].location.href = leftUrl;
-        if (parent.frames["center"]) parent.frames["center"].location.href = centerUrl;
+      // dual-link：左＋中央を同時切替、左エリアを表示
+      const dual = e.target.closest("a.dual-link");
+      if (dual) {
+        const leftUrl   = dual.dataset.left;
+        const centerUrl = dual.dataset.center;
+        if (!leftUrl || !centerUrl) return;
+        e.preventDefault();
+        setLeftVisible(true);
+        if (parent && parent.frames) {
+          if (parent.frames["left"])   parent.frames["left"].location.href = leftUrl;
+          if (parent.frames["center"]) parent.frames["center"].location.href = centerUrl;
+        }
+        return;
+      }
+
+      // solo-link：中央のみ切替、左エリアを非表示
+      const solo = e.target.closest("a.solo-link");
+      if (solo) {
+        const centerUrl = solo.dataset.center;
+        if (!centerUrl) return;
+        e.preventDefault();
+        setLeftVisible(false);
+        if (parent && parent.frames && parent.frames["center"]) {
+          parent.frames["center"].location.href = centerUrl;
+        }
+        return;
+      }
+
+      // 通常リンク（target="center"のみ）：左エリアを表示
+      const plain = e.target.closest("a[target='center']:not(.dual-link):not(.solo-link)");
+      if (plain) {
+        setLeftVisible(true);
       }
     });
   </script>
