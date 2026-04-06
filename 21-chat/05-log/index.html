@@ -10,7 +10,7 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">📝 ログ整形ツール！！</h1>
+  <h1 class="page-title">📝 ログ整形ツールでした！</h1>
   <p class="page-subtitle">CCFoliaのHTMLログを読み込み、発言者を整理してHTMLでダウンロードします。ページ内完結・サーバー送信なし。</p>
 
   <!-- ① ファイル読み込み -->
@@ -177,7 +177,7 @@ function setFile(file) {
   reader.onload = ev => {
     rawHtml = ev.target.result;
     fileNameEl.textContent = "📄 " + file.name;
-    fileNameEl.className = "file-name loaded";
+    fileNameEl.className = "summary-filename loaded";
     btnAnalyze.disabled = false;
     showStatus(loadStatus, "読み込み完了。「解析する」を押してください", "info");
     speakerMap = {}; tableOrder = []; parsedDoc = null;
@@ -205,7 +205,7 @@ btnAnalyze.addEventListener("click", () => {
     if (!(key in speakerMap)) {
       // 元の本文テキスト（brで分割→改行結合）をchatの初期値として格納
       const rawParts = spans[2].innerHTML.split(/<br\s*\/?>/i)
-        .map(s => { const d = document.createElement("div"); d.innerHTML = s; return d.textContent.trim(); })
+        .map(s => s.replace(/<[^>]*>/g, "").trim())
         .filter(s => s);
       speakerMap[key] = { origTab, dispTab: origTab, name, kind:"chara", rename:"", chat: rawParts.join("
 ") };
@@ -710,7 +710,7 @@ document.getElementById("btnFormatDownload").addEventListener("click", () => {
 document.getElementById("btnReset").addEventListener("click", () => {
   rawHtml = ""; fileName = ""; parsedDoc = null; speakerMap = {}; tableOrder = [];
   fileInput.value = "";
-  fileNameEl.textContent = "ファイル未選択"; fileNameEl.className = "file-name";
+  fileNameEl.textContent = ""; fileNameEl.className = "summary-filename";
   btnAnalyze.disabled = true;
   ["acc-2","acc-3","acc-4","acc-5"].forEach(id => document.getElementById(id)?.removeAttribute("open"));
   ["loadStatus","analyzeStatus","processStatus","formatStatus"].forEach(id => {
