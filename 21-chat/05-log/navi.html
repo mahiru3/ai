@@ -1,4 +1,8 @@
 <!DOCTYPE html>
+<!-- =============================================
+   21-chat/05-log/navi.html
+   ログ整形ツール 左ナビ（①ファイル読み込み）
+   ============================================= -->
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
@@ -13,60 +17,24 @@
   <div class="navi-tool-title">📝 ログ整形ツール</div>
 
   <!-- ① ファイル読み込み -->
-  <details class="navi-acc navi-acc-1" open>
+  <details class="navi-acc navi-acc-1" id="naviAcc1" open>
     <summary>① ファイル読み込み</summary>
     <div class="navi-acc-body">
-      CCFoliaログをHTMLでエクスポートして<br>
-      ドラッグ＆ドロップで読み込む<br>
-      <a class="navi-link" href="index.html" target="center"
-         onclick="openAccInCenter('acc-1')">▶ ファイル読み込みを開く</a>
-    </div>
-  </details>
 
-  <!-- ② 発言者一覧 -->
-  <details class="navi-acc navi-acc-2">
-    <summary>② 発言者一覧</summary>
-    <div class="navi-acc-body">
-      タブ名・種別・変更前でソート可<br>
-      変更後に名前を入力すると置換<br>
-      タブ名はバッジをクリックで変更<br>
-      一括変更バーで複数まとめて変更可<br>
-      <a class="navi-link" href="index.html" target="center"
-         onclick="openAccInCenter('acc-2')">▶ 発言者一覧を開く</a>
-    </div>
-  </details>
+      <div class="drop-zone" id="dropZone">
+        <span class="drop-icon">📂</span>
+        ここにCCFoliaの<br>HTMLファイルを<br>ドラッグ＆ドロップ<br>またはクリックして選択
+        <input type="file" id="fileInput" accept=".html,.htm" />
+      </div>
 
-  <!-- ③ 除外設定 -->
-  <details class="navi-acc navi-acc-3">
-    <summary>③ 除外設定</summary>
-    <div class="navi-acc-body">
-      種別「非表示」の発言者を<br>
-      出力から除外するか設定<br>
-      <a class="navi-link" href="index.html" target="center"
-         onclick="openAccInCenter('acc-3')">▶ 除外設定を開く</a>
-    </div>
-  </details>
+      <div class="file-name" id="fileName">ファイル未選択</div>
 
-  <!-- ④ プレビュー・ダウンロード（元構造） -->
-  <details class="navi-acc navi-acc-4">
-    <summary>④ プレビュー・DL（元構造）</summary>
-    <div class="navi-acc-body">
-      元のCCFolia HTML構造のままDL<br>
-      発言者名置換・非表示除去のみ<br>
-      &lt;br&gt;は別&lt;p&gt;に分割<br>
-      <a class="navi-link" href="index.html" target="center"
-         onclick="openAccInCenter('acc-4')">▶ プレビューを開く</a>
-    </div>
-  </details>
+      <div class="navi-btn-col">
+        <button class="btn-hover-21 bh-yellow" id="btnAnalyze" disabled><span>🔍 解析する</span></button>
+        <button class="btn-hover-21 bh-red"    id="btnReset"  ><span>🔄 リセット</span></button>
+      </div>
 
-  <!-- ⑤ 整形ダウンロード -->
-  <details class="navi-acc navi-acc-5">
-    <summary>⑤ 整形ダウンロード</summary>
-    <div class="navi-acc-body">
-      タブ名バッジ・〈技能〉強調・<br>
-      種別間空行などのオプション付き<br>
-      <a class="navi-link" href="index.html" target="center"
-         onclick="openAccInCenter('acc-5')">▶ 整形DLを開く</a>
+      <div class="status-msg" id="loadStatus"></div>
     </div>
   </details>
 
@@ -75,16 +43,76 @@
 </div>
 
 <script>
-// naviから中央iframeのアコーディオンを開く
-function openAccInCenter(accId) {
-  const center = parent && parent.frames && parent.frames["center"];
-  if (!center) return;
-  // ページ遷移後にアコーディオンを開く（少し待つ）
-  setTimeout(() => {
-    try {
-      if (center.openAccordion) center.openAccordion(accId);
-    } catch(e) {}
-  }, 400);
+/* =============================================
+   navi.html メインスクリプト
+   ファイル読み込み → centerフレーム(index.html)へ渡す
+   ============================================= */
+
+const dropZone   = document.getElementById("dropZone");
+const fileInput  = document.getElementById("fileInput");
+const fileNameEl = document.getElementById("fileName");
+const loadStatus = document.getElementById("loadStatus");
+const btnAnalyze = document.getElementById("btnAnalyze");
+const btnReset   = document.getElementById("btnReset");
+
+// centerフレームのindex.htmlを取得
+function getCenter() {
+  return parent && parent.frames && parent.frames["center"];
+}
+
+/* --- ファイル読み込み --- */
+dropZone.addEventListener("click",    () => fileInput.click());
+dropZone.addEventListener("dragover", e  => { e.preventDefault(); dropZone.classList.add("dragover"); });
+dropZone.addEventListener("dragleave",()  => dropZone.classList.remove("dragover"));
+dropZone.addEventListener("drop",     e  => {
+  e.preventDefault(); dropZone.classList.remove("dragover");
+  if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener("change", () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
+
+function setFile(file) {
+  if (!file.name.match(/\.html?$/i)) {
+    showStatus(loadStatus, "HTMLファイルを選択してください", "err"); return;
+  }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    fileNameEl.textContent = "📄 " + file.name;
+    fileNameEl.className   = "file-name loaded";
+    btnAnalyze.disabled    = false;
+    showStatus(loadStatus, "読み込み完了。「解析する」を押してください", "info");
+    // centerへファイル情報を渡す
+    const center = getCenter();
+    if (center && center.receiveFile) {
+      center.receiveFile(file.name, ev.target.result);
+    }
+  };
+  reader.readAsText(file, "UTF-8");
+}
+
+/* --- 解析ボタン --- */
+btnAnalyze.addEventListener("click", () => {
+  const center = getCenter();
+  if (center && center.runAnalyze) center.runAnalyze();
+});
+
+/* --- リセットボタン --- */
+btnReset.addEventListener("click", () => {
+  fileInput.value        = "";
+  fileNameEl.textContent = "ファイル未選択";
+  fileNameEl.className   = "file-name";
+  btnAnalyze.disabled    = true;
+  loadStatus.className   = "status-msg";
+  const center = getCenter();
+  if (center && center.runReset) center.runReset();
+});
+
+/* --- centerからステータスを受け取る（index.htmlから呼ぶ） --- */
+function setNaviStatus(msg, type) {
+  showStatus(loadStatus, msg, type);
+}
+
+function showStatus(el, msg, type) {
+  if (!el) return; el.textContent = msg; el.className = "status-msg show " + type;
 }
 </script>
 </body>
