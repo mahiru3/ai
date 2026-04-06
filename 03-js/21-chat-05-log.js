@@ -1,458 +1,568 @@
-/* ==============================================
-   03-js/21-chat-05-log.js
-   ログ整形ツール ロジック
-   ============================================== */
+/* =============================================
+   21-chat-05-log.css  ログ整形ツール専用
+   ============================================= */
 
-const KIND_LABEL = { chara:"キャラ", event:"テキスト", scene:"シーン", system:"非表示" };
-const KIND_ORDER = { chara:0, event:1, scene:2, system:3 };
-const TAB_PRESETS = ["[main]","[info]","[other]"];
+*, *::before, *::after { box-sizing: border-box; }
 
-let rawHtml   = "";
-let fileName  = "";
-let parsedDoc = null;
-let speakerMap = {};  // key=origTab+"::"+name → { origTab, dispTab, name, kind, rename }
-let tableOrder = [];
-let sortCol = null;
-let sortDir = "asc";
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  overflow: auto;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
 
-// =============================================
-// ファイル読み込み
-// =============================================
-function initFileInput() {
-  const dropZone   = document.getElementById("dropZone");
-  const fileInput  = document.getElementById("fileInput");
-  const fileNameEl = document.getElementById("fileName");
-  const loadStatus = document.getElementById("loadStatus");
-  const btnAnalyze = document.getElementById("btnAnalyze");
-
-  dropZone.addEventListener("click", () => fileInput.click());
-  dropZone.addEventListener("dragover",  e => { e.preventDefault(); dropZone.classList.add("dragover"); });
-  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
-  dropZone.addEventListener("drop", e => {
-    e.preventDefault(); dropZone.classList.remove("dragover");
-    if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
-  });
-  fileInput.addEventListener("change", () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
-
-  function setFile(file) {
-    if (!file.name.match(/\.html?$/i)) {
-      showStatus(loadStatus, "HTMLファイルを選択してください", "err"); return;
-    }
-    fileName = file.name.replace(/\.html?$/i, "");
-    const reader = new FileReader();
-    reader.onload = ev => {
-      rawHtml = ev.target.result;
-      fileNameEl.textContent = "📄 " + file.name;
-      fileNameEl.className = "file-name loaded";
-      btnAnalyze.disabled = false;
-      showStatus(loadStatus, "読み込み完了。「解析する」を押してください", "info");
-      speakerMap = {}; tableOrder = []; parsedDoc = null;
-      ["acc-2","acc-3","acc-4","acc-5"].forEach(id => {
-        document.getElementById(id)?.removeAttribute("open");
-      });
-    };
-    reader.readAsText(file, "UTF-8");
-  }
+body {
+  font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+  font-size: 14px; color: #2c2c2c;
+  background: #f7f5f2; line-height: 1.7;
 }
 
-// =============================================
-// 解析
-// =============================================
-function analyze() {
-  speakerMap = {};
-  const parser = new DOMParser();
-  parsedDoc = parser.parseFromString(rawHtml, "text/html");
+/* --- ページラップ --- */
+.page-wrap { max-width: 860px; margin: 0 auto; padding: 16px 16px 60px; }
 
-  parsedDoc.querySelectorAll("p").forEach(p => {
-    const spans = p.querySelectorAll("span");
-    if (spans.length < 3) return;
-    const origTab = spans[0].textContent.trim();
-    const name    = spans[1].textContent.trim();
-    const key     = origTab + "::" + name;
-    if (!(key in speakerMap)) {
-      speakerMap[key] = { origTab, dispTab: origTab, name, kind: "chara", rename: "" };
-    }
-  });
+.page-title { font-size: 16px; font-weight: 700; margin: 0 0 2px; color: #1a1a2e; }
+.page-subtitle { font-size: 12px; color: #999; margin: 0 0 12px; }
 
-  const spCount = Object.keys(speakerMap).length;
-  const analyzeStatus = document.getElementById("analyzeStatus");
-  if (spCount === 0) {
-    showStatus(analyzeStatus, "発言者が検出できませんでした", "err"); return;
-  }
-
-  tableOrder = Object.keys(speakerMap);
-  sortCol = null;
-  ["acc-2","acc-3","acc-4","acc-5"].forEach(id => {
-    document.getElementById(id)?.setAttribute("open","");
-  });
-
-  renderTable();
-  const pCount = parsedDoc.querySelectorAll("p").length;
-  showStatus(analyzeStatus, `${pCount} ブロック ／ 発言者 ${spCount} 件を検出`, "ok");
+/* =============================================
+   アコーディオン（accordion-008ベース）
+   ============================================= */
+.accordion-008 {
+  margin: 4px 0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px -4px rgb(0 0 0 / 8%);
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  overflow: hidden;
 }
 
-// =============================================
-// テーブル描画
-// =============================================
-function renderTable() {
-  const tbody = document.getElementById("spTbody");
-  if (!tbody) return;
+.accordion-008 summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  list-style: none;
+  padding: 9px 14px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+  line-height: 1.3;
+  /* 色はsummary-colorXで上書き */
+}
+.accordion-008 summary::-webkit-details-marker { display: none; }
+.accordion-008 summary::marker { content: ""; }
 
-  // ソート
-  const sorted = [...tableOrder].sort((a, b) => {
-    if (!sortCol) return 0;
-    const sa = speakerMap[a], sb = speakerMap[b];
-    let va, vb;
-    if      (sortCol === "kind") { va = KIND_ORDER[sa.kind]; vb = KIND_ORDER[sb.kind]; }
-    else if (sortCol === "tab")  { va = sa.dispTab; vb = sb.dispTab; }
-    else                         { va = sa.name;    vb = sb.name; }
-    if (va < vb) return sortDir === "asc" ? -1 : 1;
-    if (va > vb) return sortDir === "asc" ?  1 : -1;
-    return 0;
-  });
+/* 矢印 */
+.accordion-008 summary::after {
+  width: 7px; height: 7px;
+  margin-left: 10px;
+  border-bottom: 2.5px solid rgba(0,0,0,.5);
+  border-right:  2.5px solid rgba(0,0,0,.5);
+  transform: translateY(-25%) rotate(45deg);
+  content: ""; transition: transform .2s; flex-shrink: 0;
+}
+.accordion-008[open] summary::after { transform: rotate(225deg); }
 
-  // データ行
-  const dataRows = sorted.map(key => {
-    const sp = speakerMap[key];
-    const tabRaw   = sp.dispTab.replace(/[\[\] ]/g, "");
-    const tabClass = tabRaw === "main" ? "tab-main" : tabRaw === "info" ? "tab-info" : "tab-other";
-    const kindOpts = Object.entries(KIND_LABEL).map(([k,l]) =>
-      `<option value="${k}" ${sp.kind===k?"selected":""}>${l}</option>`
-    ).join("");
-    return `<tr data-key="${escAttr(key)}">
-      <td class="cb-cell"><input type="checkbox" class="row-cb cb-tab" data-key="${escAttr(key)}" /></td>
-      <td><span class="tab-badge ${tabClass}">${esc(sp.dispTab)}</span></td>
-      <td class="cb-cell"><input type="checkbox" class="row-cb cb-kind" data-key="${escAttr(key)}" /></td>
-      <td><select class="kind-select k-${sp.kind}" data-key="${escAttr(key)}">${kindOpts}</select></td>
-      <td class="cb-cell"><input type="checkbox" class="row-cb cb-name" data-key="${escAttr(key)}" /></td>
-      <td>${esc(sp.name)}</td>
-      <td><input type="text" class="sp-input${sp.rename?" changed":""}"
-        placeholder="${escAttr(sp.name)}" value="${escAttr(sp.rename)}"
-        data-key="${escAttr(key)}" /></td>
-    </tr>`;
-  }).join("");
+.accordion-008 .accordion-body {
+  padding: 0 14px 12px;
+  color: #333; line-height: 1.7;
+}
+.accordion-008 .accordion-body > * { margin-top: 8px; }
+.accordion-008 .accordion-body > *:first-child { margin-top: 0; }
 
-  // 一括変更行（最下部固定）
-  const tabPresetOpts = TAB_PRESETS.map(t =>
-    `<option value="${escAttr(t)}">${esc(t)}</option>`
-  ).join("");
-  const bulkKindOpts = Object.entries(KIND_LABEL).map(([k,l]) =>
-    `<option value="${k}">${l}</option>`
-  ).join("");
+/* --- 番号ごとの色 --- */
+/* ① 黄 */
+.acc-color-1 { background: #fff9e0; color: #7a5800; border-color: #f5cc50; }
+.acc-color-1 summary { background: #fff9e0; color: #7a5800; }
+.acc-color-1 summary::after { border-color: #a07800; }
+/* ② 緑 */
+.acc-color-2 { background: #f0faf0; color: #2a6a2a; border-color: #8dcc8d; }
+.acc-color-2 summary { background: #f0faf0; color: #2a6a2a; }
+.acc-color-2 summary::after { border-color: #2a6a2a; }
+/* ③ 青 */
+.acc-color-3 { background: #eef4ff; color: #1a4a9a; border-color: #9bbcf5; }
+.acc-color-3 summary { background: #eef4ff; color: #1a4a9a; }
+.acc-color-3 summary::after { border-color: #1a4a9a; }
+/* ④ 紫 */
+.acc-color-4 { background: #f6f0ff; color: #5a2a9a; border-color: #c0a0f0; }
+.acc-color-4 summary { background: #f6f0ff; color: #5a2a9a; }
+.acc-color-4 summary::after { border-color: #5a2a9a; }
+/* ⑤ 赤橙 */
+.acc-color-5 { background: #fff2ee; color: #a03820; border-color: #f0a080; }
+.acc-color-5 summary { background: #fff2ee; color: #a03820; }
+.acc-color-5 summary::after { border-color: #a03820; }
 
-  const bulkRow = `<tr class="bulk-row">
-    <td class="cb-cell"></td>
-    <td>
-      <div class="bulk-tab-cell">
-        <select class="bulk-tab-select">${tabPresetOpts}</select>
-        <span class="bulk-or">or</span>
-        <input type="text" class="bulk-tab-input" placeholder="新規タブ名" />
-      </div>
-    </td>
-    <td class="cb-cell"></td>
-    <td><select class="kind-select k-chara bulk-kind-select">${bulkKindOpts}</select></td>
-    <td class="cb-cell"></td>
-    <td colspan="2">
-      <div class="bulk-action-row">
-        <input type="text" class="sp-input bulk-rename-input" placeholder="変更後の名前" />
-        <button class="menu-btn bulk-apply-btn" type="button">まとめて変更</button>
-      </div>
-    </td>
-  </tr>`;
+/* =============================================
+   ファイル読み込みエリア（コンパクト）
+   ============================================= */
+.drop-zone {
+  border: 2px dashed #c5c0b8;
+  border-radius: 7px;
+  padding: 14px 12px;
+  text-align: center;
+  cursor: pointer;
+  color: #aaa; font-size: 12px; line-height: 1.7;
+  background: #faf9f7;
+  transition: border-color .18s, background .18s, color .18s;
+  user-select: none;
+}
+.drop-zone:hover, .drop-zone.dragover {
+  border-color: #7ba4c7; background: #f0f5fa; color: #4a7aa0;
+}
+.drop-zone .drop-icon { font-size: 22px; display: block; margin-bottom: 3px; }
+.drop-zone input[type="file"] { display: none; }
 
-  // ラベル行（一括変更の見出し）
-  const labelRow = `<tr class="bulk-label-row">
-    <td colspan="7"><span class="bulk-label">▼ 一括変更</span></td>
-  </tr>`;
+.file-name { margin-top: 6px; font-size: 12px; color: #999; min-height: 16px; }
+.file-name.loaded { color: #3d6e99; font-weight: 600; }
 
-  tbody.innerHTML = dataRows + labelRow + bulkRow;
+/* summary内ファイル名 */
+.summary-filename {
+  font-size: 11px; font-weight: 400; color: #888;
+  margin-left: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  max-width: 200px; vertical-align: middle;
+}
+.summary-filename.loaded { color: #2a6a2a; font-weight: 600; }
 
-  // --- イベント登録 ---
-
-  // 種別セレクト（個別行）
-  tbody.querySelectorAll("tr[data-key] .kind-select").forEach(sel => {
-    sel.addEventListener("change", e => {
-      const key = e.target.dataset.key;
-      speakerMap[key].kind = e.target.value;
-      e.target.className = "kind-select k-" + e.target.value;
-    });
-  });
-
-  // 変更後テキスト（個別行）
-  tbody.querySelectorAll(".sp-input:not(.bulk-rename-input)").forEach(inp => {
-    inp.addEventListener("input", e => {
-      const key = e.target.dataset.key;
-      speakerMap[key].rename = e.target.value;
-      e.target.classList.toggle("changed", e.target.value !== "");
-    });
-  });
-
-  // 一括変更：bulkタブselectが変わったらbulkタブinputをクリア
-  const bulkTabSel   = tbody.querySelector(".bulk-tab-select");
-  const bulkTabInput = tbody.querySelector(".bulk-tab-input");
-  bulkTabSel.addEventListener("change", () => { bulkTabInput.value = ""; });
-  bulkTabInput.addEventListener("input", () => { bulkTabSel.value = TAB_PRESETS[0]; });
-
-  // まとめて変更ボタン
-  tbody.querySelector(".bulk-apply-btn").addEventListener("click", () => {
-    applyBulk();
-  });
-
-  // ソートアイコン更新
-  document.querySelectorAll("#spTable th[data-col]").forEach(th => {
-    th.className = th.dataset.col === sortCol ? "sort-" + sortDir : "sort-none";
-  });
+/* 解析ボタン＋ステータスを横並び */
+.analyze-row {
+  display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap;
+}
+.analyze-row .status-msg {
+  margin-top: 0; flex: 1;
 }
 
-// =============================================
-// 一括変更適用
-// =============================================
-function applyBulk() {
-  const tbody = document.getElementById("spTbody");
+/* =============================================
+   ボタン：btn-hover-21ベース ログツール内調整
+   ============================================= */
+.menu-btn-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.menu-btn-row .btn-hover-21 { flex: 1 1 auto; justify-content: center; }
 
-  // チェック状態を取得
-  const tabChecked  = new Set([...tbody.querySelectorAll(".cb-tab:checked")].map(cb => cb.dataset.key));
-  const kindChecked = new Set([...tbody.querySelectorAll(".cb-kind:checked")].map(cb => cb.dataset.key));
-  const nameChecked = new Set([...tbody.querySelectorAll(".cb-name:checked")].map(cb => cb.dataset.key));
+/* =============================================
+   ステータス
+   ============================================= */
+.status-msg { font-size: 12px; padding: 5px 10px; border-radius: 5px; margin-top: 6px; display: none; }
+.status-msg.show { display: block; }
+.status-msg.ok   { background: #edf6ed; color: #3a7a3a; border: 1px solid #b8dbb8; }
+.status-msg.err  { background: #fdf0f0; color: #a03030; border: 1px solid #e0b8b8; }
+.status-msg.info { background: #eef3fa; color: #2a568a; border: 1px solid #b8ccdf; }
 
-  // 一括変更の値
-  const bulkTabInput = tbody.querySelector(".bulk-tab-input").value.trim();
-  const bulkTabSel   = tbody.querySelector(".bulk-tab-select").value;
-  const newTab       = bulkTabInput !== "" ? bulkTabInput : bulkTabSel;
-  const newKind      = tbody.querySelector(".bulk-kind-select").value;
-  const newName      = tbody.querySelector(".bulk-rename-input").value.trim();
+/* =============================================
+   発言者テーブル
+   ============================================= */
+.sp-table-wrap { overflow-x: auto; }
 
-  let changed = 0;
-  Object.keys(speakerMap).forEach(key => {
-    if (tabChecked.has(key)) {
-      speakerMap[key].dispTab = newTab;
-      changed++;
-    }
-    if (kindChecked.has(key)) {
-      speakerMap[key].kind = newKind;
-      changed++;
-    }
-    if (nameChecked.has(key) && newName !== "") {
-      speakerMap[key].rename = newName;
-      changed++;
-    }
-  });
+table.sp-table {
+  width: 100%; border-collapse: collapse; font-size: 12px;
+}
+table.sp-table th {
+  background: #f0ede8; color: #444; font-weight: 700;
+  padding: 6px 8px; border: 1px solid #ddd;
+  text-align: left; white-space: nowrap;
+  cursor: pointer; user-select: none;
+}
+table.sp-table th.no-sort { cursor: default; }
+table.sp-table th:hover:not(.no-sort) { background: #e6e2dc; }
 
-  renderTable();
-  if (changed > 0) {
-    showStatus(document.getElementById("analyzeStatus"), `${changed} 件を変更しました`, "ok");
-  }
+.sort-icon { margin-left: 3px; font-size: 9px; }
+th.sort-none .sort-icon::after { content: "⇅"; color: #ccc; }
+th.sort-asc  .sort-icon::after { content: "▲"; color: #3d6e99; }
+th.sort-desc .sort-icon::after { content: "▼"; color: #3d6e99; }
+
+table.sp-table td {
+  padding: 5px 8px; border: 1px solid #e8e4de; vertical-align: middle;
+}
+table.sp-table tr:nth-child(odd)  td { background: #fdfefd; }
+table.sp-table tr:nth-child(even) td { background: #f4faf4; }
+table.sp-table tr:hover td { background: #fdfbe8; }
+
+/* タブバッジ */
+.tab-badge {
+  display: inline-block; padding: 1px 7px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; white-space: nowrap; border: 1px solid;
+  cursor: pointer;
+}
+.tab-badge:hover { opacity: 0.8; }
+.tab-main  { background: #fdecea; color: #b03020; border-color: #e8a098; }
+.tab-info  { background: #f0f0f0; color: #555;    border-color: #bbb; }
+.tab-other { background: #edf7ed; color: #2a6a2a; border-color: #90cc90; }
+
+/* タブselectインライン */
+.tab-select {
+  padding: 2px 4px; border: 1px solid #bbb; border-radius: 4px;
+  font-size: 11px; cursor: pointer; background: #f0f0f0; color: #555;
+}
+.tab-select:focus { outline: none; }
+
+/* 種別セレクト */
+.kind-select {
+  padding: 2px 5px; border: 1px solid #ddd; border-radius: 4px;
+  font-size: 11px; color: #333; background: #fff; cursor: pointer;
+}
+.kind-select.k-chara  { background: #fdecea; color: #b03020; border-color: #e8a098; }
+.kind-select.k-event  { background: #f0f0f0; color: #555;    border-color: #bbb; }
+.kind-select.k-scene  { background: #e8f0fc; color: #1a4a9a; border-color: #7aaae0; }
+.kind-select.k-system { background: #e0e0e0; color: #666;    border-color: #aaa; }
+
+/* 変更後入力 */
+.sp-input {
+  width: 100%; min-width: 90px; padding: 3px 6px;
+  border: 1px solid #ddd; border-radius: 4px;
+  font-size: 12px; color: #333; background: #fafafa;
+  transition: border-color .15s;
+}
+.sp-input:focus { outline: none; border-color: #7ba4c7; background: #fff; }
+.sp-input.changed { border-color: #7ba4c7; background: #f0f6ff; font-weight: 600; }
+
+/* =============================================
+   一括タブ変更
+   ============================================= */
+.bulk-tab-bar {
+  display: flex; gap: 8px; align-items: center;
+  flex-wrap: wrap; margin-top: 8px;
+  padding: 8px 10px;
+  background: #f8f8f8; border: 1px solid #e8e4de; border-radius: 6px;
+}
+.bulk-tab-bar label { font-size: 12px; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+.bulk-tab-bar input[type="checkbox"] { accent-color: #3d6e99; cursor: pointer; }
+.bulk-tab-bar select {
+  padding: 3px 6px; border: 1px solid #ddd; border-radius: 4px;
+  font-size: 12px; cursor: pointer;
+}
+.bulk-tab-bar .btn-hover-21 { margin: 0; padding: 4px 12px; }
+
+/* =============================================
+   整形オプション
+   ============================================= */
+.option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; }
+.option-item {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 13px; cursor: pointer; user-select: none;
+}
+.option-item input[type="checkbox"] {
+  width: 14px; height: 14px; accent-color: #3d6e99; cursor: pointer; flex-shrink: 0;
 }
 
-// =============================================
-// ④ プレビュー（元構造）
-// =============================================
-function updatePreview() {
-  if (!parsedDoc) return;
-  const optHideSys = document.getElementById("optHideSystem").checked;
-  const wrap = document.getElementById("previewWrap");
-  const lines = [];
+/* =============================================
+   プレビュー
+   ============================================= */
+.preview-wrap {
+  max-height: 280px; overflow-y: auto;
+  border: 1px solid #e5e2dc; border-radius: 7px;
+  background: #fff; padding: 10px 12px; font-size: 13px; line-height: 2;
+}
+.preview-wrap::-webkit-scrollbar { width: 5px; }
+.preview-wrap::-webkit-scrollbar-track { background: #f0ede8; border-radius: 3px; }
+.preview-wrap::-webkit-scrollbar-thumb { background: #c8c3bb; border-radius: 3px; }
+.preview-empty { color: #ccc; font-size: 12px; text-align: center; padding: 24px 0; }
 
-  parsedDoc.querySelectorAll("p").forEach(p => {
-    const spans = p.querySelectorAll("span");
-    if (spans.length < 3) return;
-    const origTab = spans[0].textContent.trim();
-    const name    = spans[1].textContent.trim();
-    const key     = origTab + "::" + name;
-    const sp      = speakerMap[key] || { kind:"chara", rename:"", dispTab: origTab };
-    if (optHideSys && sp.kind === "system") return;
+/* =============================================
+   navi.html 用
+   ============================================= */
+.navi-wrap { padding: 10px 12px; }
+.navi-tool-title { font-size: 13px; font-weight: 700; color: #1a1a2e; margin: 0 0 8px; }
 
-    const dispName = sp.rename.trim() || name;
-    const dispTab  = sp.dispTab || origTab;
-    const bodyHtml = spans[2].innerHTML;
-    const parts    = bodyHtml.split(/<br\s*\/?>/i).map(s => s.trim()).filter(s => s.length > 0);
+/* naviのアコーディオン（軽量版） */
+.navi-acc {
+  margin: 3px 0; border-radius: 6px; border: 1px solid #e0ddd8;
+  overflow: hidden; background: #fff;
+}
+.navi-acc summary {
+  display: flex; justify-content: space-between; align-items: center;
+  list-style: none; padding: 6px 10px;
+  font-size: 12px; font-weight: 700; cursor: pointer; user-select: none;
+  line-height: 1.3;
+}
+.navi-acc summary::-webkit-details-marker { display: none; }
+.navi-acc summary::marker { content: ""; }
+.navi-acc summary::after {
+  width: 6px; height: 6px; margin-left: 6px;
+  border-bottom: 2px solid rgba(0,0,0,.4);
+  border-right:  2px solid rgba(0,0,0,.4);
+  transform: translateY(-20%) rotate(45deg);
+  content: ""; transition: transform .2s;
+}
+.navi-acc[open] summary::after { transform: rotate(225deg); }
+.navi-acc .navi-acc-body { padding: 0 10px 8px; font-size: 11px; color: #555; line-height: 1.6; }
 
-    parts.forEach(part => {
-      lines.push(
-        `<p style="color:#888888;"><span> ${esc(dispTab)}</span> <span>${esc(dispName)}</span> : <span> ${part} </span></p>`
-      );
-    });
-  });
+/* naviの色 */
+.navi-acc-1 summary { background: #fff9e0; color: #7a5800; border-bottom: 1px solid #f5cc50; }
+.navi-acc-2 summary { background: #f0faf0; color: #2a6a2a; border-bottom: 1px solid #8dcc8d; }
+.navi-acc-3 summary { background: #eef4ff; color: #1a4a9a; border-bottom: 1px solid #9bbcf5; }
+.navi-acc-4 summary { background: #f6f0ff; color: #5a2a9a; border-bottom: 1px solid #c0a0f0; }
+.navi-acc-5 summary { background: #fff2ee; color: #a03820; border-bottom: 1px solid #f0a080; }
 
-  if (lines.length === 0) {
-    wrap.innerHTML = `<div class="preview-empty">表示できる行がありません</div>`; return;
-  }
-  wrap.innerHTML = lines.join("\n");
+.navi-link {
+  display: block; padding: 5px 8px; margin: 2px 0;
+  background: transparent; border: 1px solid rgba(107,182,255,0.25);
+  border-radius: 5px; color: #313131; text-decoration: none;
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.navi-link:hover { background: rgba(107,182,255,0.12); border-color: rgba(107,182,255,0.35); }
+.navi-link:active { transform: translateY(1px); }
+
+.navi-note { font-size: 11px; color: #bbb; line-height: 1.6; margin-top: 8px; }
+
+/* =============================================
+   出力HTML内用（ダウンロードファイルには直接埋め込まない）
+   ============================================= */
+.log-tab {
+  font-size: 10px; font-weight: 700; margin-right: 5px;
+  padding: 0 5px; border-radius: 3px; vertical-align: middle; display: inline-block;
+}
+.log-tab-main  { background: #fff3e0; color: #a85400; }
+.log-tab-info  { background: #e8f0fe; color: #1a56a0; }
+.log-tab-other { background: #f0f0f0; color: #888; }
+.skill-hl {
+  background: #fff8e0; color: #7a5000;
+  border-radius: 3px; padding: 0 2px; font-weight: 600; font-size: .9em;
 }
 
-// =============================================
-// ④ 元構造ダウンロード
-// =============================================
-function downloadOriginal() {
-  if (!parsedDoc) { showStatus(document.getElementById("processStatus"),"先に解析してください","err"); return; }
-  const optHideSys = document.getElementById("optHideSystem").checked;
-  const pBlocks = [];
+/* =============================================
+   テーブル：チェックボックス列・一括変更行
+   ============================================= */
 
-  parsedDoc.querySelectorAll("p").forEach(p => {
-    const spans = p.querySelectorAll("span");
-    if (spans.length < 3) return;
-    const origTab = spans[0].textContent.trim();
-    const name    = spans[1].textContent.trim();
-    const key     = origTab + "::" + name;
-    const sp      = speakerMap[key] || { kind:"chara", rename:"", dispTab: origTab };
-    if (optHideSys && sp.kind === "system") return;
-
-    const dispName = sp.rename.trim() || name;
-    const dispTab  = sp.dispTab || origTab;
-    const bodyHtml = spans[2].innerHTML;
-    const parts    = bodyHtml.split(/<br\s*\/?>/i).map(s => s.trim()).filter(s => s.length > 0);
-
-    parts.forEach(part => {
-      pBlocks.push(
-`<p style="color:#888888;">
-  <span> ${esc(dispTab)}</span>
-  <span>${esc(dispName)}</span> :
-  <span>
-    ${part}
-  </span>
-</p>`
-      );
-    });
-  });
-
-  const headEl = parsedDoc.querySelector("head");
-  let headHtml = headEl ? headEl.outerHTML : `<head><meta charset="UTF-8" /></head>`;
-  headHtml = headHtml.replace(/<title>[^<]*<\/title>/, `<title>${esc(fileName)}</title>`);
-
-  const html =
-`<!DOCTYPE html>
-<html lang="ja">
-${headHtml}
-  <body>
-    
-
-${pBlocks.join("\n\n")}
-
-  </body>
-</html>`;
-
-  triggerDownload(html, fileName + "_整形済み.html");
-  showStatus(document.getElementById("processStatus"), "ダウンロードしました！", "ok");
+/* チェックボックス＋値を同一セルに */
+.cb-with-val {
+  padding: 5px 8px !important;
+  vertical-align: middle;
+}
+.cb-with-val label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  margin: 0;
+  font-size: 12px;
+}
+.cb-with-val input[type="checkbox"] {
+  width: 14px; height: 14px;
+  accent-color: #3d6e99;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+}
+/* チェック済みの行をハイライト */
+.cb-with-val input[type="checkbox"]:checked ~ *,
+.cb-with-val input[type="checkbox"]:checked + * {
+  font-weight: 600;
 }
 
-// =============================================
-// ⑤ 整形ダウンロード
-// =============================================
-function downloadFormatted() {
-  if (!parsedDoc) { showStatus(document.getElementById("formatStatus"),"先に解析してください","err"); return; }
+/* タブバッジ */
+.tab-badge { cursor: default; }
 
-  const optTab   = document.getElementById("optTab").checked;
-  const optSkill = document.getElementById("optSkill").checked;
-  const optHide  = document.getElementById("optHideSystem").checked;
-  const optSpace = document.getElementById("optSpaceBetween").checked;
-  const bodyLines = [];
-  let prevKind = null;
+/* 変更前テキスト */
+.sp-name-text { vertical-align: middle; }
 
-  parsedDoc.querySelectorAll("p").forEach(p => {
-    const spans = p.querySelectorAll("span");
-    if (spans.length < 3) return;
-    const origTab = spans[0].textContent.trim();
-    const name    = spans[1].textContent.trim();
-    const key     = origTab + "::" + name;
-    const sp      = speakerMap[key] || { kind:"chara", rename:"", dispTab: origTab };
-    const kind    = sp.kind;
-    if (optHide && kind === "system") return;
-
-    const dispName = sp.rename.trim() || name;
-    const dispTab  = sp.dispTab || origTab;
-    const bodyHtml = spans[2].innerHTML;
-    const parts    = bodyHtml.split(/<br\s*\/?>/i).map(s => s.trim()).filter(s => s.length > 0);
-
-    parts.forEach(part => {
-      if (optSpace && prevKind !== null && prevKind !== kind) {
-        bodyLines.push(`<p style="margin:0;line-height:1;">&nbsp;</p>`);
-      }
-      prevKind = kind;
-      const tabRaw   = dispTab.replace(/[\[\] ]/g,"");
-      const tabClass = tabRaw==="main"?"log-tab-main":tabRaw==="info"?"log-tab-info":"log-tab-other";
-      const tabHtml  = optTab ? `<span class="log-tab ${tabClass}">${esc(dispTab)}</span>` : "";
-      let text = part;
-      if (optSkill) text = text.replace(/〈([^〉]+)〉/g, `<span class="skill-hl">〈$1〉</span>`);
-      bodyLines.push(
-        `<p style="color:#888888;">${tabHtml}<span>${esc(dispName)}</span> : <span> ${text} </span></p>`
-      );
-    });
-  });
-
-  const headEl = parsedDoc.querySelector("head");
-  let headHtml = headEl ? headEl.outerHTML : `<head><meta charset="UTF-8" /></head>`;
-  headHtml = headHtml.replace(/<title>[^<]*<\/title>/, `<title>${esc(fileName)}</title>`);
-  headHtml = headHtml.replace("</head>",
-    `  <style>
-    .log-tab{font-size:10px;font-weight:700;margin-right:6px;padding:1px 6px;border-radius:3px;vertical-align:middle;display:inline-block}
-    .log-tab-main{background:#fff3e0;color:#a85400}
-    .log-tab-info{background:#e8f0fe;color:#1a56a0}
-    .log-tab-other{background:#f0f0f0;color:#888}
-    .skill-hl{background:#fff8e0;color:#7a5000;border-radius:3px;padding:0 2px;font-weight:600;font-size:.9em}
-  </style>\n</head>`
-  );
-
-  const html =
-`<!DOCTYPE html>
-<html lang="ja">
-${headHtml}
-  <body>
-    
-
-${bodyLines.join("\n")}
-
-  </body>
-</html>`;
-
-  triggerDownload(html, fileName + "_整形.html");
-  showStatus(document.getElementById("formatStatus"), "ダウンロードしました！", "ok");
+/* 一括変更ラベル行 */
+.bulk-label-row td {
+  background: #f0ede8; padding: 4px 10px !important;
+  border-top: 2px solid #d8d4ce;
+}
+.bulk-label {
+  font-size: 11px; font-weight: 700; color: #666; letter-spacing: .04em;
 }
 
-// =============================================
-// リセット
-// =============================================
-function resetAll() {
-  rawHtml = ""; fileName = ""; parsedDoc = null; speakerMap = {}; tableOrder = [];
-  const fi = document.getElementById("fileInput");
-  if (fi) fi.value = "";
-  const fn = document.getElementById("fileName");
-  if (fn) { fn.textContent = "ファイル未選択"; fn.className = "file-name"; }
-  const ba = document.getElementById("btnAnalyze");
-  if (ba) ba.disabled = true;
-  ["acc-2","acc-3","acc-4","acc-5"].forEach(id => document.getElementById(id)?.removeAttribute("open"));
-  ["loadStatus","analyzeStatus","processStatus","formatStatus"].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.className = "status-msg";
-  });
-  const wrap = document.getElementById("previewWrap");
-  if (wrap) wrap.innerHTML = `<div class="preview-empty">「プレビュー更新」をクリックしてください</div>`;
+/* 一括変更行 */
+.bulk-row td { background: #faf9f7; vertical-align: middle; padding: 6px 6px !important; }
+
+/* タブ列：プルダウン + or + テキスト */
+.bulk-tab-cell {
+  display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+}
+.bulk-tab-select {
+  padding: 3px 4px; border: 1px solid #ddd; border-radius: 4px;
+  font-size: 11px; cursor: pointer; min-width: 60px;
+}
+.bulk-or { font-size: 10px; color: #aaa; flex-shrink: 0; }
+.bulk-tab-input {
+  padding: 3px 6px; border: 1px solid #ddd; border-radius: 4px;
+  font-size: 11px; width: 70px; min-width: 0;
+}
+.bulk-tab-input:focus { outline: none; border-color: #7ba4c7; background: #f8fbff; }
+
+/* 変更後＋ボタン行 */
+.bulk-action-row {
+  display: flex; gap: 6px; align-items: center;
+}
+.bulk-action-row .sp-input { flex: 1; min-width: 0; }
+.bulk-apply-btn { flex-shrink: 0; }
+
+/* =============================================
+   summary内ボタン（更新・🔄一括変更）
+   ============================================= */
+.summary-btn {
+  margin-left: auto;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+  /* summaryのflexに乗る */
+}
+/* summaryはflexなので矢印の前に挿入 */
+.accordion-008 summary { position: relative; }
+
+/* 🔄一括変更ボタン */
+.bulk-toggle-btn {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+.bulk-label-row td {
+  padding: 4px 6px !important;
 }
 
-// =============================================
-// naviからアコーディオンを開く
-// =============================================
-function openAccordion(id) {
-  const el = document.getElementById(id);
-  if (el) { el.setAttribute("open",""); el.scrollIntoView({ behavior:"smooth", block:"start" }); }
+/* 列ごとの🔄一括変更ボタン行 */
+.bulk-sep-row td {
+  border-top: 2px solid #d8d4ce !important;
+  padding: 0 !important;
+  height: 0;
 }
+.bulk-btn-row td { background: #f5f3f0; padding: 4px 6px !important; }
+.col-bulk-btn {
+  width: 100%; justify-content: center;
+  padding: 4px 6px; font-size: 11px; font-weight: 600;
+}
+.bulk-input-row td { background: #faf9f7; padding: 5px 6px !important; vertical-align: middle; }
+#bulkTabSelect, #bulkTabInput {
+  font-size: 11px; padding: 3px 4px;
+  border: 1px solid #ddd; border-radius: 4px;
+}
+#bulkTabInput { width: 70px; }
+#bulkTabInput:focus { outline: none; border-color: #7ba4c7; }
 
-// =============================================
-// ユーティリティ
-// =============================================
-function esc(s) {
-  return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+/* ソートボタン ⇅ */
+.sort-col-btn {
+  padding: 1px 4px; border: 1px solid #ccc; border-radius: 3px;
+  background: #fff; font-size: 10px; cursor: pointer;
+  line-height: 1; color: #888; flex-shrink: 0;
+  transition: background .15s;
 }
-function escAttr(s) {
-  return String(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;");
+.sort-col-btn:hover { background: #eef3f8; border-color: #9bbcf5; color: #1a4a9a; }
+/* =============================================
+   フィルタUI
+   ============================================= */
+.th-with-filter { position: relative; }
+
+.th-inner {
+  display: flex; align-items: center; gap: 4px;
+  white-space: nowrap;
 }
-function triggerDownload(html, name) {
-  const blob = new Blob([html], { type:"text/html;charset=utf-8" });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href = url; a.download = name; a.click();
-  URL.revokeObjectURL(url);
+.th-cb-label {
+  display: flex; align-items: center; gap: 5px;
+  cursor: pointer; font-weight: 700; font-size: 12px;
 }
-function showStatus(el, msg, type) {
-  if (!el) return;
-  el.textContent = msg; el.className = "status-msg show " + type;
+.th-cb { width: 13px; height: 13px; accent-color: #3d6e99; cursor: pointer; margin: 0; }
+
+/* フィルタボタン ▼ */
+.filter-btn {
+  padding: 1px 5px; border: 1px solid #ccc; border-radius: 3px;
+  background: #fff; font-size: 10px; cursor: pointer;
+  line-height: 1; color: #666; flex-shrink: 0;
+  transition: background .15s;
+}
+.filter-btn:hover { background: #eef3f8; border-color: #9bbcf5; }
+.filter-btn.filter-active { background: #ddeeff; border-color: #5a8ae0; color: #1a4a9a; font-weight: 700; }
+
+/* フィルタドロップダウン */
+.filter-drop {
+  display: none; position: absolute;
+  top: 100%; left: 0; z-index: 100;
+  background: #fff; border: 1px solid #ddd; border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.12);
+  min-width: 140px; max-height: 200px; overflow-y: auto;
+  padding: 4px 0;
+}
+.filter-drop.open { display: block; }
+.filter-drop::-webkit-scrollbar { width: 4px; }
+.filter-drop::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+
+.fd-item { padding: 3px 10px; }
+.fd-item label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; cursor: pointer; font-weight: 400; color: #333;
+  white-space: nowrap;
+}
+.fd-item label:hover { color: #1a4a9a; }
+.fd-item input[type="checkbox"] { width: 13px; height: 13px; accent-color: #3d6e99; margin: 0; cursor: pointer; }
+.fd-item:first-child { border-bottom: 1px solid #eee; margin-bottom: 2px; padding-bottom: 5px; }
+
+/* タブ列の個別プルダウン */
+.tab-select-row {
+  padding: 2px 5px; border-radius: 4px;
+  font-size: 11px; font-weight: 700; cursor: pointer;
+  border: 1px solid #bbb; background: #f0f0f0; color: #555;
+}
+.tab-select-row:focus { outline: none; }
+.tab-select-row.t-main  { background: #fdecea; color: #b03020; border-color: #e8a098; }
+.tab-select-row.t-info  { background: #f0f0f0; color: #555;    border-color: #bbb; }
+.tab-select-row.t-other { background: #edf7ed; color: #2a6a2a; border-color: #90cc90; }
+.tab-select-row.t-other2{ background: #fefde8; color: #7a6800; border-color: #d4c840; }
+
+/* =============================================
+   フィルタ：すべて選択・解除ボタン行
+   ============================================= */
+.fd-ctrl-row {
+  display: flex; gap: 6px;
+  padding: 5px 8px 4px;
+  border-bottom: 1px solid #eee;
+}
+.fd-ctrl-btn {
+  flex: 1; padding: 3px 6px; font-size: 11px; font-weight: 600;
+  border: 1px solid #ccc; border-radius: 4px; background: #f8f8f8;
+  cursor: pointer; color: #444; transition: background .12s;
+}
+.fd-ctrl-btn:hover { background: #eef3f8; border-color: #9bbcf5; color: #1a4a9a; }
+
+/* =============================================
+   ② 列幅リサイズハンドル
+   ============================================= */
+.th-with-filter { position: relative; }
+.col-resizer {
+  position: absolute; top: 0; right: 0;
+  width: 5px; height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 10;
+}
+.col-resizer:hover,
+.col-resizer:active { background: #9bbcf5; }
+table.sp-table { table-layout: fixed; }
+table.sp-table th, table.sp-table td { overflow: hidden; }
+
+/* =============================================
+   ③ 行ドラッグ選択：選択中の視覚フィードバック
+   ============================================= */
+table.sp-table tr[data-key] { user-select: none; }
+
+/* チャット列テキストエリア */
+.chat-input {
+  width: 100%; min-width: 120px;
+  padding: 3px 6px;
+  border: 1px solid #ddd; border-radius: 4px;
+  font-size: 12px; color: #333; background: #fafafa;
+  font-family: inherit; line-height: 1.5;
+  resize: vertical;
+  transition: border-color .15s;
+}
+.chat-input:focus { outline: none; border-color: #7ba4c7; background: #fff; }
+
+/* 変更後・チャット列のリサイザー */
+.th-resizable { position: relative; }
+.th-resizable .col-resizer {
+  position: absolute; top: 0; right: 0;
+  width: 5px; height: 100%;
+  cursor: col-resize; background: transparent; z-index: 10;
+}
+.th-resizable .col-resizer:hover { background: #9bbcf5; }
+
+/* チェックボックスをlabel外に出したため横並び調整 */
+.cb-with-val {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 8px !important; vertical-align: middle;
+}
+.cb-with-val input[type="checkbox"] {
+  width: 14px; height: 14px; accent-color: #3d6e99;
+  cursor: pointer; flex-shrink: 0; margin: 0;
 }
