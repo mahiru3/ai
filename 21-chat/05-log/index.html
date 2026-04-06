@@ -10,7 +10,7 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">📝 ログ整形ツール！！</h1>
+  <h1 class="page-title">📝 ログ整形ツールです</h1>
   <p class="page-subtitle">CCFoliaのHTMLログを読み込み、発言者を整理してHTMLでダウンロードします。ページ内完結・サーバー送信なし。</p>
 
   <!-- ① ファイル読み込み -->
@@ -44,7 +44,7 @@
                   <button class="filter-btn"   data-col="tab"  title="フィルタ">▼</button>
                 </div>
                 <div class="filter-drop" id="filterDrop-tab"></div>
-                <div class="col-resizer" data-col="tab"></div>
+                <div class="col-resizer"></div>
               </th>
               <th class="no-sort th-with-filter">
                 <div class="th-inner">
@@ -53,7 +53,7 @@
                   <button class="filter-btn"   data-col="kind" title="フィルタ">▼</button>
                 </div>
                 <div class="filter-drop" id="filterDrop-kind"></div>
-                <div class="col-resizer" data-col="kind"></div>
+                <div class="col-resizer"></div>
               </th>
               <th class="no-sort th-with-filter">
                 <div class="th-inner">
@@ -62,7 +62,7 @@
                   <button class="filter-btn"   data-col="name" title="フィルタ">▼</button>
                 </div>
                 <div class="filter-drop" id="filterDrop-name"></div>
-                <div class="col-resizer" data-col="name"></div>
+                <div class="col-resizer"></div>
               </th>
               <th class="no-sort">変更後</th>
               <th class="no-sort">チャット</th>
@@ -75,15 +75,15 @@
     </div>
   </details>
 
-  <!-- ③ プレビュー・元構造ダウンロード（旧④） -->
+  <!-- ③ プレビュー・ダウンロード -->
   <details class="accordion-008 acc-color-4" id="acc-4">
     <summary>③ プレビュー・ダウンロード（元構造）</summary>
     <div class="accordion-body">
       <p style="font-size:11px;color:#888;margin:0 0 8px;">元のCCFolia HTML構造のまま出力。発言者名置換・非表示除去・&lt;br&gt;分割のみ。</p>
       <div class="btn-row-21">
-        <button class="btn-hover-21 bh-gray" id="btnPreview"><span>👁 プレビュー更新</span></button>
+        <button class="btn-hover-21 bh-gray"  id="btnPreview"><span>👁 プレビュー更新</span></button>
         <button class="btn-hover-21 bh-green" id="btnDownload"><span>💾 HTMLダウンロード（元構造）</span></button>
-        <button class="btn-hover-21 bh-red" id="btnReset"><span>🔄 リセット</span></button>
+        <button class="btn-hover-21 bh-red"   id="btnReset"><span>🔄 リセット</span></button>
       </div>
       <div class="preview-wrap" id="previewWrap" style="margin-top:10px;">
         <div class="preview-empty">「プレビュー更新」をクリックしてください</div>
@@ -92,7 +92,7 @@
     </div>
   </details>
 
-  <!-- ④ 除外設定（旧③） -->
+  <!-- ④ 除外設定 -->
   <details class="accordion-008 acc-color-3" id="acc-3">
     <summary>④ 除外設定</summary>
     <div class="accordion-body">
@@ -131,38 +131,41 @@
 
 <script>
 /* =============================================
-   ログ整形ツール メインスクリプト
+   定数・状態
    ============================================= */
-
 const KIND_LABEL  = { chara:"キャラ", event:"テキスト", scene:"シーン", system:"非表示" };
 const KIND_ORDER  = { chara:0, event:1, scene:2, system:3 };
 const TAB_PRESETS = ["[main]","[info]","[other]"];
+const STAR_NAME   = "★0000★";
 
 let rawHtml    = "";
 let fileName   = "";
 let parsedDoc  = null;
-let speakerMap = {};  // key=origTab+"::"+name → {origTab,dispTab,name,kind,rename}
+// speakerMap: key=origTab+"::"+origName → {origTab,dispTab,name,kind,rename,chat}
+let speakerMap = {};
 let tableOrder = [];
 let sortCol    = null;
 let sortDir    = "asc";
-// フィルタ状態：null=全表示、Set=表示する値のセット
-let filterTab  = null;
+let filterTab  = null;  // null=全表示、Set=表示する値
 let filterKind = null;
 let filterName = null;
 
-/* ------------------------------------------
-   ファイル読み込み
------------------------------------------- */
+/* =============================================
+   DOM参照（固定要素）
+   ============================================= */
 const dropZone   = document.getElementById("dropZone");
 const fileInput  = document.getElementById("fileInput");
 const fileNameEl = document.getElementById("fileName");
 const loadStatus = document.getElementById("loadStatus");
 const btnAnalyze = document.getElementById("btnAnalyze");
 
-dropZone.addEventListener("click", () => fileInput.click());
-dropZone.addEventListener("dragover",  e => { e.preventDefault(); dropZone.classList.add("dragover"); });
-dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
-dropZone.addEventListener("drop", e => {
+/* =============================================
+   ① ファイル読み込み
+   ============================================= */
+dropZone.addEventListener("click",    () => fileInput.click());
+dropZone.addEventListener("dragover", e  => { e.preventDefault(); dropZone.classList.add("dragover"); });
+dropZone.addEventListener("dragleave",()  => dropZone.classList.remove("dragover"));
+dropZone.addEventListener("drop",     e  => {
   e.preventDefault(); dropZone.classList.remove("dragover");
   if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
 });
@@ -177,9 +180,10 @@ function setFile(file) {
   reader.onload = ev => {
     rawHtml = ev.target.result;
     fileNameEl.textContent = "📄 " + file.name;
-    fileNameEl.className = "summary-filename loaded";
-    btnAnalyze.disabled = false;
+    fileNameEl.className   = "summary-filename loaded";
+    btnAnalyze.disabled    = false;
     showStatus(loadStatus, "読み込み完了。「解析する」を押してください", "info");
+    // 再読込時はリセット
     speakerMap = {}; tableOrder = []; parsedDoc = null;
     ["acc-2","acc-3","acc-4","acc-5"].forEach(id =>
       document.getElementById(id)?.removeAttribute("open")
@@ -188,13 +192,12 @@ function setFile(file) {
   reader.readAsText(file, "UTF-8");
 }
 
-/* ------------------------------------------
+/* =============================================
    解析
------------------------------------------- */
+   ============================================= */
 btnAnalyze.addEventListener("click", () => {
   speakerMap = {};
-  const parser = new DOMParser();
-  parsedDoc = parser.parseFromString(rawHtml, "text/html");
+  parsedDoc  = new DOMParser().parseFromString(rawHtml, "text/html");
 
   parsedDoc.querySelectorAll("p").forEach(p => {
     const spans = p.querySelectorAll("span");
@@ -202,14 +205,16 @@ btnAnalyze.addEventListener("click", () => {
     const origTab = spans[0].textContent.trim();
     const name    = spans[1].textContent.trim();
     const key     = origTab + "::" + name;
-    if (!(key in speakerMap)) {
-      // 元の本文テキスト（brで分割→改行結合）をchatの初期値として格納
-      const rawParts = spans[2].innerHTML.split(/<br\s*\/?>/i)
-        .map(s => s.replace(/<[^>]*>/g, "").trim())
-        .filter(s => s);
-      speakerMap[key] = { origTab, dispTab: origTab, name, kind:"chara", rename:"", chat: rawParts.join("
-") };
-    }
+    if (key in speakerMap) return; // 初出のみ登録
+
+    // 本文をテキスト化（brで分割、改行結合）
+    const chat = spans[2].innerHTML
+      .split(/<br\s*\/?>/i)
+      .map(s => s.replace(/<[^>]*>/g, "").trim())
+      .filter(s => s)
+      .join("\n");
+
+    speakerMap[key] = { origTab, dispTab: origTab, name, kind: "chara", rename: "", chat };
   });
 
   const spCount = Object.keys(speakerMap).length;
@@ -217,25 +222,23 @@ btnAnalyze.addEventListener("click", () => {
     showStatus(document.getElementById("analyzeStatus"), "発言者が検出できませんでした", "err"); return;
   }
   tableOrder = Object.keys(speakerMap);
-  sortCol = null;
+  sortCol    = null;
+
   ["acc-2","acc-3","acc-4","acc-5"].forEach(id =>
-    document.getElementById(id)?.setAttribute("open","")
+    document.getElementById(id)?.setAttribute("open", "")
   );
   renderTable();
   initFilterDrops();
   initColResize();
-  initRowDragSelect();
+
   const pCount = parsedDoc.querySelectorAll("p").length;
   showStatus(document.getElementById("analyzeStatus"),
     `${pCount} ブロック ／ 発言者 ${spCount} 件を検出`, "ok");
 });
 
-/* ------------------------------------------
-   テーブル描画
-   列順（4列）:
-   [0] ☐タブ名  [1] ☐種別  [2] ☐変更前  [3] 変更後
-   最下：▼一括変更 [まとめて変更] / bulk入力行
------------------------------------------- */
+/* =============================================
+   テーブル描画（5列：タブ名|種別|変更前|変更後|チャット）
+   ============================================= */
 function renderTable() {
   const tbody = document.getElementById("spTbody");
 
@@ -243,60 +246,51 @@ function renderTable() {
   const sorted = [...tableOrder].sort((a, b) => {
     if (!sortCol) return 0;
     const sa = speakerMap[a], sb = speakerMap[b];
-    let va, vb;
-    if      (sortCol === "kind") { va = KIND_ORDER[sa.kind]; vb = KIND_ORDER[sb.kind]; }
-    else if (sortCol === "tab")  { va = sa.dispTab; vb = sb.dispTab; }
-    else                         { va = sa.name;    vb = sb.name; }
+    const va = sortCol === "kind" ? KIND_ORDER[sa.kind] : sortCol === "tab" ? sa.dispTab : sa.name;
+    const vb = sortCol === "kind" ? KIND_ORDER[sb.kind] : sortCol === "tab" ? sb.dispTab : sb.name;
     if (va < vb) return sortDir === "asc" ? -1 : 1;
     if (va > vb) return sortDir === "asc" ?  1 : -1;
     return 0;
   });
 
-  // データ行HTML生成（4列：☐タブ名 | ☐種別 | ☐変更前 | 変更後）フィルタ適用
-  const dataRowsHtml = sorted.filter(key => {
-    const sp = speakerMap[key];
-    if (filterTab  && !filterTab.has(sp.dispTab))        return false;
-    if (filterKind && !filterKind.has(sp.kind))          return false;
-    if (filterName && !filterName.has(sp.name))          return false;
-    return true;
-  }).map(key => {
-    const sp       = speakerMap[key];
-    const tabRaw   = sp.dispTab.replace(/[\[\] ]/g, "");
-    const tabClass = tabRaw==="main" ? "tab-main" : tabRaw==="info" ? "tab-info" : "tab-other";
-    const kindOpts = Object.entries(KIND_LABEL).map(([k,l]) =>
-      `<option value="${k}"${sp.kind===k?" selected":""}>${l}</option>`
-    ).join("");
-    const tabOptsSel = TAB_PRESETS.map(t =>
-      `<option value="${ea(t)}"${sp.dispTab===t?" selected":""}>${e(t)}</option>`
-    ).join("");
-    const tabSelClass = _tabClass(sp.dispTab);
-    return `<tr data-key="${ea(key)}">
-      <td class="cb-with-val"><label><input type="checkbox" class="cb-tab"  data-key="${ea(key)}"><select class="tab-select tab-select-row ${tabSelClass}" data-key="${ea(key)}">${tabOptsSel}</select></label></td>
-      <td class="cb-with-val"><label><input type="checkbox" class="cb-kind" data-key="${ea(key)}"><select class="kind-select k-${sp.kind}" data-key="${ea(key)}">${kindOpts}</select></label></td>
-      <td class="cb-with-val"><label><input type="checkbox" class="cb-name" data-key="${ea(key)}"><span class="sp-name-text">${e(sp.name)}</span></label></td>
-      <td><input type="text" class="sp-input${sp.rename?" changed":""}"
-            placeholder="${ea(sp.name)}" value="${ea(sp.rename)}"
-            data-key="${ea(key)}"></td>
-      <td><textarea class="chat-input" rows="2" data-key="${ea(key)}">${e(sp.chat||"")}</textarea></td>
-    </tr>`;
-  }).join("");
+  // フィルタ → データ行HTML生成
+  const tabPresetOpts = TAB_PRESETS.map(t => `<option value="${ea(t)}">${e(t)}</option>`).join("");
+  const bulkKindOpts  = Object.entries(KIND_LABEL).map(([k,l]) => `<option value="${k}">${l}</option>`).join("");
 
-  // プリセットoption
-  const tabPresetOpts = TAB_PRESETS.map(t =>
-    `<option value="${ea(t)}">${e(t)}</option>`
-  ).join("");
-  const bulkKindOpts = Object.entries(KIND_LABEL).map(([k,l]) =>
-    `<option value="${k}">${l}</option>`
-  ).join("");
+  const dataRowsHtml = sorted
+    .filter(key => {
+      const sp = speakerMap[key];
+      if (filterTab  && !filterTab.has(sp.dispTab)) return false;
+      if (filterKind && !filterKind.has(sp.kind))   return false;
+      if (filterName && !filterName.has(sp.name))   return false;
+      return true;
+    })
+    .map(key => {
+      const sp         = speakerMap[key];
+      const tabSelCls  = _tabClass(sp.dispTab);
+      const tabOpts    = TAB_PRESETS.map(t =>
+        `<option value="${ea(t)}"${sp.dispTab===t?" selected":""}>${e(t)}</option>`
+      ).join("");
+      const kindOpts   = Object.entries(KIND_LABEL).map(([k,l]) =>
+        `<option value="${k}"${sp.kind===k?" selected":""}>${l}</option>`
+      ).join("");
+      return `<tr data-key="${ea(key)}">
+        <td class="cb-with-val"><label><input type="checkbox" class="cb-tab"  data-key="${ea(key)}"><select class="tab-select tab-select-row ${tabSelCls}" data-key="${ea(key)}">${tabOpts}</select></label></td>
+        <td class="cb-with-val"><label><input type="checkbox" class="cb-kind" data-key="${ea(key)}"><select class="kind-select k-${sp.kind}" data-key="${ea(key)}">${kindOpts}</select></label></td>
+        <td class="cb-with-val"><label><input type="checkbox" class="cb-name" data-key="${ea(key)}"><span class="sp-name-text">${e(sp.name)}</span></label></td>
+        <td><input type="text" class="sp-input${sp.rename?" changed":""}" placeholder="${ea(sp.name)}" value="${ea(sp.rename)}" data-key="${ea(key)}"></td>
+        <td><textarea class="chat-input" rows="2" data-key="${ea(key)}">${e(sp.chat||"")}</textarea></td>
+      </tr>`;
+    }).join("");
 
-  // 一括変更行HTML（ボタン行 → 入力行）
+  // 一括変更行（区切り＋ボタン行＋入力行）
   const bulkHtml = `
     <tr class="bulk-sep-row"><td colspan="5"></td></tr>
     <tr class="bulk-btn-row">
       <td><button class="btn-hover-21 bh-gray col-bulk-btn" id="btnBulkTab"  type="button"><span>🔄 一括変更</span></button></td>
       <td><button class="btn-hover-21 bh-gray col-bulk-btn" id="btnBulkKind" type="button"><span>🔄 一括変更</span></button></td>
       <td><button class="btn-hover-21 bh-gray col-bulk-btn" id="btnBulkName" type="button"><span>🔄 一括変更</span></button></td>
-      <td></td><td></td>
+      <td colspan="2"></td>
     </tr>
     <tr class="bulk-input-row">
       <td>
@@ -308,7 +302,7 @@ function renderTable() {
       </td>
       <td><select class="kind-select k-chara" id="bulkKindSelect">${bulkKindOpts}</select></td>
       <td><input type="text" class="sp-input" id="bulkRenameInput" placeholder="変更後の名前"></td>
-      <td></td><td></td>
+      <td colspan="2"></td>
     </tr>`;
 
   tbody.innerHTML = dataRowsHtml + bulkHtml;
@@ -316,29 +310,26 @@ function renderTable() {
 
   /* --- 個別行イベント --- */
 
-  // タブセレクト（個別）
+  // タブセレクト
   tbody.querySelectorAll(".tab-select-row").forEach(sel => {
     sel.addEventListener("change", ev => {
       const key = ev.target.dataset.key;
-      speakerMap[key].dispTab = ev.target.value;
-      // 色クラスを更新
+      speakerMap[key].dispTab  = ev.target.value;
       ev.target.className = "tab-select tab-select-row " + _tabClass(ev.target.value);
     });
   });
 
-  // 種別セレクト
+  // 種別セレクト（テキストに変更したら★0000★を自動入力）
   tbody.querySelectorAll("tr[data-key] .kind-select").forEach(sel => {
     sel.addEventListener("change", e => {
       const key  = e.target.dataset.key;
       const kind = e.target.value;
       speakerMap[key].kind = kind;
-      e.target.className = "kind-select k-" + kind;
-      // 「テキスト」に変更したら変更後に★0000★を自動入力（未入力の場合のみ）
+      e.target.className   = "kind-select k-" + kind;
       if (kind === "event" && !speakerMap[key].rename) {
-        speakerMap[key].rename = "★0000★";
-        // 同じ行のsp-inputを更新
+        speakerMap[key].rename = STAR_NAME;
         const inp = e.target.closest("tr")?.querySelector(".sp-input");
-        if (inp) { inp.value = "★0000★"; inp.classList.add("changed"); }
+        if (inp) { inp.value = STAR_NAME; inp.classList.add("changed"); }
       }
     });
   });
@@ -355,14 +346,12 @@ function renderTable() {
   // チャット欄
   tbody.querySelectorAll("tr[data-key] .chat-input").forEach(ta => {
     ta.addEventListener("input", e => {
-      const key = e.target.dataset.key;
-      speakerMap[key].chat = e.target.value;
+      speakerMap[e.target.dataset.key].chat = e.target.value;
     });
   });
 
   /* --- 一括変更イベント --- */
 
-  // タブselectが変わったらtextをクリア
   document.getElementById("bulkTabSelect").addEventListener("change", () => {
     document.getElementById("bulkTabInput").value = "";
   });
@@ -370,59 +359,40 @@ function renderTable() {
     document.getElementById("bulkTabSelect").selectedIndex = 0;
   });
 
-  // タブ列🔄 → チェック済みのタブを変更
   document.getElementById("btnBulkTab").addEventListener("click", () => {
-    const tabInput = document.getElementById("bulkTabInput").value.trim();
-    const newTab   = tabInput !== "" ? tabInput : document.getElementById("bulkTabSelect").value;
-    const checked  = new Set([...tbody.querySelectorAll(".cb-tab:checked")].map(c => c.dataset.key));
-    let n = 0;
-    checked.forEach(key => { speakerMap[key].dispTab = newTab; n++; });
-    if (n > 0) { renderTable(); showStatus(document.getElementById("analyzeStatus"), `タブ名 ${n} 件を変更しました`, "ok"); }
+    const val     = document.getElementById("bulkTabInput").value.trim()
+                  || document.getElementById("bulkTabSelect").value;
+    const checked = new Set([...tbody.querySelectorAll(".cb-tab:checked")].map(c => c.dataset.key));
+    checked.forEach(key => { speakerMap[key].dispTab = val; });
+    if (checked.size) { renderTable(); showStatus(document.getElementById("analyzeStatus"), `タブ名 ${checked.size} 件を変更しました`, "ok"); }
   });
 
-  // 種別列🔄 → チェック済みの種別を変更
   document.getElementById("btnBulkKind").addEventListener("click", () => {
-    const newKind = document.getElementById("bulkKindSelect").value;
+    const val     = document.getElementById("bulkKindSelect").value;
     const checked = new Set([...tbody.querySelectorAll(".cb-kind:checked")].map(c => c.dataset.key));
-    let n = 0;
     checked.forEach(key => {
-      speakerMap[key].kind = newKind;
-      // 「テキスト」に変更したら変更後に★0000★を自動入力（未入力の場合のみ）
-      if (newKind === "event" && !speakerMap[key].rename) {
-        speakerMap[key].rename = "★0000★";
-      }
-      n++;
+      speakerMap[key].kind = val;
+      if (val === "event" && !speakerMap[key].rename) speakerMap[key].rename = STAR_NAME;
     });
-    if (n > 0) { renderTable(); showStatus(document.getElementById("analyzeStatus"), `種別 ${n} 件を変更しました`, "ok"); }
+    if (checked.size) { renderTable(); showStatus(document.getElementById("analyzeStatus"), `種別 ${checked.size} 件を変更しました`, "ok"); }
   });
 
-  // 変更前列🔄 → チェック済みの名前を変更
   document.getElementById("btnBulkName").addEventListener("click", () => {
-    const newName = document.getElementById("bulkRenameInput").value.trim();
-    if (!newName) return;
+    const val     = document.getElementById("bulkRenameInput").value.trim();
+    if (!val) return;
     const checked = new Set([...tbody.querySelectorAll(".cb-name:checked")].map(c => c.dataset.key));
-    let n = 0;
-    checked.forEach(key => { speakerMap[key].rename = newName; n++; });
-    if (n > 0) { renderTable(); showStatus(document.getElementById("analyzeStatus"), `変更後 ${n} 件を設定しました`, "ok"); }
-  });
-
-  /* --- ソートアイコン更新 --- */
-  document.querySelectorAll("#spTable th[data-col]").forEach(th => {
-    th.className = th.dataset.col === sortCol ? "sort-" + sortDir : "sort-none";
+    checked.forEach(key => { speakerMap[key].rename = val; });
+    if (checked.size) { renderTable(); showStatus(document.getElementById("analyzeStatus"), `変更後 ${checked.size} 件を設定しました`, "ok"); }
   });
 }
 
-// 「更新」ボタン：renameをnameに昇格、renameをクリア
+/* =============================================
+   更新ボタン（rename→nameに昇格）
+   ============================================= */
 document.getElementById("btnRefresh").addEventListener("click", () => {
   let count = 0;
-  Object.keys(speakerMap).forEach(key => {
-    const sp = speakerMap[key];
-    if (sp.rename.trim() !== "") {
-      sp.name   = sp.rename.trim();
-      sp.rename = "";
-      // speakerMapのキーは変えないが表示名を更新
-      count++;
-    }
+  Object.values(speakerMap).forEach(sp => {
+    if (sp.rename.trim()) { sp.name = sp.rename.trim(); sp.rename = ""; count++; }
   });
   if (count > 0) {
     renderTable();
@@ -430,90 +400,9 @@ document.getElementById("btnRefresh").addEventListener("click", () => {
   }
 });
 
-// =============================================
-// フィルタ ドロップダウン構築
-// =============================================
-// フィルタ初期化（解析後に1回だけ呼ぶ）
-function initFilterDrops() {
-  filterTab = null; filterKind = null; filterName = null;
-  rebuildFilterDrops();
-}
-
-// フィルタドロップダウンの中身を全speakerMapから生成
-function rebuildFilterDrops() {
-  const allKeys = Object.keys(speakerMap);
-  const vals = {
-    tab:  [...new Set(allKeys.map(k => speakerMap[k].dispTab))],
-    kind: [...new Set(allKeys.map(k => speakerMap[k].kind))],
-    name: [...new Set(allKeys.map(k => speakerMap[k].name))]
-  };
-  const filters = { tab: filterTab, kind: filterKind, name: filterName };
-
-  ["tab","kind","name"].forEach(col => {
-    const drop = document.getElementById("filterDrop-" + col);
-    if (!drop) return;
-    const cur = filters[col];
-    const allChecked = !cur;
-
-    drop.innerHTML =
-      // すべて選択・解除ボタン行
-      `<div class="fd-ctrl-row">
-        <button class="fd-ctrl-btn" data-col="${col}" data-act="all">すべて選択</button>
-        <button class="fd-ctrl-btn" data-col="${col}" data-act="none">解除</button>
-      </div>` +
-      // （すべて）チェックボックス
-      `<div class="fd-item fd-all-item"><label><input type="checkbox" class="fd-all" data-col="${col}"${allChecked?" checked":""}> （すべて）</label></div>` +
-      vals[col].map(v => {
-        const disp    = col==="kind" ? (KIND_LABEL[v]||v) : v;
-        const checked = !cur || cur.has(v) ? " checked" : "";
-        return `<div class="fd-item"><label><input type="checkbox" class="fd-val" data-col="${col}" data-val="${ea(v)}"${checked}> ${e(disp)}</label></div>`;
-      }).join("");
-
-    // すべて選択・解除ボタン
-    drop.querySelectorAll(".fd-ctrl-btn").forEach(btn => {
-      btn.addEventListener("click", e => {
-        e.stopPropagation();
-        const act = btn.dataset.act;
-        drop.querySelectorAll(".fd-val").forEach(cb => cb.checked = act==="all");
-        drop.querySelector(".fd-all").checked = act==="all";
-        _applyFilter(col, true); // keepOpenフラグ
-      });
-    });
-
-    // 「すべて」チェックボックス
-    drop.querySelector(".fd-all").addEventListener("change", function() {
-      drop.querySelectorAll(".fd-val").forEach(v => v.checked = this.checked);
-      _applyFilter(col, true);
-    });
-
-    // 個別チェック
-    drop.querySelectorAll(".fd-val").forEach(cb => {
-      cb.addEventListener("change", () => {
-        const all = [...drop.querySelectorAll(".fd-val")].every(v => v.checked);
-        drop.querySelector(".fd-all").checked = all;
-        _applyFilter(col, true);
-      });
-    });
-  });
-}
-
-function _applyFilter(col, keepOpen=false) {
-  const drop    = document.getElementById("filterDrop-" + col);
-  if (!drop) return;
-  const checkedVals = [...drop.querySelectorAll(".fd-val:checked")].map(v => v.dataset.val);
-  const allChecked  = drop.querySelector(".fd-all")?.checked ?? true;
-  if      (col==="tab")  filterTab  = allChecked ? null : new Set(checkedVals);
-  else if (col==="kind") filterKind = allChecked ? null : new Set(checkedVals);
-  else if (col==="name") filterName = allChecked ? null : new Set(checkedVals);
-  const btn = document.querySelector(`.filter-btn[data-col="${col}"]`);
-  if (btn) btn.classList.toggle("filter-active", !allChecked);
-  renderTable();
-  // チェック状態を保持して再描画
-  rebuildFilterDrops();
-  if (keepOpen) document.getElementById("filterDrop-" + col)?.classList.add("open");
-}
-
-// フィルタドロップダウン 開閉 ＆ ソートボタン
+/* =============================================
+   ソート・フィルタドロップダウン
+   ============================================= */
 document.getElementById("spTable").addEventListener("click", e => {
   // フィルタ▼ボタン
   const filterBtn = e.target.closest(".filter-btn");
@@ -533,42 +422,106 @@ document.getElementById("spTable").addEventListener("click", e => {
     const col = sortBtn.dataset.col;
     sortDir = sortCol === col && sortDir === "asc" ? "desc" : "asc";
     sortCol = col;
-    // アイコン更新
     document.querySelectorAll(".sort-col-btn").forEach(b => b.textContent = "⇅");
     sortBtn.textContent = sortDir === "asc" ? "▲" : "▼";
     renderTable();
     rebuildFilterDrops();
-    return;
   }
 });
 
 // ドロップダウン外クリックで閉じる
 document.addEventListener("click", e => {
-  if (!e.target.closest(".th-with-filter")) {
+  if (!e.target.closest(".th-with-filter"))
     document.querySelectorAll(".filter-drop").forEach(d => d.classList.remove("open"));
-  }
 });
 
-// 全選択チェックボックス
+// ヘッダー全選択チェックボックス
 document.getElementById("spTable").addEventListener("change", e => {
-  const cb = e.target;
-  if (cb.id === "chkAllTab") {
-    document.querySelectorAll(".cb-tab").forEach(c => c.checked = cb.checked);
-  } else if (cb.id === "chkAllKind") {
-    document.querySelectorAll(".cb-kind").forEach(c => c.checked = cb.checked);
-  } else if (cb.id === "chkAllName") {
-    document.querySelectorAll(".cb-name").forEach(c => c.checked = cb.checked);
-  }
+  const id = e.target.id;
+  if      (id === "chkAllTab")  document.querySelectorAll(".cb-tab").forEach( c => c.checked = e.target.checked);
+  else if (id === "chkAllKind") document.querySelectorAll(".cb-kind").forEach(c => c.checked = e.target.checked);
+  else if (id === "chkAllName") document.querySelectorAll(".cb-name").forEach(c => c.checked = e.target.checked);
 });
 
+/* =============================================
+   フィルタ構築
+   ============================================= */
+function initFilterDrops() {
+  filterTab = null; filterKind = null; filterName = null;
+  rebuildFilterDrops();
+}
 
-/* ------------------------------------------
-   共通：出力行生成（プレビュー・元構造DL共通）
-   種別「テキスト」の場合：
-     1行目: [tab] dispName : 元の発言者名
-     2行目: [tab] dispName : 元の本文
------------------------------------------- */
-function buildOriginalLines(optHide) {
+function rebuildFilterDrops() {
+  const allKeys = Object.keys(speakerMap);
+  const vals = {
+    tab:  [...new Set(allKeys.map(k => speakerMap[k].dispTab))],
+    kind: [...new Set(allKeys.map(k => speakerMap[k].kind))],
+    name: [...new Set(allKeys.map(k => speakerMap[k].name))]
+  };
+  const curFilters = { tab: filterTab, kind: filterKind, name: filterName };
+
+  ["tab","kind","name"].forEach(col => {
+    const drop = document.getElementById("filterDrop-" + col);
+    if (!drop) return;
+    const cur        = curFilters[col];
+    const allChecked = !cur;
+
+    drop.innerHTML =
+      `<div class="fd-ctrl-row">
+        <button class="fd-ctrl-btn" data-act="all">すべて選択</button>
+        <button class="fd-ctrl-btn" data-act="none">解除</button>
+      </div>` +
+      `<div class="fd-item fd-all-item"><label><input type="checkbox" class="fd-all"${allChecked?" checked":""}> （すべて）</label></div>` +
+      vals[col].map(v => {
+        const disp    = col === "kind" ? (KIND_LABEL[v] || v) : v;
+        const checked = !cur || cur.has(v) ? " checked" : "";
+        return `<div class="fd-item"><label><input type="checkbox" class="fd-val" data-val="${ea(v)}"${checked}> ${e(disp)}</label></div>`;
+      }).join("");
+
+    drop.querySelectorAll(".fd-ctrl-btn").forEach(btn => {
+      btn.addEventListener("click", ev => {
+        ev.stopPropagation();
+        const all = btn.dataset.act === "all";
+        drop.querySelectorAll(".fd-val").forEach(cb => cb.checked = all);
+        drop.querySelector(".fd-all").checked = all;
+        _applyFilter(col, true);
+      });
+    });
+    drop.querySelector(".fd-all").addEventListener("change", function() {
+      drop.querySelectorAll(".fd-val").forEach(v => v.checked = this.checked);
+      _applyFilter(col, true);
+    });
+    drop.querySelectorAll(".fd-val").forEach(cb => {
+      cb.addEventListener("change", () => {
+        drop.querySelector(".fd-all").checked = [...drop.querySelectorAll(".fd-val")].every(v => v.checked);
+        _applyFilter(col, true);
+      });
+    });
+  });
+}
+
+function _applyFilter(col, keepOpen = false) {
+  const drop   = document.getElementById("filterDrop-" + col);
+  if (!drop) return;
+  const vals   = [...drop.querySelectorAll(".fd-val:checked")].map(v => v.dataset.val);
+  const isAll  = drop.querySelector(".fd-all")?.checked ?? true;
+  if      (col === "tab")  filterTab  = isAll ? null : new Set(vals);
+  else if (col === "kind") filterKind = isAll ? null : new Set(vals);
+  else if (col === "name") filterName = isAll ? null : new Set(vals);
+  document.querySelector(`.filter-btn[data-col="${col}"]`)?.classList.toggle("filter-active", !isAll);
+  renderTable();
+  rebuildFilterDrops();
+  if (keepOpen) document.getElementById("filterDrop-" + col)?.classList.add("open");
+}
+
+/* =============================================
+   出力行生成（プレビュー・元構造DL共通）
+   種別「テキスト」は2行展開：
+     1行目: dispName : 元の発言者名（name）
+     2行目〜: dispName : chatの各行
+   その他: dispName : chatの各行
+   ============================================= */
+function buildOutputLines(optHide) {
   const lines = [];
   parsedDoc.querySelectorAll("p").forEach(p => {
     const spans = p.querySelectorAll("span");
@@ -576,72 +529,56 @@ function buildOriginalLines(optHide) {
     const origTab = spans[0].textContent.trim();
     const name    = spans[1].textContent.trim();
     const key     = origTab + "::" + name;
-    const sp      = speakerMap[key] || { kind:"chara", rename:"", dispTab:origTab };
+    const sp      = speakerMap[key] || { kind:"chara", rename:"", dispTab:origTab, chat:"" };
     if (optHide && sp.kind === "system") return;
 
     const dispName = sp.rename.trim() || name;
     const dispTab  = sp.dispTab || origTab;
-    // チャット欄の内容を本文として使う（
-で複数行）
-    const chatText = (sp.chat || "").trim();
-    const parts    = chatText ? chatText.split("
-").map(s => s.trim()).filter(s => s) : [];
+    const parts    = (sp.chat || "").trim().split("\n").map(s => s.trim()).filter(s => s);
 
-    if (sp.kind === "event") {
-      // テキスト種別：発言者名を1行目として追加、chatの各行を続ける
-      lines.push(`<p style="color:#888888;"><span> ${e(dispTab)}</span> <span>${e(dispName)}</span> : <span> ${e(name)} </span></p>`);
-      parts.forEach(part => {
-        lines.push(`<p style="color:#888888;"><span> ${e(dispTab)}</span> <span>${e(dispName)}</span> : <span> ${e(part)} </span></p>`);
-      });
-    } else {
-      parts.forEach(part => {
-        lines.push(`<p style="color:#888888;"><span> ${e(dispTab)}</span> <span>${e(dispName)}</span> : <span> ${e(part)} </span></p>`);
-      });
-    }
+    const mkLine = text =>
+      `<p style="color:#888888;"><span> ${e(dispTab)}</span> <span>${e(dispName)}</span> : <span> ${e(text)} </span></p>`;
+
+    if (sp.kind === "event") lines.push(mkLine(name)); // 発言者名を1行目に
+    parts.forEach(part => lines.push(mkLine(part)));
   });
   return lines;
 }
 
-/* ------------------------------------------
-   ④ プレビュー
------------------------------------------- */
+/* =============================================
+   ③ プレビュー
+   ============================================= */
 document.getElementById("btnPreview").addEventListener("click", () => {
   if (!parsedDoc) return;
   const optHide = document.getElementById("optHideSystem").checked;
-  const wrap    = document.getElementById("previewWrap");
-  const lines   = buildOriginalLines(optHide);
-  wrap.innerHTML = lines.length
+  const lines   = buildOutputLines(optHide);
+  document.getElementById("previewWrap").innerHTML = lines.length
     ? lines.join("\n")
     : `<div class="preview-empty">表示できる行がありません</div>`;
 });
 
-/* ------------------------------------------
-   ④ 元構造ダウンロード
------------------------------------------- */
+/* =============================================
+   ③ 元構造ダウンロード
+   ============================================= */
 document.getElementById("btnDownload").addEventListener("click", () => {
-  if (!parsedDoc) { showStatus(document.getElementById("processStatus"),"先に解析してください","err"); return; }
-  const optHide  = document.getElementById("optHideSystem").checked;
-
-  // buildOriginalLinesの結果を<p>形式に変換
-  const pBlocks = buildOriginalLines(optHide).map(line => {
-    // すでに<p>タグ形式なのでそのまま使う（インデント整形）
-    return line;
-  });
+  if (!parsedDoc) { showStatus(document.getElementById("processStatus"), "先に解析してください", "err"); return; }
+  const optHide = document.getElementById("optHideSystem").checked;
+  const body    = buildOutputLines(optHide).join("\n\n");
 
   const headEl = parsedDoc.querySelector("head");
   let headHtml = headEl ? headEl.outerHTML : `<head><meta charset="UTF-8"/></head>`;
   headHtml = headHtml.replace(/<title>[^<]*<\/title>/, `<title>${e(fileName)}</title>`);
 
-  dl(`<!DOCTYPE html>\n<html lang="ja">\n${headHtml}\n  <body>\n    \n\n${pBlocks.join("\n\n")}\n\n  </body>\n</html>`,
+  dl(`<!DOCTYPE html>\n<html lang="ja">\n${headHtml}\n  <body>\n\n${body}\n\n  </body>\n</html>`,
      fileName + "_整形済み.html");
   showStatus(document.getElementById("processStatus"), "ダウンロードしました！", "ok");
 });
 
-/* ------------------------------------------
+/* =============================================
    ⑤ 整形ダウンロード
------------------------------------------- */
+   ============================================= */
 document.getElementById("btnFormatDownload").addEventListener("click", () => {
-  if (!parsedDoc) { showStatus(document.getElementById("formatStatus"),"先に解析してください","err"); return; }
+  if (!parsedDoc) { showStatus(document.getElementById("formatStatus"), "先に解析してください", "err"); return; }
   const optTab   = document.getElementById("optTab").checked;
   const optSkill = document.getElementById("optSkill").checked;
   const optHide  = document.getElementById("optHideSystem").checked;
@@ -655,43 +592,34 @@ document.getElementById("btnFormatDownload").addEventListener("click", () => {
     const origTab = spans[0].textContent.trim();
     const name    = spans[1].textContent.trim();
     const key     = origTab + "::" + name;
-    const sp      = speakerMap[key] || { kind:"chara", rename:"", dispTab:origTab };
+    const sp      = speakerMap[key] || { kind:"chara", rename:"", dispTab:origTab, chat:"" };
     const kind    = sp.kind;
     if (optHide && kind === "system") return;
 
     const dispName = sp.rename.trim() || name;
     const dispTab  = sp.dispTab || origTab;
-    const tabRaw   = dispTab.replace(/[\[\] ]/g,"");
-    const tabClass = tabRaw==="main"?"log-tab-main":tabRaw==="info"?"log-tab-info":"log-tab-other";
+    const tabRaw   = dispTab.replace(/[\[\] ]/g, "");
+    const tabClass = tabRaw === "main" ? "log-tab-main" : tabRaw === "info" ? "log-tab-info" : "log-tab-other";
     const tabHtml  = optTab ? `<span class="log-tab ${tabClass}">${e(dispTab)}</span>` : "";
+    const parts    = (sp.chat || "").trim().split("\n").map(s => s.trim()).filter(s => s);
 
-    const chatText = (sp.chat || "").trim();
-    const parts    = chatText ? chatText.split("
-").map(s => s.trim()).filter(s => s) : [];
-
-    // テキスト種別：発言者名を1行目として追加
-    if (kind === "event") {
+    const addLine = text => {
       if (optSpace && prevKind !== null && prevKind !== kind)
         lines.push(`<p style="margin:0;line-height:1;">&nbsp;</p>`);
       prevKind = kind;
-      lines.push(`<p style="color:#888888;">${tabHtml}<span>${e(dispName)}</span> : <span> ${e(name)} </span></p>`);
-    }
+      let t = e(text);
+      if (optSkill) t = t.replace(/〈([^〉]+)〉/g, `<span class="skill-hl">〈$1〉</span>`);
+      lines.push(`<p style="color:#888888;">${tabHtml}<span>${e(dispName)}</span> : <span> ${t} </span></p>`);
+    };
 
-    parts.forEach(part => {
-      if (optSpace && prevKind !== null && prevKind !== kind)
-        lines.push(`<p style="margin:0;line-height:1;">&nbsp;</p>`);
-      prevKind = kind;
-      let text = e(part);
-      if (optSkill) text = text.replace(/〈([^〉]+)〉/g,`<span class="skill-hl">〈$1〉</span>`);
-      lines.push(`<p style="color:#888888;">${tabHtml}<span>${e(dispName)}</span> : <span> ${text} </span></p>`);
-    });
+    if (kind === "event") addLine(name); // 発言者名を1行目に
+    parts.forEach(part => addLine(part));
   });
 
   const headEl = parsedDoc.querySelector("head");
   let headHtml = headEl ? headEl.outerHTML : `<head><meta charset="UTF-8"/></head>`;
   headHtml = headHtml.replace(/<title>[^<]*<\/title>/, `<title>${e(fileName)}</title>`);
-  headHtml = headHtml.replace("</head>",
-    `  <style>
+  headHtml = headHtml.replace("</head>", `  <style>
     .log-tab{font-size:10px;font-weight:700;margin-right:6px;padding:1px 6px;border-radius:3px;vertical-align:middle;display:inline-block}
     .log-tab-main{background:#fff3e0;color:#a85400}
     .log-tab-info{background:#e8f0fe;color:#1a56a0}
@@ -699,19 +627,21 @@ document.getElementById("btnFormatDownload").addEventListener("click", () => {
     .skill-hl{background:#fff8e0;color:#7a5000;border-radius:3px;padding:0 2px;font-weight:600;font-size:.9em}
   </style>\n</head>`);
 
-  dl(`<!DOCTYPE html>\n<html lang="ja">\n${headHtml}\n  <body>\n    \n\n${lines.join("\n")}\n\n  </body>\n</html>`,
+  dl(`<!DOCTYPE html>\n<html lang="ja">\n${headHtml}\n  <body>\n\n${lines.join("\n")}\n\n  </body>\n</html>`,
      fileName + "_整形.html");
   showStatus(document.getElementById("formatStatus"), "ダウンロードしました！", "ok");
 });
 
-/* ------------------------------------------
+/* =============================================
    リセット
------------------------------------------- */
+   ============================================= */
 document.getElementById("btnReset").addEventListener("click", () => {
   rawHtml = ""; fileName = ""; parsedDoc = null; speakerMap = {}; tableOrder = [];
-  fileInput.value = "";
-  fileNameEl.textContent = ""; fileNameEl.className = "summary-filename";
-  btnAnalyze.disabled = true;
+  filterTab = null; filterKind = null; filterName = null;
+  fileInput.value            = "";
+  fileNameEl.textContent     = "";
+  fileNameEl.className       = "summary-filename";
+  btnAnalyze.disabled        = true;
   ["acc-2","acc-3","acc-4","acc-5"].forEach(id => document.getElementById(id)?.removeAttribute("open"));
   ["loadStatus","analyzeStatus","processStatus","formatStatus"].forEach(id => {
     const el = document.getElementById(id); if (el) el.className = "status-msg";
@@ -721,42 +651,25 @@ document.getElementById("btnReset").addEventListener("click", () => {
   document.getElementById("spTbody").innerHTML = "";
 });
 
-/* ------------------------------------------
-   naviからアコーディオンを開く（外部から呼ぶ）
------------------------------------------- */
-function openAccordion(id) {
-  const el = document.getElementById(id);
-  if (el) { el.setAttribute("open",""); el.scrollIntoView({behavior:"smooth",block:"start"}); }
-}
-
-/* ------------------------------------------
-   ユーティリティ
------------------------------------------- */
-// =============================================
-// ② 列幅リサイズ
-// =============================================
+/* =============================================
+   列幅リサイズ
+   ============================================= */
 function initColResize() {
-  const table = document.getElementById("spTable");
-  if (!table) return;
-  table.querySelectorAll(".col-resizer").forEach(handle => {
+  document.querySelectorAll(".col-resizer").forEach(handle => {
     let startX, startW, th;
     handle.addEventListener("mousedown", e => {
-      e.preventDefault();
-      e.stopPropagation();
-      th     = handle.closest("th");
+      e.preventDefault(); e.stopPropagation();
+      th = handle.closest("th");
       startX = e.clientX;
       startW = th.offsetWidth;
-      document.body.style.cursor = "col-resize";
+      document.body.style.cursor     = "col-resize";
       document.body.style.userSelect = "none";
-
       const onMove = ev => {
         const w = Math.max(60, startW + ev.clientX - startX);
-        th.style.width    = w + "px";
-        th.style.minWidth = w + "px";
+        th.style.width = th.style.minWidth = w + "px";
       };
       const onUp = () => {
-        document.body.style.cursor = "";
-        document.body.style.userSelect = "";
+        document.body.style.cursor = document.body.style.userSelect = "";
         document.removeEventListener("mousemove", onMove);
         document.removeEventListener("mouseup",   onUp);
       };
@@ -766,64 +679,66 @@ function initColResize() {
   });
 }
 
-// =============================================
-// ③ 行ドラッグ選択（cb-tab / cb-kind / cb-name をまとめてON/OFF）
-// =============================================
+/* =============================================
+   行ドラッグ選択
+   ============================================= */
 function initRowDragSelect() {
   const tbody = document.getElementById("spTbody");
   if (!tbody) return;
-  let dragging  = false;
-  let startKey  = null;
-  let dragState = null; // true=チェックON, false=チェックOFF
-
-  // どのチェックボックスクラスを操作するか（最初に触ったcb-xxxで決定）
-  let targetCbClass = null;
+  let dragging = false, dragState = null, targetCls = null;
 
   tbody.addEventListener("mousedown", e => {
     const cb = e.target.closest(".cb-tab, .cb-kind, .cb-name");
-    if (!cb) return;
-    const row = cb.closest("tr[data-key]");
-    if (!row) return;
-    dragging       = true;
-    startKey       = row.dataset.key;
-    dragState      = !cb.checked; // 最初の状態を反転
-    targetCbClass  = [...cb.classList].find(cls => cls.startsWith("cb-"));
-    cb.checked     = dragState;
+    if (!cb || !cb.closest("tr[data-key]")) return;
+    dragging  = true;
+    dragState = !cb.checked;
+    targetCls = [...cb.classList].find(cls => cls.startsWith("cb-"));
+    cb.checked = dragState;
     e.preventDefault();
   });
 
   tbody.addEventListener("mousemove", e => {
-    if (!dragging || !targetCbClass) return;
-    const td  = e.target.closest("td");
-    const row = td ? td.closest("tr[data-key]") : null;
+    if (!dragging || !targetCls) return;
+    const row = e.target.closest("tr[data-key]");
     if (!row) return;
-    const cb = row.querySelector("." + targetCbClass);
+    const cb = row.querySelector("." + targetCls);
     if (cb) cb.checked = dragState;
   });
 
   document.addEventListener("mouseup", () => {
-    dragging = false; startKey = null; dragState = null; targetCbClass = null;
+    dragging = false; dragState = null; targetCls = null;
   });
 }
 
-// タブ値→CSSクラス
-function _tabClass(tab) {
-  const raw = tab.replace(/[\[\] ]/g,"");
-  if (raw==="main")  return "t-main";
-  if (raw==="info")  return "t-info";
-  if (raw==="other") return "t-other";
-  return "t-other2";
+/* =============================================
+   naviからアコーディオンを開く
+   ============================================= */
+function openAccordion(id) {
+  const el = document.getElementById(id);
+  if (el) { el.setAttribute("open", ""); el.scrollIntoView({ behavior:"smooth", block:"start" }); }
 }
 
+/* =============================================
+   ユーティリティ
+   ============================================= */
+// タブ値→CSSクラス
+function _tabClass(tab) {
+  const r = tab.replace(/[\[\] ]/g, "");
+  return r === "main" ? "t-main" : r === "info" ? "t-info" : r === "other" ? "t-other" : "t-other2";
+}
+// HTMLエスケープ
 function e(s)  { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+// 属性値エスケープ
 function ea(s) { return String(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;"); }
+// ダウンロード
 function dl(html, name) {
   const a = Object.assign(document.createElement("a"), {
-    href: URL.createObjectURL(new Blob([html],{type:"text/html;charset=utf-8"})),
+    href: URL.createObjectURL(new Blob([html], { type:"text/html;charset=utf-8" })),
     download: name
   });
   a.click(); URL.revokeObjectURL(a.href);
 }
+// ステータス表示
 function showStatus(el, msg, type) {
   if (!el) return; el.textContent = msg; el.className = "status-msg show " + type;
 }
