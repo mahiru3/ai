@@ -408,9 +408,9 @@ input.dice-num::-webkit-outer-spin-button,
 input.dice-num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 input.dice-num:focus { outline: none; border-color: #7ba4c7; background: #f5f8fc; }
 
-.dice-d {
-  font-size: 14px; font-weight: 900; color: #888;
-  user-select: none;
+.dice-fixed {
+  font-size: 13px; font-weight: 900; color: #888;
+  user-select: none; letter-spacing: 0.02em;
 }
 .dice-hint {
   font-size: 11px; color: #aaa; white-space: nowrap;
