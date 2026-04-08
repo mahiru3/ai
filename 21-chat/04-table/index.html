@@ -1,1 +1,153 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>「」→＜＞変換ツール</title>
+  <link rel="stylesheet" href="../../01-css/00-style.css" />
+  <link rel="stylesheet" href="../../01-css/21-chat-04-table.css" />
+</head>
+<body>
+<div class="page-wrap">
 
+  <h1 class="page-title">🔄 「」→＜＞変換ツール</h1>
+  <p class="page-subtitle">ここふぁりあのロールテーブル等で使う「」記法を＜＞記法（\n区切り）に変換します。ページ内完結・サーバー送信なし。</p>
+
+  <!-- ① 変換 -->
+  <details class="accordion-008 acc-color-1" id="acc-1" open>
+    <summary>① テキスト変換</summary>
+    <div class="accordion-body">
+
+      <div class="ta-wrap">
+        <div class="ta-col">
+          <span class="ta-label">入力（「」で囲まれたテキスト）</span>
+          <textarea class="conv-ta" id="inputTa" rows="12"
+            placeholder="「/roll-table&#10;☠️&#10;1D6&#10;1:ささやかな不幸&#10;...&#10;6:クリチケが消える」"></textarea>
+        </div>
+        <div class="ta-col">
+          <span class="ta-label">変換結果（ここふぁりあに貼り付け可）</span>
+          <textarea class="conv-ta" id="outputTa" rows="12" readonly
+            placeholder="ここに結果が表示されます"></textarea>
+        </div>
+      </div>
+
+      <div class="menu-btn-row">
+        <button class="menu-btn primary" id="btnConvert">🔄 変換する</button>
+        <button class="menu-btn copy-btn" id="btnCopy">📋 コピー</button>
+        <button class="menu-btn reset" id="btnClear">🗑 クリア</button>
+      </div>
+
+      <div class="status-msg" id="statusMsg"></div>
+
+    </div>
+  </details>
+
+  <!-- ② 変換ルール -->
+  <details class="accordion-008 acc-color-2" id="acc-2">
+    <summary>② 変換ルール</summary>
+    <div class="accordion-body">
+      <div class="rule-box">
+        <b>変換の仕様：</b><br>
+        • 先頭の <code>「</code> → <code>＜</code><br>
+        • 末尾の <code>」</code> → <code>\n　＞</code>（改行＋全角スペース＋終端）<br>
+        • 各行（1行目以外）の先頭に全角スペースを付与<br>
+        • 行間の改行は <code>\n</code> に変換<br>
+        <br>
+        <b>入力例：</b><br>
+        <code>「/roll-table\n☠️\n1D6\n1:結果A\n6:結果F」</code><br>
+        <br>
+        <b>出力例：</b><br>
+        <code>＜/roll-table\n　☠️\n　1D6\n　1:結果A\n　6:結果F\n　＞</code>
+      </div>
+    </div>
+  </details>
+
+</div><!-- /page-wrap -->
+
+<script>
+/* =============================================
+   変換ロジック
+   ============================================= */
+function convert() {
+  const raw = document.getElementById('inputTa').value;
+  if (!raw.trim()) {
+    showMsg('テキストを入力してください。', 'err');
+    return;
+  }
+
+  // 先頭「・末尾」を除去（なければそのまま）
+  let inner = raw;
+  if (inner.startsWith('「')) inner = inner.slice(1);
+  if (inner.endsWith('」'))  inner = inner.slice(0, -1);
+
+  // 行に分割
+  const lines = inner.split('\n');
+
+  // 1行目はそのまま、2行目以降は全角スペースを付与
+  const escaped = lines.map((l, i) => {
+    const line = i === 0 ? l : '\u3000' + l;
+    return line;
+  }).join('\\n');
+
+  const result = '＜' + escaped + '\\n\u3000＞';
+  document.getElementById('outputTa').value = result;
+  showMsg('変換しました。', 'ok');
+}
+
+/* コピー */
+async function copyOutput() {
+  const text = document.getElementById('outputTa').value;
+  if (!text) { showMsg('先に変換してください。', 'err'); return; }
+
+  let ok = false;
+  try { await navigator.clipboard.writeText(text); ok = true; } catch(e) {}
+  if (!ok) {
+    const ta = document.getElementById('outputTa');
+    ta.focus(); ta.select();
+    try { ok = document.execCommand('copy'); } catch(e) {}
+  }
+  if (ok) {
+    showMsg('コピーしました。ここふぁりあに Ctrl+V でペーストしてください。', 'ok');
+  } else {
+    document.getElementById('outputTa').select();
+    showMsg('自動コピー失敗。出力欄を選択しました → Ctrl+C でコピーしてください。', 'err');
+  }
+}
+
+/* クリア */
+function clearAll() {
+  document.getElementById('inputTa').value  = '';
+  document.getElementById('outputTa').value = '';
+  hideMsg();
+}
+
+/* ステータス表示 */
+function showMsg(msg, type) {
+  const el = document.getElementById('statusMsg');
+  el.textContent = msg;
+  el.className = 'status-msg show ' + type;
+}
+function hideMsg() {
+  const el = document.getElementById('statusMsg');
+  el.className = 'status-msg';
+}
+
+/* イベント登録 */
+document.getElementById('btnConvert').addEventListener('click', convert);
+document.getElementById('btnCopy').addEventListener('click', copyOutput);
+document.getElementById('btnClear').addEventListener('click', clearAll);
+
+/* 入力欄変更でリアルタイム変換 */
+document.getElementById('inputTa').addEventListener('input', function() {
+  if (this.value.trim()) convert();
+  else { document.getElementById('outputTa').value = ''; hideMsg(); }
+});
+
+/* アコーディオンを外部から開く用 */
+window.openAccordion = function(id) {
+  const el = document.getElementById(id);
+  if (el) el.open = true;
+};
+</script>
+</body>
+</html>
