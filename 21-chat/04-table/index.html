@@ -10,7 +10,7 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">🔄てーぶる風</h1>
+  <h1 class="page-title">🔄 「」→＜＞変換ツール</h1>
   <p class="page-subtitle">ここふぁりあのロールテーブル等で使う「」記法を＜＞記法（\n区切り）に変換します。ページ内完結・サーバー送信なし。</p>
 
   <!-- ① テキスト作成 -->
@@ -383,8 +383,13 @@ function convert() {
   if (inner.startsWith('「')) inner = inner.slice(1);
   if (inner.endsWith('」'))  inner = inner.slice(0, -1);
 
-  const ls = inner.split('\n');
-  const result = ls.map((l, i) => i === 0 ? l : '\u3000' + l).join('\\n');
+  /* 実際の改行 OR リテラル \n 両方に対応して分割 */
+  const ls = inner.split(/\n|\\n/);
+  /* 各行の先頭にある全角スペースを除去してから付与し直す（二重付与防止） */
+  const result = ls.map((l, i) => {
+    const trimmed = l.replace(/^\u3000/, '');
+    return i === 0 ? trimmed : '\u3000' + trimmed;
+  }).join('\\n');
 
   document.getElementById('outputTa').value = result;
   showMsg('変換しました。', 'ok');
