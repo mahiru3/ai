@@ -76,6 +76,10 @@ body {
 .acc-color-2 summary { background: #f0faf0; color: #2a6a2a; }
 .acc-color-2 summary::after { border-color: #2a6a2a; }
 
+.acc-color-3 { background: #eef4ff; color: #1a4a9a; border-color: #9bbcf5; }
+.acc-color-3 summary { background: #eef4ff; color: #1a4a9a; }
+.acc-color-3 summary::after { border-color: #1a4a9a; }
+
 /* =============================================
    テキストエリア
    ============================================= */
@@ -229,6 +233,7 @@ textarea.conv-ta[readonly] {
 
 .navi-acc-1 summary { background: #fff9e0; color: #7a5800; border-bottom: 1px solid #f5cc50; }
 .navi-acc-2 summary { background: #f0faf0; color: #2a6a2a; border-bottom: 1px solid #8dcc8d; }
+.navi-acc-3 summary { background: #eef4ff; color: #1a4a9a; border-bottom: 1px solid #9bbcf5; }
 
 .navi-link {
   display: block; padding: 5px 8px; margin: 4px 0;
@@ -241,3 +246,139 @@ textarea.conv-ta[readonly] {
 .navi-link:active { transform: translateY(1px); }
 
 .navi-note { font-size: 11px; color: #bbb; line-height: 1.6; margin-top: 8px; }
+
+/* =============================================
+   ①テキスト作成：モード選択・複数行入力
+   ============================================= */
+
+/* モード選択トグル */
+.mode-select-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 8px;
+}
+.mode-label {
+  font-size: 12px; font-weight: 700; color: #666; white-space: nowrap;
+}
+.mode-btn {
+  padding: 4px 14px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  background: #fff;
+  color: #666;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+  font-family: inherit;
+}
+.mode-btn:hover { background: #f0f0f0; }
+.mode-btn.active {
+  background: #fff9e0;
+  border-color: #f0cc50;
+  color: #7a5800;
+  font-weight: 700;
+}
+
+/* 複数行入力リスト */
+.line-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.line-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.line-num {
+  font-size: 11px;
+  color: #aaa;
+  min-width: 18px;
+  text-align: right;
+  flex-shrink: 0;
+  user-select: none;
+}
+.line-input {
+  flex: 1;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 5px 8px;
+  font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', monospace;
+  font-size: 12px;
+  background: #faf9f7;
+  color: #222;
+  line-height: 1.4;
+  transition: border-color .15s, background .15s;
+  min-width: 0;
+}
+.line-input:focus { outline: none; border-color: #7ba4c7; background: #f5f8fc; }
+.line-input.fixed-line {
+  background: #f0ede8;
+  color: #888;
+  font-weight: 700;
+}
+.line-input.fixed-line:focus { border-color: #ccc; background: #f0ede8; }
+
+.line-add-btn {
+  width: 24px; height: 24px;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  background: #fff;
+  color: #666;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background .15s, border-color .15s;
+  padding: 0;
+  font-family: inherit;
+}
+.line-add-btn:hover { background: #f0f5ff; border-color: #9bbcf5; color: #1a4a9a; }
+
+.line-del-btn {
+  width: 22px; height: 22px;
+  border: 1px solid #f0a080;
+  border-radius: 50%;
+  background: #fff;
+  color: #c05030;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background .15s;
+  padding: 0;
+  font-family: inherit;
+}
+.line-del-btn:hover { background: #fff0ee; }
+.line-del-btn:disabled { opacity: 0.3; cursor: default; }
+
+/* 作成エリアのラップ */
+.create-wrap {
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.create-left  { flex: 1; min-width: 0; }
+.create-right { flex: 1; min-width: 0; }
+
+/* プレビュー出力（作成エリア右側） */
+textarea.preview-ta {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', monospace;
+  font-size: 12px;
+  resize: vertical;
+  background: #f0ede8;
+  color: #444;
+  line-height: 1.6;
+  cursor: default;
+}
+
+.send-btn {
+  background: #fff9e0; border-color: #f0cc50; color: #7a5800; font-weight: 700;
+  width: 100%; margin-top: 6px; text-align: center;
+}
+.send-btn:hover { background: #fff3c0; border-color: #d0a800; }
