@@ -48,16 +48,15 @@
     <div class="accordion-body">
       <div class="rule-box">
         <b>変換の仕様：</b><br>
-        • 先頭の <code>「</code> → <code>＜</code><br>
-        • 末尾の <code>」</code> → <code>\n　＞</code>（改行＋全角スペース＋終端）<br>
+        • 先頭の <code>「</code> と末尾の <code>」</code> を除去<br>
         • 各行（1行目以外）の先頭に全角スペースを付与<br>
         • 行間の改行は <code>\n</code> に変換<br>
         <br>
         <b>入力例：</b><br>
-        <code>「/roll-table\n☠️\n1D6\n1:結果A\n6:結果F」</code><br>
+        <code>「/roll-table<br>☠️<br>1D6<br>1:結果A<br>6:結果F」</code><br>
         <br>
         <b>出力例：</b><br>
-        <code>＜/roll-table\n　☠️\n　1D6\n　1:結果A\n　6:結果F\n　＞</code>
+        <code>/roll-table\n　☠️\n　1D6\n　1:結果A\n　6:結果F</code>
       </div>
     </div>
   </details>
@@ -84,12 +83,9 @@ function convert() {
   const lines = inner.split('\n');
 
   // 1行目はそのまま、2行目以降は全角スペースを付与
-  const escaped = lines.map((l, i) => {
-    const line = i === 0 ? l : '\u3000' + l;
-    return line;
+  const result = lines.map((l, i) => {
+    return i === 0 ? l : '\u3000' + l;
   }).join('\\n');
-
-  const result = '＜' + escaped + '\\n\u3000＞';
   document.getElementById('outputTa').value = result;
   showMsg('変換しました。', 'ok');
 }
