@@ -10,12 +10,50 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">🔄 「」→＜＞変換ツール</h1>
+  <h1 class="page-title">🔄 チャパレ！</h1>
   <p class="page-subtitle">ここふぁりあのロールテーブル等で使う「」記法を＜＞記法（\n区切り）に変換します。ページ内完結・サーバー送信なし。</p>
 
-  <!-- ① 変換 -->
+  <!-- ① テキスト作成 -->
   <details class="accordion-008 acc-color-1" id="acc-1" open>
-    <summary>① テキスト変換</summary>
+    <summary>① テキスト作成</summary>
+    <div class="accordion-body">
+
+      <div class="create-wrap">
+
+        <!-- 左：入力エリア -->
+        <div class="create-left">
+          <!-- モード選択 -->
+          <div class="mode-select-row">
+            <span class="mode-label">種類：</span>
+            <button class="mode-btn active" id="modeTable" onclick="setMode('table')">テーブル</button>
+            <button class="mode-btn" id="modePlain" onclick="setMode('plain')">プレーンテキスト</button>
+          </div>
+
+          <!-- 複数行入力リスト -->
+          <div class="line-list" id="lineList"></div>
+
+        </div>
+
+        <!-- 右：プレビュー＋送信 -->
+        <div class="create-right">
+          <span class="ta-label">プレビュー（結合テキスト）</span>
+          <textarea class="preview-ta" id="createPreview" rows="12" readonly
+            placeholder="左の入力が自動でここに結合されます"></textarea>
+          <button class="menu-btn send-btn" onclick="sendToConvert()">
+            ② テキスト変換へ送る →
+          </button>
+        </div>
+
+      </div>
+
+      <div class="status-msg" id="createStatus"></div>
+
+    </div>
+  </details>
+
+  <!-- ② テキスト変換 -->
+  <details class="accordion-008 acc-color-2" id="acc-2">
+    <summary>② テキスト変換</summary>
     <div class="accordion-body">
 
       <div class="ta-wrap">
@@ -42,9 +80,9 @@
     </div>
   </details>
 
-  <!-- ② 変換ルール -->
-  <details class="accordion-008 acc-color-2" id="acc-2">
-    <summary>② 変換ルール</summary>
+  <!-- ③ 変換ルール -->
+  <details class="accordion-008 acc-color-3" id="acc-3">
+    <summary>③ 変換ルール</summary>
     <div class="accordion-body">
       <div class="rule-box">
         <b>変換の仕様：</b><br>
@@ -65,8 +103,126 @@
 
 <script>
 /* =============================================
-   変換ロジック
+   ① テキスト作成
    ============================================= */
+
+let currentMode = 'table';
+let lineData = [];   /* { value: string, fixed: boolean } */
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('modeTable').classList.toggle('active', mode === 'table');
+  document.getElementById('modePlain').classList.toggle('active', mode === 'plain');
+  initLines();
+}
+
+function initLines() {
+  if (currentMode === 'table') {
+    lineData = [
+      { value: '/roll-table', fixed: true },
+      { value: 'タイトルを入力', fixed: false },
+      { value: 'ダイスを入力',   fixed: false },
+    ];
+  } else {
+    lineData = [
+      { value: '', fixed: false },
+    ];
+  }
+  renderLines();
+}
+
+function renderLines() {
+  const list = document.getElementById('lineList');
+  list.innerHTML = '';
+
+  lineData.forEach((line, idx) => {
+    const row = document.createElement('div');
+    row.className = 'line-row';
+
+    /* 行番号 */
+    const num = document.createElement('span');
+    num.className = 'line-num';
+    num.textContent = idx + 1;
+
+    /* 入力欄 */
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'line-input' + (line.fixed ? ' fixed-line' : '');
+    inp.value = line.value;
+    inp.readOnly = line.fixed;
+    inp.addEventListener('input', () => {
+      lineData[idx].value = inp.value;
+      updatePreview();
+    });
+
+    /* ＋ボタン（その行の右横に表示、最終行だけ visible） */
+    const addBtn = document.createElement('button');
+    addBtn.className = 'line-add-btn';
+    addBtn.textContent = '+';
+    addBtn.title = '下に行を追加';
+    addBtn.style.visibility = (idx === lineData.length - 1) ? 'visible' : 'hidden';
+    addBtn.addEventListener('click', () => {
+      lineData.splice(idx + 1, 0, { value: '', fixed: false });
+      renderLines();
+      /* 追加した行にフォーカス */
+      const inputs = document.getElementById('lineList').querySelectorAll('.line-input');
+      if (inputs[idx + 1]) inputs[idx + 1].focus();
+    });
+
+    /* ×ボタン */
+    const delBtn = document.createElement('button');
+    delBtn.className = 'line-del-btn';
+    delBtn.textContent = '×';
+    delBtn.title = '行を削除';
+    const deletableCount = lineData.filter(l => !l.fixed).length;
+    delBtn.disabled = line.fixed || deletableCount <= 1;
+    delBtn.addEventListener('click', () => {
+      lineData.splice(idx, 1);
+      renderLines();
+    });
+
+    row.appendChild(num);
+    row.appendChild(inp);
+    row.appendChild(addBtn);
+    row.appendChild(delBtn);
+    list.appendChild(row);
+  });
+
+  updatePreview();
+}
+
+function updatePreview() {
+  const text = lineData.map(l => l.value).join('\n');
+  document.getElementById('createPreview').value = text;
+}
+
+function sendToConvert() {
+  const text = lineData.map(l => l.value).join('\n');
+  if (!text.trim()) {
+    showCreateMsg('テキストを入力してください。', 'err');
+    return;
+  }
+  document.getElementById('inputTa').value = text;
+  document.getElementById('acc-2').open = true;
+  convert();
+  showCreateMsg('②テキスト変換に送りました。', 'ok');
+  document.getElementById('acc-2').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function showCreateMsg(msg, type) {
+  const el = document.getElementById('createStatus');
+  el.textContent = msg;
+  el.className = 'status-msg show ' + type;
+  setTimeout(() => { el.className = 'status-msg'; }, 2500);
+}
+
+/* 起動時初期化 */
+initLines();
+
+/* =============================================
+   ② テキスト変換
+   ============================================= */
+
 function convert() {
   const raw = document.getElementById('inputTa').value;
   if (!raw.trim()) {
@@ -74,23 +230,17 @@ function convert() {
     return;
   }
 
-  // 先頭「・末尾」を除去（なければそのまま）
   let inner = raw;
   if (inner.startsWith('「')) inner = inner.slice(1);
   if (inner.endsWith('」'))  inner = inner.slice(0, -1);
 
-  // 行に分割
-  const lines = inner.split('\n');
+  const ls = inner.split('\n');
+  const result = ls.map((l, i) => i === 0 ? l : '\u3000' + l).join('\\n');
 
-  // 1行目はそのまま、2行目以降は全角スペースを付与
-  const result = lines.map((l, i) => {
-    return i === 0 ? l : '\u3000' + l;
-  }).join('\\n');
   document.getElementById('outputTa').value = result;
   showMsg('変換しました。', 'ok');
 }
 
-/* コピー */
 async function copyOutput() {
   const text = document.getElementById('outputTa').value;
   if (!text) { showMsg('先に変換してください。', 'err'); return; }
@@ -110,30 +260,25 @@ async function copyOutput() {
   }
 }
 
-/* クリア */
 function clearAll() {
   document.getElementById('inputTa').value  = '';
   document.getElementById('outputTa').value = '';
   hideMsg();
 }
 
-/* ステータス表示 */
 function showMsg(msg, type) {
   const el = document.getElementById('statusMsg');
   el.textContent = msg;
   el.className = 'status-msg show ' + type;
 }
 function hideMsg() {
-  const el = document.getElementById('statusMsg');
-  el.className = 'status-msg';
+  document.getElementById('statusMsg').className = 'status-msg';
 }
 
-/* イベント登録 */
 document.getElementById('btnConvert').addEventListener('click', convert);
 document.getElementById('btnCopy').addEventListener('click', copyOutput);
 document.getElementById('btnClear').addEventListener('click', clearAll);
 
-/* 入力欄変更でリアルタイム変換 */
 document.getElementById('inputTa').addEventListener('input', function() {
   if (this.value.trim()) convert();
   else { document.getElementById('outputTa').value = ''; hideMsg(); }
