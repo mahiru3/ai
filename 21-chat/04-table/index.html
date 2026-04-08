@@ -10,7 +10,7 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">🔄 「」→＜＞変換ツール</h1>
+  <h1 class="page-title">🔄 テーブルもつくる</h1>
   <p class="page-subtitle">ここふぁりあのロールテーブル等で使う「」記法を＜＞記法（\n区切り）に変換します。ページ内完結・サーバー送信なし。</p>
 
   <!-- ① テキスト作成 -->
@@ -188,7 +188,7 @@ function onDiceChange() {
 
   /* 結果行を total 行に合わせる（増減） */
   while (resultRows.length < total) resultRows.push('');
-  /* 超過分は削除せず、ユーザーが手動削除できるようにする */
+  if (resultRows.length > total) resultRows = resultRows.slice(0, total);
   renderResultList();
 }
 
@@ -385,11 +385,8 @@ function convert() {
 
   /* 実際の改行 OR リテラル \n 両方に対応して分割 */
   const ls = inner.split(/\n|\\n/);
-  /* 各行の先頭にある全角スペースを除去してから付与し直す（二重付与防止） */
-  const result = ls.map((l, i) => {
-    const trimmed = l.replace(/^\u3000/, '');
-    return i === 0 ? trimmed : '\u3000' + trimmed;
-  }).join('\\n');
+  /* 各行の先頭の全角スペースを除去して \n で結合（全角スペースは付与しない） */
+  const result = ls.map(l => l.replace(/^\u3000/, '')).join('\\n');
 
   document.getElementById('outputTa').value = result;
   showMsg('変換しました。', 'ok');
