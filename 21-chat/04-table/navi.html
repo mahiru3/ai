@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>「」→＜＞変換 ナビ</title>
+  <link rel="stylesheet" href="../../01-css/00-style.css" />
+  <link rel="stylesheet" href="../../01-css/21-chat-04-table.css" />
+</head>
+<body>
+<div class="navi-wrap">
+
+  <div class="navi-tool-title">🔄 「」→＜＞変換ツール</div>
+
+  <!-- ① 変換 -->
+  <details class="navi-acc navi-acc-1" open>
+    <summary>① テキスト変換</summary>
+    <div class="navi-acc-body">
+      「」で囲まれたテキストを<br>
+      ＜＞記法（\n区切り）に変換<br>
+      リアルタイムで変換・コピー可<br>
+      <a class="navi-link" href="index.html" target="center"
+         onclick="openAccInCenter('acc-1')">▶ 変換ツールを開く</a>
+    </div>
+  </details>
+
+  <!-- ② 変換ルール -->
+  <details class="navi-acc navi-acc-2">
+    <summary>② 変換ルール</summary>
+    <div class="navi-acc-body">
+      先頭「→＜　末尾」→\n　＞<br>
+      各行に全角スペースを付与<br>
+      改行は \n に変換<br>
+      <a class="navi-link" href="index.html" target="center"
+         onclick="openAccInCenter('acc-2')">▶ 変換ルールを開く</a>
+    </div>
+  </details>
+
+  <p class="navi-note">※ファイルはサーバーに送信されません</p>
+
+</div>
+
+<script>
+function openAccInCenter(accId) {
+  const center = parent && parent.frames && parent.frames["center"];
+  if (!center) return;
+  setTimeout(() => {
+    try {
+      if (center.openAccordion) center.openAccordion(accId);
+    } catch(e) {}
+  }, 400);
+}
+</script>
+</body>
+</html>
