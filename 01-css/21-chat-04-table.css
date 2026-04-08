@@ -420,7 +420,12 @@ input.dice-num:focus { outline: none; border-color: #7ba4c7; background: #f5f8fc
 .result-section { margin-top: 8px; }
 .result-header  { margin-bottom: 4px; }
 
-/* 結果行の番号（「1:」形式） */
+/* 貼り付けエリア */
+textarea.paste-ta {
+  margin-top: 4px;
+  background: #faf9f7;
+  color: #222;
+}
 .line-num.result-num {
   min-width: 28px;
   font-size: 11px;
