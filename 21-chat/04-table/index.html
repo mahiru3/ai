@@ -10,7 +10,7 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">🔄 テーブルもつくる</h1>
+  <h1 class="page-title">🔄 「」→＜＞変換ツール</h1>
   <p class="page-subtitle">ここふぁりあのロールテーブル等で使う「」記法を＜＞記法（\n区切り）に変換します。ページ内完結・サーバー送信なし。</p>
 
   <!-- ① テキスト作成 -->
@@ -47,16 +47,14 @@
                 oninput="updatePreview()" />
             </div>
 
-            <!-- 行3：ダイス専用UI -->
+            <!-- 行3：ダイス専用UI（1Dn固定） -->
             <div class="line-row">
               <span class="line-num">3</span>
               <div class="dice-row">
-                <input type="number" class="dice-num" id="diceCount" value="1" min="1" max="9"
-                  oninput="onDiceChange()" />
-                <span class="dice-d">D</span>
+                <span class="dice-fixed">1D</span>
                 <input type="number" class="dice-num" id="diceFace" value="6" min="2" max="100"
                   oninput="onDiceChange()" />
-                <span class="dice-hint" id="diceHint">→ 6面 × 1個 ＝ 6行</span>
+                <span class="dice-hint" id="diceHint">→ 6行</span>
               </div>
             </div>
 
@@ -174,31 +172,22 @@ function setMode(mode) {
 
 /* ---- テーブルモード：ダイス変更 ---- */
 function getDiceTotal() {
-  const cnt  = Math.max(1, parseInt(document.getElementById('diceCount').value) || 1);
-  const face = Math.max(2, parseInt(document.getElementById('diceFace').value)  || 6);
-  return cnt * face;
+  return Math.max(2, parseInt(document.getElementById('diceFace').value) || 6);
 }
 
 function onDiceChange() {
-  const cnt  = Math.max(1, parseInt(document.getElementById('diceCount').value) || 1);
-  const face = Math.max(2, parseInt(document.getElementById('diceFace').value)  || 6);
-  const total = cnt * face;
-  document.getElementById('diceHint').textContent =
-    '→ ' + face + '面 × ' + cnt + '個 ＝ ' + total + '行';
+  const face = Math.max(2, parseInt(document.getElementById('diceFace').value) || 6);
+  document.getElementById('diceHint').textContent = '→ ' + face + '行';
 
-  /* 結果行を total 行に合わせる（増減） */
-  while (resultRows.length < total) resultRows.push('');
-  if (resultRows.length > total) resultRows = resultRows.slice(0, total);
+  while (resultRows.length < face) resultRows.push('');
+  if (resultRows.length > face) resultRows = resultRows.slice(0, face);
   renderResultList();
 }
 
 function initResultRows() {
-  const total = getDiceTotal();
-  resultRows = Array(total).fill('');
-  const cnt  = parseInt(document.getElementById('diceCount').value) || 1;
-  const face = parseInt(document.getElementById('diceFace').value)  || 6;
-  document.getElementById('diceHint').textContent =
-    '→ ' + face + '面 × ' + cnt + '個 ＝ ' + (cnt * face) + '行';
+  const face = getDiceTotal();
+  resultRows = Array(face).fill('');
+  document.getElementById('diceHint').textContent = '→ ' + face + '行';
   renderResultList();
 }
 
@@ -327,10 +316,9 @@ function updatePreview() {
     const title = document.getElementById('titleInput').value.trim();
     if (title) lines.push(title);
 
-    /* 3行目：ダイス表記 */
-    const cnt  = Math.max(1, parseInt(document.getElementById('diceCount').value) || 1);
-    const face = Math.max(2, parseInt(document.getElementById('diceFace').value)  || 6);
-    lines.push(cnt + 'D' + face);
+    /* 3行目：ダイス表記（1Dn固定） */
+    const face = Math.max(2, parseInt(document.getElementById('diceFace').value) || 6);
+    lines.push('1D' + face);
 
     /* 結果行：番号自動付与 */
     resultRows.forEach((val, idx) => {
