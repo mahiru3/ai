@@ -382,3 +382,49 @@ textarea.preview-ta {
   width: 100%; margin-top: 6px; text-align: center;
 }
 .send-btn:hover { background: #fff3c0; border-color: #d0a800; }
+
+/* =============================================
+   ダイス専用入力UI
+   ============================================= */
+.dice-row {
+  display: flex; align-items: center; gap: 5px;
+  flex: 1; min-width: 0;
+}
+input.dice-num {
+  width: 52px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 5px 6px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  background: #faf9f7;
+  color: #222;
+  transition: border-color .15s;
+  -moz-appearance: textfield;
+}
+input.dice-num::-webkit-outer-spin-button,
+input.dice-num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input.dice-num:focus { outline: none; border-color: #7ba4c7; background: #f5f8fc; }
+
+.dice-d {
+  font-size: 14px; font-weight: 900; color: #888;
+  user-select: none;
+}
+.dice-hint {
+  font-size: 11px; color: #aaa; white-space: nowrap;
+}
+
+/* 結果行セクション */
+.result-section { margin-top: 8px; }
+.result-header  { margin-bottom: 4px; }
+
+/* 結果行の番号（「1:」形式） */
+.line-num.result-num {
+  min-width: 28px;
+  font-size: 11px;
+  color: #888;
+  text-align: right;
+  font-weight: 700;
+}
