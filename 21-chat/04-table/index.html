@@ -10,7 +10,7 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">🔄複数行やつ</h1>
+  <h1 class="page-title">🔄 「」→＜＞変換ツール</h1>
   <p class="page-subtitle">ここふぁりあのロールテーブル等で使う「」記法を＜＞記法（\n区切り）に変換します。ページ内完結・サーバー送信なし。</p>
 
   <!-- ① テキスト作成 -->
@@ -26,11 +26,12 @@
           <!-- モード選択 -->
           <div class="mode-select-row">
             <span class="mode-label">種類：</span>
-            <button class="mode-btn active" id="modeTable" onclick="setMode('table')">テーブル</button>
-            <button class="mode-btn" id="modePlain" onclick="setMode('plain')">プレーンテキスト</button>
+            <button class="mode-btn active" id="modeTable"      onclick="setMode('table')">テーブル（項目入力）</button>
+            <button class="mode-btn"        id="modeTablePaste" onclick="setMode('tablePaste')">テーブル（貼り付け）</button>
+            <button class="mode-btn"        id="modePlain"      onclick="setMode('plain')">プレーンテキスト</button>
           </div>
 
-          <!-- テーブルモード専用フォーム -->
+          <!-- テーブルモード：各項目入力 -->
           <div id="tableForm">
 
             <!-- 固定行1：/roll-table -->
@@ -67,6 +68,45 @@
             </div>
 
           </div><!-- /#tableForm -->
+
+          <!-- テーブルモード：貼り付け -->
+          <div id="tablePasteForm" style="display:none">
+
+            <!-- 固定行1：/roll-table -->
+            <div class="line-row">
+              <span class="line-num">1</span>
+              <input type="text" class="line-input fixed-line" value="/roll-table" readonly />
+            </div>
+
+            <!-- 行2：タイトル（任意） -->
+            <div class="line-row">
+              <span class="line-num">2</span>
+              <input type="text" class="line-input" id="titleInputP"
+                placeholder="タイトル（任意・空欄で省略）"
+                oninput="updatePreview()" />
+            </div>
+
+            <!-- 行3：ダイス専用UI（1Dn固定） -->
+            <div class="line-row">
+              <span class="line-num">3</span>
+              <div class="dice-row">
+                <span class="dice-fixed">1D</span>
+                <input type="number" class="dice-num" id="diceFaceP" value="6" min="2" max="100"
+                  oninput="updatePreview()" />
+              </div>
+            </div>
+
+            <!-- 結果貼り付けエリア -->
+            <div class="result-section">
+              <div class="result-header">
+                <span class="ta-label" style="margin:0">結果テキストを貼り付け（1行1項目・番号は自動付与）</span>
+              </div>
+              <textarea class="conv-ta paste-ta" id="pasteArea" rows="10"
+                placeholder="いっこ&#10;にこ&#10;さんこ&#10;よんこ&#10;ごこ&#10;ろっこ"
+                oninput="updatePreview()"></textarea>
+            </div>
+
+          </div><!-- /#tablePasteForm -->
 
           <!-- プレーンモード用行リスト -->
           <div id="plainForm" style="display:none">
@@ -158,12 +198,16 @@ let plainRows = [];   /* string[] */
 /* ---- モード切替 ---- */
 function setMode(mode) {
   currentMode = mode;
-  document.getElementById('modeTable').classList.toggle('active', mode === 'table');
-  document.getElementById('modePlain').classList.toggle('active', mode === 'plain');
-  document.getElementById('tableForm').style.display = mode === 'table' ? '' : 'none';
-  document.getElementById('plainForm').style.display = mode === 'plain' ? '' : 'none';
+  document.getElementById('modeTable').classList.toggle('active',      mode === 'table');
+  document.getElementById('modeTablePaste').classList.toggle('active', mode === 'tablePaste');
+  document.getElementById('modePlain').classList.toggle('active',      mode === 'plain');
+  document.getElementById('tableForm').style.display      = mode === 'table'      ? '' : 'none';
+  document.getElementById('tablePasteForm').style.display = mode === 'tablePaste' ? '' : 'none';
+  document.getElementById('plainForm').style.display      = mode === 'plain'      ? '' : 'none';
   if (mode === 'table') {
     initResultRows();
+  } else if (mode === 'tablePaste') {
+    updatePreview();
   } else {
     if (plainRows.length === 0) plainRows = [''];
     renderPlainList();
@@ -309,20 +353,26 @@ function updatePreview() {
   let lines = [];
 
   if (currentMode === 'table') {
-    /* 1行目：固定 */
     lines.push('/roll-table');
-
-    /* 2行目：タイトル（空なら省略） */
     const title = document.getElementById('titleInput').value.trim();
     if (title) lines.push(title);
-
-    /* 3行目：ダイス表記（1Dn固定） */
     const face = Math.max(2, parseInt(document.getElementById('diceFace').value) || 6);
     lines.push('1D' + face);
-
-    /* 結果行：番号自動付与 */
     resultRows.forEach((val, idx) => {
       lines.push((idx + 1) + ':' + val);
+    });
+
+  } else if (currentMode === 'tablePaste') {
+    lines.push('/roll-table');
+    const titleP = document.getElementById('titleInputP').value.trim();
+    if (titleP) lines.push(titleP);
+    const faceP = Math.max(2, parseInt(document.getElementById('diceFaceP').value) || 6);
+    lines.push('1D' + faceP);
+    /* 貼り付けテキストを行分割して番号付与 */
+    const raw = document.getElementById('pasteArea').value;
+    const items = raw.split('\n').map(l => l.trim()).filter(l => l !== '');
+    items.forEach((item, idx) => {
+      lines.push((idx + 1) + ':' + item);
     });
 
   } else {
