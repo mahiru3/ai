@@ -2,19 +2,15 @@
    21-chat-05-log.css  ログ整形ツール専用
    ============================================= */
 
+/* iframe内スクロール設定（00-style.cssのhtml,bodyを上書きしない） */
 *, *::before, *::after { box-sizing: border-box; }
-
-html, body {
-  margin: 0; padding: 0; height: 100%;
-  overflow: auto;
-  scrollbar-width: none; -ms-overflow-style: none;
-}
-html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
 
 body {
   font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
   font-size: 14px; color: #2c2c2c;
   background: #f7f5f2; line-height: 1.7;
+  overflow: auto;
+  scrollbar-width: thin;
 }
 
 /* =============================================
@@ -121,7 +117,7 @@ body {
 .btn-col-21 .btn-hover-21 { justify-content: flex-start; }
 
 /* 横並び（③プレビューボタン用） */
-.btn-row-21 { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+/* btn-row-21は00-style.cssで定義 */
 
 /* navi用ボタン縦並び */
 .navi-btn-col { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
