@@ -24,13 +24,9 @@
   <!-- ② 発言一覧 -->
   <details class="accordion-008 acc-color-2" id="acc-2">
     <summary>② 発言一覧
-      <span class="summary-sub-btns">
-        <button class="btn-hover-21 bh-gray summary-btn-sm" id="btnShowDup"  type="button"><span>重複表示</span></button>
-        <button class="btn-hover-21 bh-gray summary-btn-sm" id="btnHideDup"  type="button"><span>重複非表示</span></button>
-      </span>
       <button class="btn-scroll" id="btnScrollBottom" type="button">▼末尾</button>
-      <button class="btn-update" id="btnRefresh" type="button"><span>🔃 更新</span></button>
       <button class="btn-delete" id="btnDelChecked" type="button">🗑️削除実行</button>
+      <button class="btn-update" id="btnRefresh" type="button"><span>🔃 更新</span></button>
     </summary>
     <div class="accordion-body">
       <div class="sp-table-wrap sp-table-scroll">
@@ -70,6 +66,8 @@
                   <span class="th-label">変更前</span>
                   <button class="sort-col-btn" data-col="name" title="ソート">⇅</button>
                   <button class="filter-btn"   data-col="name" title="フィルタ">▼</button>
+                  <button class="btn-jump" id="btnShowDup" type="button" title="重複表示">重複↑</button>
+                  <button class="btn-jump" id="btnHideDup" type="button" title="重複非表示">重複↓</button>
                 </div>
                 <div class="filter-drop" id="filterDrop-name"></div>
                 <div class="col-resizer"></div>
@@ -324,8 +322,8 @@ function renderTable() {
       </div></td>
       <td><select class="kind-select k-chara" id="bulkKindSelect">${bulkKindOpts}</select></td>
       <td><input type="text" class="sp-input" id="bulkRenameInput" placeholder="変更後の名前"></td>
-      <td><button class="btn-scroll" id="btnScrollTop" type="button" title="先頭へ">▲先頭</button></td>
       <td colspan="2"></td>
+      <td><button class="btn-scroll" id="btnScrollTop" type="button" title="先頭へ">▲先頭</button></td>
     </tr>
     <tr class="bulk-btn-row">
       <td></td>
