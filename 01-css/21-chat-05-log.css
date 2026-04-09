@@ -577,3 +577,12 @@ table.sp-table tr[data-key] { user-select: none; }
 .summary-right-btns {
   display: flex; gap: 4px; align-items: center; margin-left: auto;
 }
+
+/* theadボタン行 */
+.thead-btn-row th {
+  background: #e8f0e8;
+  padding: 4px 6px !important;
+  border-bottom: 1px solid #c0d8c0;
+}
+.th-btn { background: #e8f0e8 !important; }
+.th-btn .th-inner { flex-wrap: wrap; gap: 3px; }
