@@ -404,3 +404,14 @@ table.sp-table tr[data-key] { user-select: none; }
 .summary-btn-sm {
   padding: 2px 8px; font-size: 10px; font-weight: 600; flex-shrink: 0;
 }
+
+/* 削除列 */
+.td-del {
+  text-align: center; padding: 4px 6px !important; vertical-align: middle;
+}
+.td-del input[type="checkbox"] {
+  width: 15px; height: 15px; accent-color: #c03030; cursor: pointer;
+}
+
+/* フィルタ「反転」追加で3ボタン対応 */
+.fd-ctrl-row { flex-wrap: wrap; }
