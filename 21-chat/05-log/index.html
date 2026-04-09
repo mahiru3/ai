@@ -295,6 +295,9 @@ function renderTable() {
     return 0;
   });
 
+  // rowsに_idxを付与（indexOf不要にする）
+  rows.forEach((r, i) => r._idx = i);
+
   // フィルタ＋重複非表示
   const seenNames = new Set();
   const visible = sorted.filter(row => {
@@ -315,8 +318,8 @@ function renderTable() {
   const tabPresetOpts = TAB_PRESETS.map(t=>`<option value="${ea(t)}">${e(t)}</option>`).join("");
   const bulkKindOpts  = Object.entries(KIND_LABEL).map(([k,l])=>`<option value="${k}">${l}</option>`).join("");
 
-  const dataRows = visible.map(row => {
-    const idx     = rows.indexOf(row);
+  const dataRows = visible.map((row, _) => {
+    const idx     = row._idx; // 事前に付与したインデックス
     const tabCls  = _tabClass(row.dispTab);
     const tabOpts = TAB_PRESETS.map(t =>
       `<option value="${ea(t)}"${row.dispTab===t?" selected":""}>${e(t)}</option>`
@@ -324,15 +327,14 @@ function renderTable() {
     const kindOpts = Object.entries(KIND_LABEL).map(([k,l]) =>
       `<option value="${k}"${row.kind===k?" selected":""}>${l}</option>`
     ).join("");
-    const rz = `<div class="col-resizer"></div>`;
     return `<tr data-idx="${idx}">
-      <td class="td-order">${row.order+1}${rz}</td>
-      <td class="td-cb">${rz}<input type="checkbox" class="cb-tab"  data-idx="${idx}"><select class="tab-select tab-select-row ${tabCls}" data-idx="${idx}">${tabOpts}</select></td>
-      <td class="td-cb">${rz}<input type="checkbox" class="cb-kind" data-idx="${idx}"><select class="kind-select k-${row.kind}" data-idx="${idx}">${kindOpts}</select></td>
-      <td class="td-cb">${rz}<input type="checkbox" class="cb-name" data-idx="${idx}"><span class="sp-name-text">${e(row.name)}</span></td>
-      <td>${rz}<input type="text" class="sp-input${row.rename?" changed":""}" placeholder="${ea(row.name)}" value="${ea(row.rename)}" data-idx="${idx}"></td>
-      <td>${rz}<textarea class="chat-input" rows="2" data-idx="${idx}">${e(row.chat||"")}</textarea></td>
-      <td class="td-del">${rz}<input type="checkbox" class="cb-del" data-idx="${idx}"${row.deleted?" checked":""}></td>
+      <td class="td-order">${row.order+1}</td>
+      <td class="td-cb" data-cbcls="cb-tab"><input type="checkbox" class="cb-tab"  data-idx="${idx}"><select class="tab-select tab-select-row ${tabCls}" data-idx="${idx}">${tabOpts}</select></td>
+      <td class="td-cb" data-cbcls="cb-kind"><input type="checkbox" class="cb-kind" data-idx="${idx}"><select class="kind-select k-${row.kind}" data-idx="${idx}">${kindOpts}</select></td>
+      <td class="td-cb" data-cbcls="cb-name"><input type="checkbox" class="cb-name" data-idx="${idx}"><span class="sp-name-text">${e(row.name)}</span></td>
+      <td><input type="text" class="sp-input${row.rename?" changed":""}" placeholder="${ea(row.name)}" value="${ea(row.rename)}" data-idx="${idx}"></td>
+      <td><textarea class="chat-input" rows="2" data-idx="${idx}">${e(row.chat||"")}</textarea></td>
+      <td class="td-cb td-del" data-cbcls="cb-del"><input type="checkbox" class="cb-del" data-idx="${idx}"${row.deleted?" checked":""}></td>
     </tr>`;
   }).join("");
 
@@ -856,54 +858,69 @@ function initColResize() {
 }
 
 /* =============================================
-   Q1: セルクリック＋ドラッグ選択
-   - td-cbセルをクリック→チェック切替
-   - td-cbセルをドラッグ→複数行を同じ状態にする
+   セルクリック＋ドラッグ選択
    ============================================= */
 function initRowDragSelect() {
   const tbody = $id("spTbody");
   if (!tbody) return;
   let dragging=false, dragState=null, targetCls=null;
 
-  // セルクリックでチェック切替（チェックボックス本体以外からもクリック可）
+  // td-cbをクリック→チェック切替
+  // selectやcheckbox本体はデフォルト動作を優先
   tbody.addEventListener("click", e => {
+    if (e.target.tagName === "SELECT" || e.target.tagName === "OPTION") return;
     const td = e.target.closest(".td-cb");
     if (!td) return;
-    const cb = td.querySelector(".cb-tab,.cb-kind,.cb-name,.cb-del");
+    const cb = td.querySelector("input[type='checkbox']");
     if (!cb) return;
-    if (e.target === cb) return; // チェックボックス本体はデフォルト動作
+    if (e.target === cb) return; // checkbox本体はブラウザデフォルト
     cb.checked = !cb.checked;
-    cb.dispatchEvent(new Event("change", {bubbles:true}));
+    rows[+cb.dataset.idx][cb.dataset.idx !== undefined ? _cbField(cb) : "deleted"] = cb.checked;
+    updatePreview();
   });
 
-  // ドラッグ選択
+  // mousedownでドラッグ開始（selectは除外）
   tbody.addEventListener("mousedown", e => {
+    if (e.target.tagName === "SELECT" || e.target.tagName === "OPTION") return;
+    if (e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT" && e.target.type === "text") return;
     const td = e.target.closest(".td-cb");
-    if (!td) return;
-    const cb = td.querySelector(".cb-tab,.cb-kind,.cb-name,.cb-del");
-    if (!cb || !cb.closest("tr[data-idx]")) return;
-    dragging  = true;
-    dragState = !cb.checked;
-    targetCls = [...cb.classList].find(cls => cls.startsWith("cb-"));
-    cb.checked = dragState;
-    cb.dispatchEvent(new Event("change", {bubbles:true}));
+    if (!td || !td.closest("tr[data-idx]")) return;
+    const cb = td.querySelector("input[type='checkbox']");
+    if (!cb) return;
+    targetCls = td.dataset.cbcls;
+    dragState = e.target === cb ? cb.checked : !cb.checked;
+    if (e.target !== cb) {
+      cb.checked = dragState;
+      rows[+cb.dataset.idx][_cbField(cb)] = dragState;
+    }
+    dragging = true;
     e.preventDefault();
   });
 
-  tbody.addEventListener("mouseenter", e => {
+  // ドラッグ中に行をまたいだらチェック状態を適用
+  tbody.addEventListener("mouseover", e => {
     if (!dragging || !targetCls) return;
-    const row = e.target.closest("tr[data-idx]");
-    if (!row) return;
-    const cb = row.querySelector("." + targetCls);
-    if (cb && cb.checked !== dragState) {
-      cb.checked = dragState;
-      cb.dispatchEvent(new Event("change", {bubbles:true}));
-    }
-  }, true);
+    const tr = e.target.closest("tr[data-idx]");
+    if (!tr) return;
+    const cb = tr.querySelector("." + targetCls);
+    if (!cb || cb.checked === dragState) return;
+    cb.checked = dragState;
+    rows[+cb.dataset.idx][_cbField(cb)] = dragState;
+  });
 
   document.addEventListener("mouseup", () => {
     dragging=false; dragState=null; targetCls=null;
+    updatePreview();
   });
+}
+
+// チェックボックスのクラスからrowsのフィールド名を返す
+function _cbField(cb) {
+  if (cb.classList.contains("cb-tab"))  return null; // tabはチェックのみ管理
+  if (cb.classList.contains("cb-kind")) return null;
+  if (cb.classList.contains("cb-name")) return null;
+  if (cb.classList.contains("cb-del"))  return "deleted";
+  return null;
 }
 
 /* =============================================
