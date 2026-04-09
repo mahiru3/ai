@@ -29,6 +29,7 @@
         <button class="btn-hover-21 bh-gray summary-btn-sm" id="btnHideDup"  type="button"><span>重複非表示</span></button>
       </span>
       <button class="btn-hover-21 bh-green summary-btn" id="btnRefresh" type="button"><span>🔃 更新</span></button>
+      <button class="btn-hover-21 bh-gray  summary-btn" id="btnScrollBottom" type="button"><span>🔽 最後行</span></button>
     </summary>
     <div class="accordion-body">
       <div class="sp-table-wrap sp-table-scroll">
@@ -75,6 +76,14 @@
               </th>
               <th class="th-col" id="th-rename">変更後<div class="col-resizer"></div></th>
               <th class="th-col" id="th-chat">チャット<div class="col-resizer"></div></th>
+              <th class="th-col th-with-filter" id="th-del">
+                <div class="th-inner">
+                  <input type="checkbox" id="chkAllDel" class="th-cb" title="全選択">
+                  <span class="th-label">削除</span>
+                  <button class="filter-btn" data-col="del" title="フィルタ">▼</button>
+                </div>
+                <div class="filter-drop" id="filterDrop-del"></div>
+              </th>
             </tr>
           </thead>
           <tbody id="spTbody"></tbody>
@@ -159,6 +168,7 @@ let filterTab  = null;
 let filterKind = null;
 let filterName = null;
 let showDuplicates = false;
+let filterDel = null;
 
 const $id = id => document.getElementById(id);
 
@@ -206,7 +216,7 @@ function runAnalyze() {
     if (chatLines.length === 0) chatLines.push("");
 
     chatLines.forEach(chat => {
-      rows.push({ order: order++, origTab, dispTab: origTab, name, rename: "", kind: "chara", chat, color });
+      rows.push({ order: order++, origTab, dispTab: origTab, name, rename: "", kind: "chara", chat, color, deleted: false });
     });
   });
 
@@ -268,6 +278,10 @@ function renderTable() {
     if (filterTab  && !filterTab.has(row.dispTab)) return false;
     if (filterKind && !filterKind.has(row.kind))   return false;
     if (filterName && !filterName.has(row.name))   return false;
+    if (filterDel) {
+      const delVal = row.deleted ? "チェックあり" : "チェックなし";
+      if (!filterDel.has(delVal)) return false;
+    }
     if (!showDuplicates) {
       if (seenNames.has(row.name)) return false;
       seenNames.add(row.name);
@@ -294,18 +308,20 @@ function renderTable() {
       <td class="td-cb"><input type="checkbox" class="cb-name" data-idx="${idx}"><span class="sp-name-text">${e(row.name)}</span></td>
       <td><input type="text" class="sp-input${row.rename?" changed":""}" placeholder="${ea(row.name)}" value="${ea(row.rename)}" data-idx="${idx}"></td>
       <td><textarea class="chat-input" rows="2" data-idx="${idx}">${e(row.chat||"")}</textarea></td>
+      <td class="td-del"><input type="checkbox" class="cb-del" data-idx="${idx}"${row.deleted?" checked":""}></td>
     </tr>`;
   }).join("");
 
   // 一括変更行
   const bulkHtml = `
-    <tr class="bulk-sep-row"><td colspan="6"></td></tr>
+    <tr class="bulk-sep-row"><td colspan="7"></td></tr>
     <tr class="bulk-btn-row">
       <td></td>
       <td><button class="btn-hover-21 bh-gray col-bulk-btn" id="btnBulkTab"  type="button"><span>🔄 一括変更</span></button></td>
       <td><button class="btn-hover-21 bh-gray col-bulk-btn" id="btnBulkKind" type="button"><span>🔄 一括変更</span></button></td>
       <td><button class="btn-hover-21 bh-gray col-bulk-btn" id="btnBulkName" type="button"><span>🔄 一括変更</span></button></td>
       <td colspan="2"></td>
+      <td></td>
     </tr>
     <tr class="bulk-input-row">
       <td></td>
@@ -317,6 +333,7 @@ function renderTable() {
       <td><select class="kind-select k-chara" id="bulkKindSelect">${bulkKindOpts}</select></td>
       <td><input type="text" class="sp-input" id="bulkRenameInput" placeholder="変更後の名前"></td>
       <td colspan="2"></td>
+      <td><button class="btn-hover-21 bh-gray col-bulk-btn" id="btnScrollTop" type="button"><span>🔼 最初行</span></button></td>
     </tr>`;
 
   tbody.innerHTML = dataRows + bulkHtml;
@@ -364,6 +381,13 @@ function bindTableEvents(tbody) {
     });
   });
 
+  // 削除チェック
+  tbody.querySelectorAll("tr[data-idx] .cb-del").forEach(cb => {
+    cb.addEventListener("change", e => {
+      rows[+e.target.dataset.idx].deleted = e.target.checked;
+    });
+  });
+
   // チャット
   tbody.querySelectorAll("tr[data-idx] .chat-input").forEach(ta => {
     ta.addEventListener("input", e => {
@@ -373,6 +397,13 @@ function bindTableEvents(tbody) {
   });
 
   // 一括：タブ
+  // 最初行へスクロール
+  const btnScrollTop = $id("btnScrollTop");
+  if (btnScrollTop) btnScrollTop.addEventListener("click", () => {
+    const firstRow = $id("spTbody").querySelector("tr[data-idx]");
+    if (firstRow) firstRow.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
   $id("bulkTabSelect").addEventListener("change", () => { $id("bulkTabInput").value = ""; });
   $id("bulkTabInput").addEventListener("input",   () => { $id("bulkTabSelect").selectedIndex = 0; });
   $id("btnBulkTab").addEventListener("click", () => {
@@ -421,6 +452,16 @@ $id("btnRefresh").addEventListener("click", () => {
     updatePreview();
   }
 });
+
+/* =============================================
+   スクロールジャンプ
+   ============================================= */
+$id("btnScrollBottom").addEventListener("click", () => {
+  const tbody = $id("spTbody");
+  const lastRow = tbody.querySelector("tr[data-idx]:last-of-type");
+  if (lastRow) lastRow.scrollIntoView({ behavior: "smooth", block: "end" });
+});
+// btnScrollTopは一括変更行内にあるためbindTableEvents内で登録
 
 /* =============================================
    重複表示・非表示・再採番
@@ -472,6 +513,7 @@ $id("spTable").addEventListener("change", e => {
   if      (id==="chkAllTab")  document.querySelectorAll(".cb-tab").forEach( c=>c.checked=e.target.checked);
   else if (id==="chkAllKind") document.querySelectorAll(".cb-kind").forEach(c=>c.checked=e.target.checked);
   else if (id==="chkAllName") document.querySelectorAll(".cb-name").forEach(c=>c.checked=e.target.checked);
+  else if (id==="chkAllDel")  document.querySelectorAll(".cb-del").forEach( c=>c.checked=e.target.checked);
 });
 
 document.addEventListener("click", e => {
@@ -491,11 +533,12 @@ function rebuildFilterDrops() {
   const vals = {
     tab:  [...new Set(rows.map(r=>r.dispTab))],
     kind: [...new Set(rows.map(r=>r.kind))],
-    name: [...new Set(rows.map(r=>r.name))]
+    name: [...new Set(rows.map(r=>r.name))],
+    del:  ["チェックあり","チェックなし"]
   };
-  const curF = { tab:filterTab, kind:filterKind, name:filterName };
+  const curF = { tab:filterTab, kind:filterKind, name:filterName, del:filterDel };
 
-  ["tab","kind","name"].forEach(col => {
+  ["tab","kind","name","del"].forEach(col => {
     const drop = $id("filterDrop-"+col);
     if (!drop) return;
     const cur = curF[col];
@@ -503,6 +546,7 @@ function rebuildFilterDrops() {
       `<div class="fd-ctrl-row">
         <button class="fd-ctrl-btn" data-act="all">すべて選択</button>
         <button class="fd-ctrl-btn" data-act="none">解除</button>
+        <button class="fd-ctrl-btn" data-act="inv">反転</button>
       </div>
       <div class="fd-item fd-all-item"><label><input type="checkbox" class="fd-all"${!cur?" checked":""}> （すべて）</label></div>` +
       vals[col].map(v => {
@@ -514,9 +558,15 @@ function rebuildFilterDrops() {
     drop.querySelectorAll(".fd-ctrl-btn").forEach(btn => {
       btn.addEventListener("click", ev => {
         ev.stopPropagation();
-        const all = btn.dataset.act==="all";
-        drop.querySelectorAll(".fd-val").forEach(cb=>cb.checked=all);
-        drop.querySelector(".fd-all").checked = all;
+        const act = btn.dataset.act;
+        if (act==="inv") {
+          drop.querySelectorAll(".fd-val").forEach(cb=>cb.checked=!cb.checked);
+          drop.querySelector(".fd-all").checked=[...drop.querySelectorAll(".fd-val")].every(v=>v.checked);
+        } else {
+          const all = act==="all";
+          drop.querySelectorAll(".fd-val").forEach(cb=>cb.checked=all);
+          drop.querySelector(".fd-all").checked = all;
+        }
         _applyFilter(col, true);
       });
     });
@@ -541,6 +591,7 @@ function _applyFilter(col, keepOpen=false) {
   if      (col==="tab")  filterTab  = isAll ? null : new Set(vals);
   else if (col==="kind") filterKind = isAll ? null : new Set(vals);
   else if (col==="name") filterName = isAll ? null : new Set(vals);
+  else if (col==="del")  filterDel  = isAll ? null : new Set(vals);
   document.querySelector(`.filter-btn[data-col="${col}"]`)?.classList.toggle("filter-active", !isAll);
   renderTable(); rebuildFilterDrops();
   if (keepOpen) { const d=$id("filterDrop-"+col); if(d) d.classList.add("open"); }
