@@ -372,3 +372,11 @@ table.sp-table tr[data-key] { user-select: none; }
   background: #fff8e0; color: #7a5000;
   border-radius: 3px; padding: 0 2px; font-weight: 600; font-size: .9em;
 }
+
+/* summaryの右端ボタン群（重複表示・非表示＋更新） */
+.summary-sub-btns {
+  display: flex; gap: 4px; margin-left: auto; align-items: center;
+}
+.summary-btn-sm {
+  padding: 2px 8px; font-size: 10px; font-weight: 600; flex-shrink: 0;
+}
