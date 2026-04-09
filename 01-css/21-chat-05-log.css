@@ -147,7 +147,8 @@ table.sp-table {
   table-layout: fixed;
 }
 table.sp-table td { overflow: hidden; }
-table.sp-table th { overflow: visible; }
+table.sp-table th {
+  position: sticky; top: 0; z-index: 5; overflow: visible; }
 
 table.sp-table th {
   background: #f0ede8; color: #444; font-weight: 700;
@@ -251,6 +252,7 @@ table.sp-table tr[data-key] { user-select: none; }
 .td-cb input[type="checkbox"] {
   width: 14px; height: 14px; accent-color: #3d6e99;
   cursor: pointer; vertical-align: middle; margin-right: 5px;
+  pointer-events: auto; position: relative; z-index: 1;
 }
 
 /* タブ選択プルダウン（各行） */
@@ -487,9 +489,9 @@ table.sp-table tr[data-key] { user-select: none; }
   background: #444;
 }
 
-/* 先頭・末尾ボタン（丸型・反転） */
+/* 先頭・末尾ボタン（丸型・青系） */
 .btn-scroll {
-  background: #e8e8e8;
+  background: #ddeeff;
   border-radius: 9999px;
   position: relative;
   display: inline-flex;
@@ -498,8 +500,8 @@ table.sp-table tr[data-key] { user-select: none; }
   padding: 4px 14px 4px 10px;
   font-size: 11px; font-weight: 600;
   font-family: inherit;
-  color: #333;
-  border: none;
+  color: #1a4a9a;
+  border: 1px solid #9bbcf5;
   cursor: pointer;
   white-space: nowrap;
   transition: 0.3s ease-in-out;
@@ -507,8 +509,8 @@ table.sp-table tr[data-key] { user-select: none; }
 .btn-scroll::after {
   content: '';
   width: 5px; height: 5px;
-  border-top: 2px solid #333;
-  border-right: 2px solid #333;
+  border-top: 2px solid #1a4a9a;
+  border-right: 2px solid #1a4a9a;
   transform: rotate(45deg) translateY(-50%);
   position: absolute;
   top: 50%; right: 8px;
@@ -516,10 +518,11 @@ table.sp-table tr[data-key] { user-select: none; }
   transition: 0.3s ease-in-out;
 }
 .btn-scroll:hover {
-  background: #333;
+  background: #3a6abf;
   color: #fff;
+  border-color: #3a6abf;
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px -4px rgba(0,0,0,.3);
+  box-shadow: 0 6px 16px -4px rgba(30,80,180,.3);
 }
 .btn-scroll:hover::after { border-color: #fff; }
 
