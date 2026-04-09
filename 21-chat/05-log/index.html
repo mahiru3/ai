@@ -367,44 +367,48 @@ function renderTable() {
 }
 
 /* =============================================
-   テキスト種別のrow分割
-   event種別にしたとき、1rowを2rowに分割する
-   1行目: {name:★0000★, chat:元のname, kind:chara}
-   2行目: {name:★0000★, chat:元のchat, kind:chara}
+   テキスト種別の展開
+   指定idxのrowと同じname・同じdispTabを持つ全行を対象に：
+   - 先頭行: {name:★0000★, chat:元のname}  ← タイトル行
+   - 残り行: {name:★0000★, chat:元のchat}  ← 本文各行
    ============================================= */
 function expandEventRow(idx) {
-  const row = rows[idx];
-  const starName = row.rename.trim() || STAR_NAME;
-  const origName = row.name;
-  const origChat = (row.chat || "").trim();
+  const baseRow  = rows[idx];
+  const origName = baseRow.name;
+  const starName = baseRow.rename.trim() || STAR_NAME;
+  const dispTab  = baseRow.dispTab;
+  const color    = baseRow.color || "#888888";
 
-  // 1行目（元のname→chat）
-  const row1 = {
-    order:   row.order,
-    origTab: row.origTab,
-    dispTab: row.dispTab,
+  // 同じname・同じdispTabを持つ全行のインデックスを取得（order順）
+  const targets = rows
+    .map((r, i) => ({ r, i }))
+    .filter(({ r }) => r.name === origName && r.dispTab === dispTab)
+    .sort((a, b) => a.r.order - b.r.order);
+
+  if (!targets.length) return;
+
+  // 先頭行：元のnameをchatとして挿入（タイトル行）
+  const titleRow = {
+    order:   targets[0].r.order - 0.5,  // 先頭より前に挿入
+    origTab: dispTab,
+    dispTab: dispTab,
     name:    starName,
     rename:  "",
     kind:    "chara",
-    chat:    origName,
-    color:   row.color || "#888888",
-    deleted: false
-  };
-  // 2行目（元のchat）
-  const row2 = {
-    order:   row.order + 0.5,
-    origTab: row.origTab,
-    dispTab: row.dispTab,
-    name:    starName,
-    rename:  "",
-    kind:    "chara",
-    chat:    origChat,
-    color:   row.color || "#888888",
+    chat:    origName,  // 元の発言者名がタイトルになる
+    color:   color,
     deleted: false
   };
 
-  // rowsのidx位置を2行に置き換え
-  rows.splice(idx, 1, row1, row2);
+  // 対象行全てのnameをstarNameに変更・kindをcharaに
+  targets.forEach(({ r }) => {
+    r.name   = starName;
+    r.rename = "";
+    r.kind   = "chara";
+  });
+
+  // タイトル行をrowsに追加
+  rows.push(titleRow);
 
   // order整数に再採番
   rows.sort((a, b) => a.order - b.order);
