@@ -641,3 +641,9 @@ table.sp-table tr[data-idx] { height: 56px; box-sizing: border-box; }
 .bulk-btn-row-div {
   display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
 }
+
+/* 一括変更ボタンの幅修正 */
+.bulk-btn-row-div .btn-bulk {
+  max-width: 180px;
+  width: auto;
+}
