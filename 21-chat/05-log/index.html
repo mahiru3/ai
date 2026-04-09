@@ -18,8 +18,10 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">📝 ログ整形ツール！！</h1>
-  <p class="page-subtitle">CCFoliaのHTMLログを読み込み、発言者を整理してHTMLでダウンロードします。ページ内完結・サーバー送信なし。</p>
+  <div class="title-row">
+    <h1 class="page-title">📝 ログ整形ツール！！</h1>
+    <button class="btn-update" id="btnRefresh" type="button"><span>🔃 更新</span></button>
+  </div>
 
   <!-- ② 発言一覧 -->
   <details class="accordion-008 acc-color-2" id="acc-2">
@@ -38,22 +40,22 @@
               <th class="th-col th-btn" colspan="2">
                 <div class="th-inner">
                   <button class="btn-hover-21 bh-gray summary-btn-sm" id="btnShowDup" type="button"><span>重複表示</span></button>
+                </div>
+              </th>
+              <th class="th-col th-btn">
+                <div class="th-inner">
                   <button class="btn-hover-21 bh-gray summary-btn-sm" id="btnHideDup" type="button"><span>重複非表示</span></button>
                 </div>
               </th>
-              <th class="th-col th-btn">
-              </th>
-              <th class="th-col th-btn">
-              </th>
+              <th class="th-col th-btn"></th>
               <th class="th-col th-btn">
                 <div class="th-inner">
                   <button class="btn-scroll" id="btnScrollBottom" type="button">▼末尾</button>
-                  <button class="btn-delete" id="btnDelChecked" type="button">🗑️削除実行</button>
                 </div>
               </th>
               <th class="th-col th-btn">
                 <div class="th-inner">
-                  <button class="btn-update" id="btnRefresh" type="button"><span>🔃 更新</span></button>
+                  <button class="btn-delete" id="btnDelChecked" type="button">🗑️削除実行</button>
                 </div>
               </th>
             </tr>
@@ -322,14 +324,15 @@ function renderTable() {
     const kindOpts = Object.entries(KIND_LABEL).map(([k,l]) =>
       `<option value="${k}"${row.kind===k?" selected":""}>${l}</option>`
     ).join("");
+    const rz = `<div class="col-resizer"></div>`;
     return `<tr data-idx="${idx}">
-      <td class="td-order">${row.order+1}</td>
-      <td class="td-cb"><input type="checkbox" class="cb-tab"  data-idx="${idx}"><select class="tab-select tab-select-row ${tabCls}" data-idx="${idx}">${tabOpts}</select></td>
-      <td class="td-cb"><input type="checkbox" class="cb-kind" data-idx="${idx}"><select class="kind-select k-${row.kind}" data-idx="${idx}">${kindOpts}</select></td>
-      <td class="td-cb"><input type="checkbox" class="cb-name" data-idx="${idx}"><span class="sp-name-text">${e(row.name)}</span></td>
-      <td><input type="text" class="sp-input${row.rename?" changed":""}" placeholder="${ea(row.name)}" value="${ea(row.rename)}" data-idx="${idx}"></td>
-      <td><textarea class="chat-input" rows="2" data-idx="${idx}">${e(row.chat||"")}</textarea></td>
-      <td class="td-del"><input type="checkbox" class="cb-del" data-idx="${idx}"${row.deleted?" checked":""}></td>
+      <td class="td-order">${row.order+1}${rz}</td>
+      <td class="td-cb">${rz}<input type="checkbox" class="cb-tab"  data-idx="${idx}"><select class="tab-select tab-select-row ${tabCls}" data-idx="${idx}">${tabOpts}</select></td>
+      <td class="td-cb">${rz}<input type="checkbox" class="cb-kind" data-idx="${idx}"><select class="kind-select k-${row.kind}" data-idx="${idx}">${kindOpts}</select></td>
+      <td class="td-cb">${rz}<input type="checkbox" class="cb-name" data-idx="${idx}"><span class="sp-name-text">${e(row.name)}</span></td>
+      <td>${rz}<input type="text" class="sp-input${row.rename?" changed":""}" placeholder="${ea(row.name)}" value="${ea(row.rename)}" data-idx="${idx}"></td>
+      <td>${rz}<textarea class="chat-input" rows="2" data-idx="${idx}">${e(row.chat||"")}</textarea></td>
+      <td class="td-del">${rz}<input type="checkbox" class="cb-del" data-idx="${idx}"${row.deleted?" checked":""}></td>
     </tr>`;
   }).join("");
 
@@ -773,8 +776,18 @@ function initColResize() {
     let startX, startW, th;
     handle.addEventListener("mousedown", e => {
       e.preventDefault(); e.stopPropagation();
+      // thまたはtdの親セルを取得、tdの場合は列インデックスからthを特定
       th = handle.closest("th");
-      if (!th) return;
+      if (!th) {
+        const td = handle.closest("td");
+        if (!td) return;
+        const colIdx = td.cellIndex;
+        const table  = td.closest("table");
+        // thead最後の行（見出し行）の同列thを使う
+        const headerRow = table.querySelector("thead tr:last-child");
+        th = headerRow ? headerRow.cells[colIdx] : null;
+        if (!th) return;
+      }
       startX = e.clientX; startW = th.offsetWidth;
       document.body.style.cursor = "col-resize";
       document.body.style.userSelect = "none";
