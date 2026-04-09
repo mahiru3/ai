@@ -569,3 +569,11 @@ table.sp-table tr[data-key] { user-select: none; }
   flex-shrink: 0;
 }
 .btn-delete:hover { background: #c03030; color: #fff; }
+
+/* summaryのボタン配置 */
+.summary-table-btns {
+  display: flex; gap: 4px; align-items: center; margin-left: 8px;
+}
+.summary-right-btns {
+  display: flex; gap: 4px; align-items: center; margin-left: auto;
+}
