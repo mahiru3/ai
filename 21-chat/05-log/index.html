@@ -27,6 +27,10 @@
   <details class="accordion-008 acc-color-2" id="acc-2">
     <summary>② 発言一覧</summary>
     <div class="accordion-body">
+      <div class="default-name-row">
+        <label class="default-name-label">デフォルト発言者：</label>
+        <input type="text" id="inputDefaultName" class="sp-input default-name-input" placeholder="★0000★" value="★0000★">
+      </div>
       <div class="sp-table-wrap sp-table-scroll">
         <table class="sp-table" id="spTable">
           <thead>
@@ -36,22 +40,26 @@
                 <div class="th-inner">
                   <button class="btn-jump" id="btnReorder" type="button" title="現在の並び順でNo採番">🔃採番</button>
                 </div>
+                <div class="col-resizer"></div>
               </th>
               <th class="th-col th-btn" colspan="2">
                 <div class="th-inner">
                   <button class="btn-hover-21 bh-gray summary-btn-sm" id="btnShowDup" type="button"><span>重複表示</span></button>
                 </div>
+                <div class="col-resizer"></div>
               </th>
               <th class="th-col th-btn">
                 <div class="th-inner">
                   <button class="btn-hover-21 bh-gray summary-btn-sm" id="btnHideDup" type="button"><span>重複非表示</span></button>
                 </div>
+                <div class="col-resizer"></div>
               </th>
-              <th class="th-col th-btn"></th>
+              <th class="th-col th-btn"><div class="col-resizer"></div></th>
               <th class="th-col th-btn">
                 <div class="th-inner">
                   <button class="btn-scroll" id="btnScrollBottom" type="button">▼末尾</button>
                 </div>
+                <div class="col-resizer"></div>
               </th>
               <th class="th-col th-btn">
                 <div class="th-inner">
@@ -173,10 +181,10 @@
 /* =============================================
    定数
    ============================================= */
-const KIND_LABEL  = { chara:"キャラ", event:"テキスト", scene:"シーン", system:"非表示" };
-const KIND_ORDER  = { chara:0, event:1, scene:2, system:3 };
+const KIND_LABEL  = { chara:"キャラ", event:"テキスト", scene:"シーン", system:"非表示", sysmsg:"systemメッセ" };
+const KIND_ORDER  = { chara:0, event:1, scene:2, system:3, sysmsg:4 };
 const TAB_PRESETS = ["[main]","[info]","[other]"];
-const STAR_NAME   = "★0000★";
+let   DEFAULT_NAME = "★0000★"; // デフォルト発言者（入力欄で変更可）
 
 /* =============================================
    状態
@@ -375,7 +383,7 @@ function renderTable() {
 function expandEventRow(idx) {
   const baseRow  = rows[idx];
   const origName = baseRow.name;
-  const starName = baseRow.rename.trim() || STAR_NAME;
+  const starName = baseRow.rename.trim() || DEFAULT_NAME;
   const dispTab  = baseRow.dispTab;
   const color    = baseRow.color || "#888888";
 
@@ -416,6 +424,39 @@ function expandEventRow(idx) {
 }
 
 /* =============================================
+   systemメッセージの展開
+   chat: "[ 名前 ] 内容" → name=名前, chat=内容
+   同じnameを持つ全行を対象に処理
+   ============================================= */
+function expandSysmsgRows(idx) {
+  const baseRow  = rows[idx];
+  const origName = baseRow.name; // "system"など
+  const dispTab  = baseRow.dispTab;
+
+  // 同じname・同じdispTabを持つ全行を対象
+  const targets = rows.filter(r => r.name === origName && r.dispTab === dispTab);
+
+  targets.forEach(row => {
+    const chat = (row.chat || "").trim();
+    // "[ 名前 ] 内容" パターンを解析
+    const m = chat.match(/^\[\s*(.+?)\s*\]\s*([\s\S]*)$/);
+    if (m) {
+      row.name   = m[1].trim(); // [ ] 内を発言者名に
+      row.chat   = m[2].trim(); // 残りを本文に
+      row.rename = "";
+      row.kind   = "chara";
+    } else {
+      // パターン不一致はそのままcharaに
+      row.kind = "chara";
+    }
+  });
+
+  // order再採番
+  rows.sort((a, b) => a.order - b.order);
+  rows.forEach((r, i) => r.order = i);
+}
+
+/* =============================================
    テーブルイベント登録
    ============================================= */
 function bindTableEvents(tbody) {
@@ -435,9 +476,14 @@ function bindTableEvents(tbody) {
       const idx  = +e.target.dataset.idx;
       const kind = e.target.value;
       if (kind === "event") {
-        // テキスト種別：rowを2行に分割
-        rows[idx].rename = rows[idx].rename.trim() || STAR_NAME;
+        // テキスト種別：同名全行を展開
+        rows[idx].rename = rows[idx].rename.trim() || DEFAULT_NAME;
         expandEventRow(idx);
+        renderTable();
+        initFilterDrops();
+      } else if (kind === "sysmsg") {
+        // systemメッセージ：[ 名前 ] 内容 → name=名前, chat=内容
+        expandSysmsgRows(idx);
         renderTable();
         initFilterDrops();
       } else {
@@ -495,8 +541,10 @@ function bindTableEvents(tbody) {
     const idxs = [...checkedIdxs(tbody, ".cb-kind")].sort((a,b)=>b-a); // 後ろから処理してidxズレ防止
     idxs.forEach(i => {
       if (val === "event") {
-        rows[i].rename = rows[i].rename.trim() || STAR_NAME;
+        rows[i].rename = rows[i].rename.trim() || DEFAULT_NAME;
         expandEventRow(i);
+      } else if (val === "sysmsg") {
+        expandSysmsgRows(i);
       } else {
         rows[i].kind = val;
       }
@@ -525,7 +573,10 @@ $id("btnRefresh").addEventListener("click", () => {
   let count = 0;
   // event種別が残っていたら分割してからname昇格
   const toExpand = rows.map((r,i)=>({r,i})).filter(({r})=>r.kind==="event").map(({i})=>i).sort((a,b)=>b-a);
-  toExpand.forEach(i => { rows[i].rename = rows[i].rename.trim()||STAR_NAME; expandEventRow(i); });
+  toExpand.forEach(i => { rows[i].rename = rows[i].rename.trim()||DEFAULT_NAME; expandEventRow(i); });
+  // sysmsg種別が残っていたら展開
+  const toSys = rows.map((r,i)=>({r,i})).filter(({r})=>r.kind==="sysmsg").map(({i})=>i).sort((a,b)=>b-a);
+  toSys.forEach(i => expandSysmsgRows(i));
 
   rows.forEach(row => {
     if (row.rename.trim()) { row.name = row.rename.trim(); row.rename = ""; count++; }
@@ -544,6 +595,12 @@ function scrollTableTo(pos) {
   if (!wrap) return;
   wrap.scrollTo({ top: pos === "bottom" ? wrap.scrollHeight : 0, behavior: "smooth" });
 }
+
+// デフォルト発言者入力欄
+document.addEventListener("DOMContentLoaded", () => {
+  const inp = $id("inputDefaultName");
+  if (inp) inp.addEventListener("input", () => { DEFAULT_NAME = inp.value.trim() || "★0000★"; });
+});
 
 // summary内のボタン（renderTable外なので直接登録）
 $id("btnScrollBottom").addEventListener("click", () => scrollTableTo("bottom"));
@@ -901,15 +958,18 @@ function initRowDragSelect() {
     e.preventDefault();
   });
 
-  // ドラッグ中に行をまたいだらチェック状態を適用
-  tbody.addEventListener("mouseover", e => {
+  // ドラッグ中：mousemove+elementFromPointで高速判定
+  document.addEventListener("mousemove", e => {
     if (!dragging || !targetCls) return;
-    const tr = e.target.closest("tr[data-idx]");
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    if (!el) return;
+    const tr = el.closest("tr[data-idx]");
     if (!tr) return;
     const cb = tr.querySelector("." + targetCls);
     if (!cb || cb.checked === dragState) return;
     cb.checked = dragState;
-    rows[+cb.dataset.idx][_cbField(cb)] = dragState;
+    const field = _cbField(cb);
+    if (field) rows[+cb.dataset.idx][field] = dragState;
   });
 
   document.addEventListener("mouseup", () => {
