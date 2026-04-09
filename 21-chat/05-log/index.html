@@ -28,7 +28,9 @@
         <button class="btn-hover-21 bh-gray summary-btn-sm" id="btnShowDup"  type="button"><span>重複表示</span></button>
         <button class="btn-hover-21 bh-gray summary-btn-sm" id="btnHideDup"  type="button"><span>重複非表示</span></button>
       </span>
-      <button class="btn-hover-21 bh-green summary-btn" id="btnRefresh" type="button"><span>🔃 更新</span></button>
+      <button class="btn-scroll" id="btnScrollBottom" type="button">▼末尾</button>
+      <button class="btn-update" id="btnRefresh" type="button"><span>🔃 更新</span></button>
+      <button class="btn-delete" id="btnDelChecked" type="button">🗑️削除実行</button>
     </summary>
     <div class="accordion-body">
       <div class="sp-table-wrap sp-table-scroll">
@@ -37,7 +39,6 @@
             <tr>
               <th class="th-col" id="th-order">
                 <div class="th-inner">
-                  <span class="th-label">No</span>
                   <button class="btn-jump" id="btnReorder" type="button" title="現在の並び順でNo採番">🔃採番</button>
                   <button class="sort-col-btn" data-col="order" title="ソート">⇅</button>
                 </div>
@@ -315,7 +316,7 @@ function renderTable() {
   const bulkHtml = `
     <tr class="bulk-sep-row"><td colspan="7"></td></tr>
     <tr class="bulk-input-row">
-      <td><button class="btn-jump" id="btnScrollTop" type="button" title="先頭へ">🔼先頭</button></td>
+      <td></td>
       <td><div class="bulk-tab-cell">
         <select id="bulkTabSelect">${tabPresetOpts}</select>
         <span class="bulk-or">or</span>
@@ -323,14 +324,14 @@ function renderTable() {
       </div></td>
       <td><select class="kind-select k-chara" id="bulkKindSelect">${bulkKindOpts}</select></td>
       <td><input type="text" class="sp-input" id="bulkRenameInput" placeholder="変更後の名前"></td>
+      <td><button class="btn-scroll" id="btnScrollTop" type="button" title="先頭へ">▲先頭</button></td>
       <td colspan="2"></td>
-      <td><button class="btn-jump" id="btnDelChecked" type="button" title="削除チェック行を削除">🗑️削除実行</button></td>
     </tr>
     <tr class="bulk-btn-row">
-      <td><button class="btn-jump" id="btnScrollBottom" type="button" title="末尾へ">🔽末尾</button></td>
-      <td><button class="btn-hover-21 bh-gray col-bulk-btn" id="btnBulkTab"  type="button"><span>🔄 一括変更</span></button></td>
-      <td><button class="btn-hover-21 bh-gray col-bulk-btn" id="btnBulkKind" type="button"><span>🔄 一括変更</span></button></td>
-      <td><button class="btn-hover-21 bh-gray col-bulk-btn" id="btnBulkName" type="button"><span>🔄 一括変更</span></button></td>
+      <td></td>
+      <td><button class="btn-bulk" id="btnBulkTab"  type="button"><span>🔄 一括変更</span></button></td>
+      <td><button class="btn-bulk" id="btnBulkKind" type="button"><span>🔄 一括変更</span></button></td>
+      <td><button class="btn-bulk" id="btnBulkName" type="button"><span>🔄 一括変更</span></button></td>
       <td colspan="3"></td>
     </tr>`;
 
@@ -398,19 +399,8 @@ function bindTableEvents(tbody) {
   // スクロール・削除ボタン
   const btnScrollTop = $id("btnScrollTop");
   if (btnScrollTop) btnScrollTop.addEventListener("click", () => scrollTableTo("top"));
-  const btnScrollBottom = $id("btnScrollBottom");
-  if (btnScrollBottom) btnScrollBottom.addEventListener("click", () => scrollTableTo("bottom"));
-  // 5. 削除実行
-  const btnDelChecked = $id("btnDelChecked");
-  if (btnDelChecked) btnDelChecked.addEventListener("click", () => {
-    const before = rows.length;
-    rows = rows.filter(r => !r.deleted);
-    // order再採番
-    rows.forEach((r, i) => r.order = i);
-    renderTable(); initFilterDrops();
-    showStatus($id("analyzeStatus"), `${before - rows.length} 件を削除しました`, "ok");
-    updatePreview();
-  });
+  // btnScrollBottomはsummaryに移動したためここでは登録しない
+  // 削除実行はsummaryボタンに移動済み（グローバル登録）
 
   $id("bulkTabSelect").addEventListener("change", () => { $id("bulkTabInput").value = ""; });
   $id("bulkTabInput").addEventListener("input",   () => { $id("bulkTabSelect").selectedIndex = 0; });
@@ -469,6 +459,17 @@ function scrollTableTo(pos) {
   if (!wrap) return;
   wrap.scrollTo({ top: pos === "bottom" ? wrap.scrollHeight : 0, behavior: "smooth" });
 }
+
+// summary内のボタン（renderTable外なので直接登録）
+$id("btnScrollBottom").addEventListener("click", () => scrollTableTo("bottom"));
+$id("btnDelChecked").addEventListener("click", () => {
+  const before = rows.length;
+  rows = rows.filter(r => !r.deleted);
+  rows.forEach((r, i) => r.order = i);
+  renderTable(); initFilterDrops();
+  showStatus($id("analyzeStatus"), `${before - rows.length} 件を削除しました`, "ok");
+  updatePreview();
+});
 
 /* =============================================
    重複表示・非表示・再採番
