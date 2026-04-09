@@ -365,6 +365,51 @@ function renderTable() {
 }
 
 /* =============================================
+   テキスト種別のrow分割
+   event種別にしたとき、1rowを2rowに分割する
+   1行目: {name:★0000★, chat:元のname, kind:chara}
+   2行目: {name:★0000★, chat:元のchat, kind:chara}
+   ============================================= */
+function expandEventRow(idx) {
+  const row = rows[idx];
+  const starName = row.rename.trim() || STAR_NAME;
+  const origName = row.name;
+  const origChat = (row.chat || "").trim();
+
+  // 1行目（元のname→chat）
+  const row1 = {
+    order:   row.order,
+    origTab: row.origTab,
+    dispTab: row.dispTab,
+    name:    starName,
+    rename:  "",
+    kind:    "chara",
+    chat:    origName,
+    color:   row.color || "#888888",
+    deleted: false
+  };
+  // 2行目（元のchat）
+  const row2 = {
+    order:   row.order + 0.5,
+    origTab: row.origTab,
+    dispTab: row.dispTab,
+    name:    starName,
+    rename:  "",
+    kind:    "chara",
+    chat:    origChat,
+    color:   row.color || "#888888",
+    deleted: false
+  };
+
+  // rowsのidx位置を2行に置き換え
+  rows.splice(idx, 1, row1, row2);
+
+  // order整数に再採番
+  rows.sort((a, b) => a.order - b.order);
+  rows.forEach((r, i) => r.order = i);
+}
+
+/* =============================================
    テーブルイベント登録
    ============================================= */
 function bindTableEvents(tbody) {
@@ -383,12 +428,15 @@ function bindTableEvents(tbody) {
     sel.addEventListener("change", e => {
       const idx  = +e.target.dataset.idx;
       const kind = e.target.value;
-      rows[idx].kind = kind;
-      e.target.className = "kind-select k-" + kind;
-      if (kind === "event" && !rows[idx].rename) {
-        rows[idx].rename = STAR_NAME;
-        const inp = e.target.closest("tr")?.querySelector(".sp-input");
-        if (inp) { inp.value = STAR_NAME; inp.classList.add("changed"); }
+      if (kind === "event") {
+        // テキスト種別：rowを2行に分割
+        rows[idx].rename = rows[idx].rename.trim() || STAR_NAME;
+        expandEventRow(idx);
+        renderTable();
+        initFilterDrops();
+      } else {
+        rows[idx].kind = kind;
+        e.target.className = "kind-select k-" + kind;
       }
       updatePreview();
     });
@@ -438,12 +486,16 @@ function bindTableEvents(tbody) {
   // 一括：種別
   $id("btnBulkKind").addEventListener("click", () => {
     const val  = $id("bulkKindSelect").value;
-    const idxs = checkedIdxs(tbody, ".cb-kind");
+    const idxs = [...checkedIdxs(tbody, ".cb-kind")].sort((a,b)=>b-a); // 後ろから処理してidxズレ防止
     idxs.forEach(i => {
-      rows[i].kind = val;
-      if (val === "event" && !rows[i].rename) rows[i].rename = STAR_NAME;
+      if (val === "event") {
+        rows[i].rename = rows[i].rename.trim() || STAR_NAME;
+        expandEventRow(i);
+      } else {
+        rows[i].kind = val;
+      }
     });
-    if (idxs.size) { renderTable(); showStatus($id("analyzeStatus"), `種別 ${idxs.size} 件を変更`, "ok"); updatePreview(); }
+    if (idxs.length) { renderTable(); initFilterDrops(); showStatus($id("analyzeStatus"), `種別 ${idxs.length} 件を変更`, "ok"); updatePreview(); }
   });
 
   // 一括：変更後
@@ -465,14 +517,17 @@ function checkedIdxs(tbody, cls) {
    ============================================= */
 $id("btnRefresh").addEventListener("click", () => {
   let count = 0;
+  // event種別が残っていたら分割してからname昇格
+  const toExpand = rows.map((r,i)=>({r,i})).filter(({r})=>r.kind==="event").map(({i})=>i).sort((a,b)=>b-a);
+  toExpand.forEach(i => { rows[i].rename = rows[i].rename.trim()||STAR_NAME; expandEventRow(i); });
+
   rows.forEach(row => {
     if (row.rename.trim()) { row.name = row.rename.trim(); row.rename = ""; count++; }
   });
-  if (count > 0) {
-    renderTable();
-    showStatus($id("analyzeStatus"), `${count} 件の変更前を更新しました`, "ok");
-    updatePreview();
-  }
+  renderTable();
+  initFilterDrops();
+  showStatus($id("analyzeStatus"), `${count} 件の変更前を更新しました`, "ok");
+  updatePreview();
 });
 
 /* =============================================
@@ -647,9 +702,7 @@ function buildOutputLines(optHide) {
     const mkLine   = text =>
       `<p style="color:${color};"><span> ${e(dispTab)}</span> <span>${e(dispName)}</span> : <span> ${e(text)} </span></p>`;
 
-    if (row.kind==="event") {
-      lines.push(mkLine(row.name)); // テキスト：1行目に元の名前
-    }
+    // event種別はexpandEventRowで既に分割済みのためchatのみ出力
     if (chat) lines.push(mkLine(chat));
   });
   return lines;
@@ -689,15 +742,18 @@ $id("btnApplyUp").addEventListener("click", () => {
       (r.dispTab===dispTab || r.origTab===dispTab) &&
       (r.rename===dispName || r.name===dispName)
     );
+    // event種別はexpand済みなのでcharaとして取り込む
+    const inheritKind = (origRow && origRow.kind !== "event") ? origRow.kind : "chara";
     newRows.push({
       order:   order++,
       origTab: dispTab,
       dispTab: dispTab,
       name:    dispName,
       rename:  "",
-      kind:    origRow ? origRow.kind : "chara",
+      kind:    inheritKind,
       chat:    chat,
-      color:   origRow ? origRow.color : "#888888"
+      color:   origRow ? origRow.color : "#888888",
+      deleted: false
     });
   });
 
@@ -752,7 +808,7 @@ $id("btnFormatDownload").addEventListener("click", () => {
       lines.push(`<p style="color:${rowColor};">${tabHtml}<span>${e(dispName)}</span> : <span> ${t} </span></p>`);
     };
 
-    if (kind==="event") addLine(row.name);
+    // event種別はexpandEventRowで分割済みのためchatのみ出力
     if (chat) addLine(chat);
   });
 
@@ -800,27 +856,54 @@ function initColResize() {
 }
 
 /* =============================================
-   行ドラッグ選択
+   Q1: セルクリック＋ドラッグ選択
+   - td-cbセルをクリック→チェック切替
+   - td-cbセルをドラッグ→複数行を同じ状態にする
    ============================================= */
 function initRowDragSelect() {
   const tbody = $id("spTbody");
   if (!tbody) return;
   let dragging=false, dragState=null, targetCls=null;
-  tbody.addEventListener("mousedown", e => {
-    const cb = e.target.closest(".cb-tab,.cb-kind,.cb-name");
-    if (!cb || !cb.closest("tr[data-idx]")) return;
-    dragging=true; dragState=!cb.checked;
-    targetCls=[...cb.classList].find(c=>c.startsWith("cb-"));
-    cb.checked=dragState; e.preventDefault();
+
+  // セルクリックでチェック切替（チェックボックス本体以外からもクリック可）
+  tbody.addEventListener("click", e => {
+    const td = e.target.closest(".td-cb");
+    if (!td) return;
+    const cb = td.querySelector(".cb-tab,.cb-kind,.cb-name,.cb-del");
+    if (!cb) return;
+    if (e.target === cb) return; // チェックボックス本体はデフォルト動作
+    cb.checked = !cb.checked;
+    cb.dispatchEvent(new Event("change", {bubbles:true}));
   });
+
+  // ドラッグ選択
+  tbody.addEventListener("mousedown", e => {
+    const td = e.target.closest(".td-cb");
+    if (!td) return;
+    const cb = td.querySelector(".cb-tab,.cb-kind,.cb-name,.cb-del");
+    if (!cb || !cb.closest("tr[data-idx]")) return;
+    dragging  = true;
+    dragState = !cb.checked;
+    targetCls = [...cb.classList].find(cls => cls.startsWith("cb-"));
+    cb.checked = dragState;
+    cb.dispatchEvent(new Event("change", {bubbles:true}));
+    e.preventDefault();
+  });
+
   tbody.addEventListener("mouseenter", e => {
-    if (!dragging||!targetCls) return;
-    const row=e.target.closest("tr[data-idx]");
+    if (!dragging || !targetCls) return;
+    const row = e.target.closest("tr[data-idx]");
     if (!row) return;
-    const cb=row.querySelector("."+targetCls);
-    if (cb) cb.checked=dragState;
+    const cb = row.querySelector("." + targetCls);
+    if (cb && cb.checked !== dragState) {
+      cb.checked = dragState;
+      cb.dispatchEvent(new Event("change", {bubbles:true}));
+    }
   }, true);
-  document.addEventListener("mouseup", ()=>{ dragging=false; dragState=null; targetCls=null; });
+
+  document.addEventListener("mouseup", () => {
+    dragging=false; dragState=null; targetCls=null;
+  });
 }
 
 /* =============================================
