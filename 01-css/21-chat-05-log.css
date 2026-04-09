@@ -427,3 +427,146 @@ table.sp-table tr[data-key] { user-select: none; }
 }
 .btn-jump:hover { background: #dce6f5; border-color: #7a9ace; }
 .btn-jump:active { background: #c8d8ee; }
+
+/* =============================================
+   カスタムボタン
+   ============================================= */
+
+/* 一括変更ボタン（矢印付きスライド） */
+.btn-bulk {
+  position: relative;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+  padding: 6px 8px 6px 28px;
+  font-size: 11px; font-weight: 600;
+  font-family: inherit;
+  line-height: 1.4;
+  text-decoration: none;
+  color: #333;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+  overflow: hidden;
+}
+.btn-bulk::before {
+  content: "";
+  position: absolute;
+  top: 50%; left: 10px;
+  width: 0.4rem; height: 0.4rem;
+  border-top: solid 2px #333;
+  border-right: solid 2px #333;
+  z-index: 2;
+  transform: translateY(-50%) rotate(45deg);
+  transition: all 0.3s;
+}
+.btn-bulk::after {
+  content: "";
+  position: absolute;
+  top: 50%; left: 0;
+  width: 2.2rem; height: 2.2rem;
+  background: #e0e0e0;
+  border-radius: 50%;
+  z-index: 1;
+  transform: translateY(-50%);
+  transition: all 0.4s;
+}
+.btn-bulk span {
+  position: relative; z-index: 3;
+  transition: all 0.3s;
+}
+.btn-bulk:hover span { color: #fff; }
+.btn-bulk:hover::before {
+  left: calc(100% - 22px);
+  border-color: #fff;
+}
+.btn-bulk:hover::after {
+  width: 100%;
+  background: #444;
+}
+
+/* 先頭・末尾ボタン（丸型・反転） */
+.btn-scroll {
+  background: #e8e8e8;
+  border-radius: 9999px;
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 14px 4px 10px;
+  font-size: 11px; font-weight: 600;
+  font-family: inherit;
+  color: #333;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: 0.3s ease-in-out;
+}
+.btn-scroll::after {
+  content: '';
+  width: 5px; height: 5px;
+  border-top: 2px solid #333;
+  border-right: 2px solid #333;
+  transform: rotate(45deg) translateY(-50%);
+  position: absolute;
+  top: 50%; right: 8px;
+  border-radius: 1px;
+  transition: 0.3s ease-in-out;
+}
+.btn-scroll:hover {
+  background: #333;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -4px rgba(0,0,0,.3);
+}
+.btn-scroll:hover::after { border-color: #fff; }
+
+/* 更新ボタン（スライド塗り） */
+.btn-update {
+  position: relative;
+  overflow: hidden;
+  border-radius: 3px;
+  border: none;
+  background: #c8e6c9;
+  padding: 5px 14px;
+  font-family: inherit;
+  font-size: 12px; font-weight: 700;
+  color: #2a6a2a;
+  cursor: pointer;
+  transition: 0.2s ease;
+  flex-shrink: 0;
+}
+.btn-update span {
+  position: relative; z-index: 3; color: #2a6a2a;
+}
+.btn-update:hover span { color: #fff; }
+.btn-update::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; z-index: 2;
+  background: #2a6a2a;
+  width: 100%; height: 100%;
+  transition: transform .3s cubic-bezier(0.8,0,0.2,1);
+  transform: scale(0,1);
+  transform-origin: top;
+}
+.btn-update:hover::before { transform: scale(1,1); }
+
+/* 削除実行ボタン */
+.btn-delete {
+  position: relative;
+  overflow: hidden;
+  border-radius: 3px;
+  border: none;
+  background: #ffcdd2;
+  padding: 5px 14px;
+  font-family: inherit;
+  font-size: 12px; font-weight: 700;
+  color: #c03030;
+  cursor: pointer;
+  transition: 0.2s ease;
+  flex-shrink: 0;
+}
+.btn-delete:hover { background: #c03030; color: #fff; }
