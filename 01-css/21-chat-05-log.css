@@ -615,3 +615,11 @@ table.sp-table td .col-resizer {
   cursor: col-resize; background: transparent; z-index: 3;
 }
 table.sp-table td .col-resizer:hover { background: rgba(155,188,245,0.5); }
+
+/* デフォルト発言者入力欄 */
+.default-name-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 4px 4px; margin-bottom: 4px;
+}
+.default-name-label { font-size: 12px; font-weight: 600; color: #444; white-space: nowrap; }
+.default-name-input { max-width: 200px; }
