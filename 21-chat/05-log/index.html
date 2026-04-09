@@ -192,16 +192,21 @@ function runAnalyze() {
     if (spans.length < 3) return;
     const origTab = spans[0].textContent.trim();
     const name    = spans[1].textContent.trim();
-    // 本文をbrで分割して複数行に展開
-    const chatLines = spans[2].innerHTML
+    // 元のpタグの色を保持
+    const color   = p.style.color || "#888888";
+    // 本文をbrで分割：textContentでHTMLエンティティを自動デコード
+    const span2   = spans[2];
+    // brで分割するためにinnerHTMLを使い、各片をtextContentでデコード
+    const tmp = document.createElement("div");
+    const chatLines = span2.innerHTML
       .split(/<br\s*\/?>/i)
-      .map(s => s.replace(/<[^>]*>/g, "").trim())
+      .map(s => { tmp.innerHTML = s; return tmp.textContent.trim(); })
       .filter(s => s);
 
     if (chatLines.length === 0) chatLines.push("");
 
     chatLines.forEach(chat => {
-      rows.push({ order: order++, origTab, dispTab: origTab, name, rename: "", kind: "chara", chat });
+      rows.push({ order: order++, origTab, dispTab: origTab, name, rename: "", kind: "chara", chat, color });
     });
   });
 
@@ -555,8 +560,9 @@ function buildOutputLines(optHide) {
     const dispName = row.rename.trim() || row.name;
     const dispTab  = row.dispTab || row.origTab;
     const chat     = (row.chat||"").trim();
+    const color    = row.color || "#888888";
     const mkLine   = text =>
-      `<p style="color:#888888;"><span> ${e(dispTab)}</span> <span>${e(dispName)}</span> : <span> ${e(text)} </span></p>`;
+      `<p style="color:${color};"><span> ${e(dispTab)}</span> <span>${e(dispName)}</span> : <span> ${e(text)} </span></p>`;
 
     if (row.kind==="event") {
       lines.push(mkLine(row.name)); // テキスト：1行目に元の名前
@@ -607,7 +613,8 @@ $id("btnApplyUp").addEventListener("click", () => {
       name:    dispName,
       rename:  "",
       kind:    origRow ? origRow.kind : "chara",
-      chat:    chat
+      chat:    chat,
+      color:   origRow ? origRow.color : "#888888"
     });
   });
 
@@ -652,13 +659,14 @@ $id("btnFormatDownload").addEventListener("click", () => {
     const chat     = (row.chat||"").trim();
     const kind     = row.kind;
 
+    const rowColor = row.color || "#888888";
     const addLine = text => {
       if (optSpace && prevKind!==null && prevKind!==kind)
         lines.push(`<p style="margin:0;line-height:1;">&nbsp;</p>`);
       prevKind = kind;
       let t = e(text);
       if (optSkill) t = t.replace(/〈([^〉]+)〉/g, `<span class="skill-hl">〈$1〉</span>`);
-      lines.push(`<p style="color:#888888;">${tabHtml}<span>${e(dispName)}</span> : <span> ${t} </span></p>`);
+      lines.push(`<p style="color:${rowColor};">${tabHtml}<span>${e(dispName)}</span> : <span> ${t} </span></p>`);
     };
 
     if (kind==="event") addLine(row.name);
