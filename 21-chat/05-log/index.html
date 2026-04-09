@@ -17,12 +17,12 @@
 <body>
 <div class="page-wrap">
 
-  <h1 class="page-title">📝 ログ整形ツール！</h1>
+  <h1 class="page-title">📝 ログ整形ツール！！</h1>
   <p class="page-subtitle">CCFoliaのHTMLログを読み込み、発言者を整理してHTMLでダウンロードします。ページ内完結・サーバー送信なし。</p>
 
   <!-- ② 発言者一覧 -->
   <details class="accordion-008 acc-color-2" id="acc-2">
-    <summary>② 発言者一覧<button class="btn-hover-21 bh-green summary-btn" id="btnRefresh" type="button"><span>🔃 更新</span></button></summary>
+    <summary>② 発言者一覧<span class="summary-sub-btns"><button class="btn-hover-21 bh-gray summary-btn-sm" id="btnShowDup" type="button"><span>重複表示</span></button><button class="btn-hover-21 bh-gray summary-btn-sm" id="btnHideDup" type="button"><span>重複非表示</span></button></span><button class="btn-hover-21 bh-green summary-btn" id="btnRefresh" type="button"><span>🔃 更新</span></button></summary>
     <div class="accordion-body">
       <div class="sp-table-wrap">
         <table class="sp-table" id="spTable">
@@ -241,12 +241,18 @@ function renderTable() {
   const bulkKindOpts  = Object.entries(KIND_LABEL).map(([k,l])=>`<option value="${k}">${l}</option>`).join("");
 
   // データ行
+  // 重複除外：showDuplicates=falseのとき同じnameは最初の1件のみ表示
+  const seenNames = new Set();
   const dataRows = sorted
     .filter(key => {
       const sp=speakerMap[key];
       if (filterTab  && !filterTab.has(sp.dispTab)) return false;
       if (filterKind && !filterKind.has(sp.kind))   return false;
       if (filterName && !filterName.has(sp.name))   return false;
+      if (!showDuplicates) {
+        if (seenNames.has(sp.name)) return false;
+        seenNames.add(sp.name);
+      }
       return true;
     })
     .map(key => {
@@ -390,6 +396,22 @@ $id("btnRefresh").addEventListener("click", () => {
 });
 
 /* =============================================
+   重複発言者の表示・非表示
+   ============================================= */
+let showDuplicates = false;
+
+$id("btnShowDup").addEventListener("click", () => {
+  showDuplicates = true;
+  renderTable();
+  showStatus($id("analyzeStatus"), "重複発言者を表示しています", "info");
+});
+$id("btnHideDup").addEventListener("click", () => {
+  showDuplicates = false;
+  renderTable();
+  showStatus($id("analyzeStatus"), "重複発言者を非表示にしています", "info");
+});
+
+/* =============================================
    ヘッダー全選択チェックボックス・ソート・フィルタ
    ============================================= */
 $id("spTable").addEventListener("click", e => {
@@ -503,26 +525,24 @@ function _applyFilter(col, keepOpen=false) {
 }
 
 /* =============================================
-   出力行生成（共通）
+   出力行生成（speakerMapのtableOrderベース）
+   parsedDocに依存しないためupdatePreviewは常に最新状態を反映する
    ============================================= */
 function buildOutputLines(optHide) {
   const lines=[];
-  if (!parsedDoc) return lines;
-  parsedDoc.querySelectorAll("p").forEach(p=>{
-    const spans=p.querySelectorAll("span");
-    if (spans.length<3) return;
-    const origTab=spans[0].textContent.trim();
-    const name   =spans[1].textContent.trim();
-    const key    =origTab+"::"+name;
-    const sp     =speakerMap[key]||{kind:"chara",rename:"",dispTab:origTab,chat:""};
+  if (!tableOrder.length) return lines;
+
+  tableOrder.forEach(key=>{
+    const sp=speakerMap[key];
+    if (!sp) return;
     if (optHide && sp.kind==="system") return;
 
-    const dispName=sp.rename.trim()||name;
-    const dispTab =sp.dispTab||origTab;
+    const dispName=sp.rename.trim()||sp.name;
+    const dispTab =sp.dispTab||sp.origTab;
     const parts   =(sp.chat||"").trim().split("\n").map(s=>s.trim()).filter(s=>s);
     const mkLine  =text=>`<p style="color:#888888;"><span> ${e(dispTab)}</span> <span>${e(dispName)}</span> : <span> ${e(text)} </span></p>`;
 
-    if (sp.kind==="event") lines.push(mkLine(name));
+    if (sp.kind==="event") lines.push(mkLine(sp.name));
     parts.forEach(part=>lines.push(mkLine(part)));
   });
   return lines;
@@ -532,7 +552,7 @@ function buildOutputLines(optHide) {
    ③ プレビュー更新
    ============================================= */
 function updatePreview() {
-  if (!parsedDoc) return;
+  if (!tableOrder.length) return;
   const optHide=$id("optHideSystem").checked;
   const lines=buildOutputLines(optHide);
   $id("previewWrap").innerHTML=lines.length
