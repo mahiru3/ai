@@ -382,8 +382,9 @@ table.sp-table tr[data-key] { user-select: none; }
 
 /* ②テーブルエリアのスクロール */
 .sp-table-scroll {
-  max-height: 400px;
+  height: 400px;
   overflow-y: auto;
+  overflow-x: auto;
 }
 .sp-table-scroll::-webkit-scrollbar { width: 5px; }
 .sp-table-scroll::-webkit-scrollbar-track { background: #f0ede8; border-radius: 3px; }
@@ -623,3 +624,20 @@ table.sp-table td .col-resizer:hover { background: rgba(155,188,245,0.5); }
 }
 .default-name-label { font-size: 12px; font-weight: 600; color: #444; white-space: nowrap; }
 .default-name-input { max-width: 200px; }
+
+/* 仮想スクロール：行高さ固定 */
+table.sp-table tr[data-idx] { height: 56px; box-sizing: border-box; }
+.vs-spacer-top, .vs-spacer-bottom { padding: 0 !important; }
+.vs-spacer-top td, .vs-spacer-bottom td { padding: 0 !important; border: none !important; }
+
+/* 一括変更エリア */
+.bulk-area {
+  background: #f5f3f0; border: 1px solid #d8d4ce; border-radius: 6px;
+  padding: 8px 10px; margin-top: 8px; display: flex; flex-direction: column; gap: 6px;
+}
+.bulk-input-row-div {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+}
+.bulk-btn-row-div {
+  display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+}
