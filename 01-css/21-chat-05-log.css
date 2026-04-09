@@ -586,3 +586,32 @@ table.sp-table tr[data-key] { user-select: none; }
 }
 .th-btn { background: #e8f0e8 !important; }
 .th-btn .th-inner { flex-wrap: wrap; gap: 3px; }
+
+/* タイトル行（更新ボタン右端） */
+.title-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.title-row .page-title { margin: 0; }
+
+/* thead両行を固定 */
+.thead-btn-row th {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+}
+/* 見出し行は採番行の高さ分下にずらす */
+table.sp-table thead tr:nth-child(2) th {
+  position: sticky;
+  top: 33px; /* ボタン行の高さに合わせる */
+  z-index: 5;
+}
+
+/* tbodyのtd内にリサイザーを追加して任意行から幅変更可能に */
+table.sp-table td { position: relative; }
+table.sp-table td .col-resizer {
+  position: absolute; top: 0; right: 0;
+  width: 5px; height: 100%;
+  cursor: col-resize; background: transparent; z-index: 3;
+}
+table.sp-table td .col-resizer:hover { background: rgba(155,188,245,0.5); }
