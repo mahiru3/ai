@@ -415,3 +415,15 @@ table.sp-table tr[data-key] { user-select: none; }
 
 /* フィルタ「反転」追加で3ボタン対応 */
 .fd-ctrl-row { flex-wrap: wrap; }
+
+/* ジャンプ・採番ボタン（フラット・アイコン系） */
+.btn-jump {
+  padding: 2px 7px; font-size: 11px; font-weight: 600;
+  border: 1px solid #b0b8c8; border-radius: 4px;
+  background: #eef2f8; color: #3a5a8a;
+  cursor: pointer; white-space: nowrap;
+  transition: background .12s, border-color .12s;
+  flex-shrink: 0;
+}
+.btn-jump:hover { background: #dce6f5; border-color: #7a9ace; }
+.btn-jump:active { background: #c8d8ee; }
