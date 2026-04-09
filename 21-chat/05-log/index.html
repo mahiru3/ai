@@ -24,7 +24,7 @@
   <details class="accordion-008 acc-color-2" id="acc-2">
     <summary>② 発言者一覧<span class="summary-sub-btns"><button class="btn-hover-21 bh-gray summary-btn-sm" id="btnShowDup" type="button"><span>重複表示</span></button><button class="btn-hover-21 bh-gray summary-btn-sm" id="btnHideDup" type="button"><span>重複非表示</span></button></span><button class="btn-hover-21 bh-green summary-btn" id="btnRefresh" type="button"><span>🔃 更新</span></button></summary>
     <div class="accordion-body">
-      <div class="sp-table-wrap">
+      <div class="sp-table-wrap sp-table-scroll">
         <table class="sp-table" id="spTable">
           <thead>
             <tr>
@@ -525,24 +525,30 @@ function _applyFilter(col, keepOpen=false) {
 }
 
 /* =============================================
-   出力行生成（speakerMapのtableOrderベース）
-   parsedDocに依存しないためupdatePreviewは常に最新状態を反映する
+   出力行生成（parsedDocベース＋speakerMapで設定参照）
    ============================================= */
 function buildOutputLines(optHide) {
   const lines=[];
-  if (!tableOrder.length) return lines;
+  if (!parsedDoc) return lines;
 
-  tableOrder.forEach(key=>{
-    const sp=speakerMap[key];
-    if (!sp) return;
+  // 「上に反映」後はparsedDocがないのでspeakerMapから生成
+  if (!parsedDoc.querySelectorAll("p").length) return lines;
+
+  parsedDoc.querySelectorAll("p").forEach(p=>{
+    const spans=p.querySelectorAll("span");
+    if (spans.length<3) return;
+    const origTab=spans[0].textContent.trim();
+    const name   =spans[1].textContent.trim();
+    const key    =origTab+"::"+name;
+    const sp     =speakerMap[key]||{kind:"chara",rename:"",dispTab:origTab,chat:"",origTab,name};
     if (optHide && sp.kind==="system") return;
 
-    const dispName=sp.rename.trim()||sp.name;
-    const dispTab =sp.dispTab||sp.origTab;
+    const dispName=sp.rename.trim()||sp.name||name;
+    const dispTab =sp.dispTab||origTab;
     const parts   =(sp.chat||"").trim().split("\n").map(s=>s.trim()).filter(s=>s);
     const mkLine  =text=>`<p style="color:#888888;"><span> ${e(dispTab)}</span> <span>${e(dispName)}</span> : <span> ${e(text)} </span></p>`;
 
-    if (sp.kind==="event") lines.push(mkLine(sp.name));
+    if (sp.kind==="event") lines.push(mkLine(sp.name||name));
     parts.forEach(part=>lines.push(mkLine(part)));
   });
   return lines;
@@ -552,7 +558,7 @@ function buildOutputLines(optHide) {
    ③ プレビュー更新
    ============================================= */
 function updatePreview() {
-  if (!tableOrder.length) return;
+  if (!parsedDoc) return;
   const optHide=$id("optHideSystem").checked;
   const lines=buildOutputLines(optHide);
   $id("previewWrap").innerHTML=lines.length
@@ -614,8 +620,21 @@ $id("btnApplyUp").addEventListener("click", ()=>{
   speakerMap=newMap;
   tableOrder=newOrder;
   sortCol=null;
+
+  // parsedDocを新speakerMapの内容から再構築
+  const newHtml = "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"/></head><body>" +
+    newOrder.map(k=>{
+      const sp=newMap[k];
+      const chatLines=(sp.chat||"").split("\n").filter(s=>s.trim());
+      const bodyText=chatLines.join("<br>");
+      return `<p style="color:#888888;"><span> ${e(sp.dispTab)}</span><span>${e(sp.name)}</span>:<span>${bodyText}</span></p>`;
+    }).join("\n") +
+    "</body></html>";
+  parsedDoc=new DOMParser().parseFromString(newHtml,"text/html");
+
   renderTable();
   initFilterDrops();
+  updatePreview();
   showStatus($id("processStatus"),`${newOrder.length} 件をテーブルに反映しました`,"ok");
 });
 
