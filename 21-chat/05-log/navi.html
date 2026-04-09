@@ -1,119 +1,49 @@
 <!DOCTYPE html>
-<!-- =============================================
-   21-chat/05-log/navi.html
-   ログ整形ツール 左ナビ（①ファイル読み込み）　
-   ============================================= -->
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ログ整形 ナビ</title>
-  <link rel="stylesheet" href="../../01-css/00-style.css" />
-  <link rel="stylesheet" href="../../01-css/21-chat-05-log.css" />
+<meta charset="UTF-8">
+<title>ログ解析</title>
+<link rel="stylesheet" href="../../01-css/21-chat-05-log.css" />
 </head>
 <body>
-<div class="navi-wrap">
+<div class="page-wrap">
+  <h1 class="page-title">ログ解析</h1>
 
-  <div class="navi-tool-title">📝 ログ整形ツール</div>
-
-  <!-- ① ファイル読み込み -->
-  <details class="navi-acc navi-acc-1" id="naviAcc1" open>
-    <summary>① ファイル読み込み</summary>
-    <div class="navi-acc-body">
-
-      <div class="drop-zone" id="dropZone">
-        <span class="drop-icon">📂</span>
-        ここにCCFoliaの<br>HTMLファイルを<br>ドラッグ＆ドロップ<br>またはクリックして選択
-        <input type="file" id="fileInput" accept=".html,.htm" />
-      </div>
-
-      <div class="file-name" id="fileName">ファイル未選択</div>
-
-      <div class="navi-btn-col">
-        <button class="btn-hover-21 bh-yellow" id="btnAnalyze" disabled><span>🔍 解析する</span></button>
-        <button class="btn-hover-21 bh-red"    id="btnReset"  ><span>🔄 リセット</span></button>
-      </div>
-
-      <div class="status-msg" id="loadStatus"></div>
-    </div>
-  </details>
-
-  <p class="navi-note">※ファイルはサーバーに送信されません</p>
-
+  <input type="file" id="fileInput">
+  <button id="parseBtn">解析</button>
 </div>
 
 <script>
-/* =============================================
-   navi.html メインスクリプト
-   ファイル読み込み → centerフレーム(index.html)へ渡す
-   ============================================= */
+let rawText = '';
 
-const dropZone   = document.getElementById("dropZone");
-const fileInput  = document.getElementById("fileInput");
-const fileNameEl = document.getElementById("fileName");
-const loadStatus = document.getElementById("loadStatus");
-const btnAnalyze = document.getElementById("btnAnalyze");
-const btnReset   = document.getElementById("btnReset");
-
-// centerフレームのindex.htmlを取得
-function getCenter() {
-  return parent && parent.frames && parent.frames["center"];
-}
-
-/* --- ファイル読み込み --- */
-dropZone.addEventListener("click",    () => fileInput.click());
-dropZone.addEventListener("dragover", e  => { e.preventDefault(); dropZone.classList.add("dragover"); });
-dropZone.addEventListener("dragleave",()  => dropZone.classList.remove("dragover"));
-dropZone.addEventListener("drop",     e  => {
-  e.preventDefault(); dropZone.classList.remove("dragover");
-  if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
-});
-fileInput.addEventListener("change", () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
-
-function setFile(file) {
-  if (!file.name.match(/\.html?$/i)) {
-    showStatus(loadStatus, "HTMLファイルを選択してください", "err"); return;
-  }
+document.getElementById('fileInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
   const reader = new FileReader();
-  reader.onload = ev => {
-    fileNameEl.textContent = "📄 " + file.name;
-    fileNameEl.className   = "file-name loaded";
-    btnAnalyze.disabled    = false;
-    showStatus(loadStatus, "読み込み完了。「解析する」を押してください", "info");
-    // centerへファイル情報を渡す
-    const center = getCenter();
-    if (center && center.receiveFile) {
-      center.receiveFile(file.name, ev.target.result);
-    }
-  };
-  reader.readAsText(file, "UTF-8");
-}
-
-/* --- 解析ボタン --- */
-btnAnalyze.addEventListener("click", () => {
-  const center = getCenter();
-  if (center && center.runAnalyze) center.runAnalyze();
+  reader.onload = ev=> rawText = ev.target.result;
+  reader.readAsText(file);
 });
 
-/* --- リセットボタン --- */
-btnReset.addEventListener("click", () => {
-  fileInput.value        = "";
-  fileNameEl.textContent = "ファイル未選択";
-  fileNameEl.className   = "file-name";
-  btnAnalyze.disabled    = true;
-  loadStatus.className   = "status-msg";
-  const center = getCenter();
-  if (center && center.runReset) center.runReset();
-});
+function parse(){
+  const lines = rawText.split('\n');
+  let result = [];
 
-/* --- centerからステータスを受け取る（index.htmlから呼ぶ） --- */
-function setNaviStatus(msg, type) {
-  showStatus(loadStatus, msg, type);
+  lines.forEach((line,i)=>{
+    if(!line.trim()) return;
+    result.push({
+      order: i+1,
+      tab: 'main',
+      kind: 'chara',
+      before: '',
+      after: '',
+      chat: line
+    });
+  });
+
+  localStorage.setItem('chatLogs', JSON.stringify(result));
+  alert('解析完了');
 }
 
-function showStatus(el, msg, type) {
-  if (!el) return; el.textContent = msg; el.className = "status-msg show " + type;
-}
+document.getElementById('parseBtn').onclick = parse;
 </script>
 </body>
 </html>
