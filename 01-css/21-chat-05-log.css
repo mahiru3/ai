@@ -1,5 +1,5 @@
 /* =============================================
-   21-chat-05-log.css  ログ整形ツール専用　
+   21-chat-05-log.css  ログ整形ツール専用
    ============================================= */
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -389,3 +389,17 @@ table.sp-table tr[data-key] { user-select: none; }
 .sp-table-scroll::-webkit-scrollbar { width: 5px; }
 .sp-table-scroll::-webkit-scrollbar-track { background: #f0ede8; border-radius: 3px; }
 .sp-table-scroll::-webkit-scrollbar-thumb { background: #c8c3bb; border-radius: 3px; }
+
+/* 「順」列 */
+.td-order {
+  text-align: center; color: #aaa; font-size: 11px;
+  padding: 4px 4px !important; min-width: 30px;
+}
+
+/* 再採番・重複ボタン */
+.summary-sub-btns {
+  display: flex; gap: 4px; margin-left: auto; align-items: center;
+}
+.summary-btn-sm {
+  padding: 2px 8px; font-size: 10px; font-weight: 600; flex-shrink: 0;
+}
