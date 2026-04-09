@@ -146,7 +146,8 @@ table.sp-table {
   width: 100%; border-collapse: collapse; font-size: 12px;
   table-layout: fixed;
 }
-table.sp-table th, table.sp-table td { overflow: hidden; }
+table.sp-table td { overflow: hidden; }
+table.sp-table th { overflow: visible; }
 
 table.sp-table th {
   background: #f0ede8; color: #444; font-weight: 700;
