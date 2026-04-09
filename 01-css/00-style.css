@@ -71,8 +71,7 @@ html, body {
   .layout {
     grid-template-columns: 180px 1fr 220px;
   }
-
-
+}
 
 /* =============================================
    btn-hover-21 ボタンデザイン（共通）
