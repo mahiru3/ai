@@ -23,25 +23,44 @@
 
   <!-- ② 発言一覧 -->
   <details class="accordion-008 acc-color-2" id="acc-2">
-    <summary>② 発言一覧
-      <span class="summary-table-btns">
-        <button class="btn-hover-21 bh-gray summary-btn-sm" id="btnShowDup" type="button"><span>重複表示</span></button>
-        <button class="btn-hover-21 bh-gray summary-btn-sm" id="btnHideDup" type="button"><span>重複非表示</span></button>
-      </span>
-      <span class="summary-right-btns">
-        <button class="btn-scroll" id="btnScrollBottom" type="button">▼末尾</button>
-        <button class="btn-delete" id="btnDelChecked" type="button">🗑️削除実行</button>
-        <button class="btn-update" id="btnRefresh" type="button"><span>🔃 更新</span></button>
-      </span>
-    </summary>
+    <summary>② 発言一覧</summary>
     <div class="accordion-body">
       <div class="sp-table-wrap sp-table-scroll">
         <table class="sp-table" id="spTable">
           <thead>
+            <!-- ボタン行：テーブル列に合わせて配置 -->
+            <tr class="thead-btn-row">
+              <th class="th-col th-btn">
+                <div class="th-inner">
+                  <button class="btn-jump" id="btnReorder" type="button" title="現在の並び順でNo採番">🔃採番</button>
+                </div>
+              </th>
+              <th class="th-col th-btn" colspan="2">
+                <div class="th-inner">
+                  <button class="btn-hover-21 bh-gray summary-btn-sm" id="btnShowDup" type="button"><span>重複表示</span></button>
+                  <button class="btn-hover-21 bh-gray summary-btn-sm" id="btnHideDup" type="button"><span>重複非表示</span></button>
+                </div>
+              </th>
+              <th class="th-col th-btn">
+              </th>
+              <th class="th-col th-btn">
+              </th>
+              <th class="th-col th-btn">
+                <div class="th-inner">
+                  <button class="btn-scroll" id="btnScrollBottom" type="button">▼末尾</button>
+                  <button class="btn-delete" id="btnDelChecked" type="button">🗑️削除実行</button>
+                </div>
+              </th>
+              <th class="th-col th-btn">
+                <div class="th-inner">
+                  <button class="btn-update" id="btnRefresh" type="button"><span>🔃 更新</span></button>
+                </div>
+              </th>
+            </tr>
+            <!-- 見出し行 -->
             <tr>
               <th class="th-col" id="th-order">
                 <div class="th-inner">
-                  <button class="btn-jump" id="btnReorder" type="button" title="現在の並び順でNo採番">🔃採番</button>
                   <button class="sort-col-btn" data-col="order" title="ソート">⇅</button>
                 </div>
                 <div class="col-resizer"></div>
@@ -72,7 +91,6 @@
                   <span class="th-label">変更前</span>
                   <button class="sort-col-btn" data-col="name" title="ソート">⇅</button>
                   <button class="filter-btn"   data-col="name" title="フィルタ">▼</button>
-
                 </div>
                 <div class="filter-drop" id="filterDrop-name"></div>
                 <div class="col-resizer"></div>
