@@ -1,30 +1,9 @@
-/* === 強制グリッド（検証用） === */
-body.layout{
-  display: grid !important;
-  height: 100vh !important;
-  grid-template-rows: 64px 1fr 44px !important;
-  grid-template-columns: 220px 1fr 260px !important;
-  grid-template-areas:
-    "top top top"
-    "left center right"
-    "bottom bottom bottom" !important;
-}
-.area-top{ grid-area: top !important; }
-.area-left{ grid-area: left !important; }
-.area-center{ grid-area: center !important; }
-.area-right{ grid-area: right !important; }
-.area-bottom{ grid-area: bottom !important; }
-
-.frame{ width:100% !important; height:100% !important; border:0 !important; display:block !important; }
-.area{ border:1px solid #ddd !important; background:#fff !important; box-sizing:border-box !important; }
-/* === ここまで === */
-
 html, body {
   height: 100%;
   margin: 0;
 }
 
-.layout {
+body.layout {
   display: grid;
   height: 100vh;
   grid-template-rows: 64px 1fr 44px;
