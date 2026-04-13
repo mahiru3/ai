@@ -85,7 +85,8 @@ function buildSVGText(s) {
       paths += `<!-- V${i+1} -->\n<g opacity="0">\n  <path d="${d}" fill="none" stroke="${arrowColor}" stroke-width="${a.sw}" stroke-linecap="round" stroke-linejoin="round" filter="url(#g${i+1})"/>\n  <animate attributeName="opacity" values="${kf.values}" keyTimes="${kf.keyTimes}" dur="${dur}s" repeatCount="indefinite"/>\n</g>\n`;
     }
   });
-  return `<svg width="${cvW}" height="${cvH}" viewBox="0 0 ${cvW} ${cvH}" xmlns="http://www.w3.org/2000/svg">\n<rect width="${cvW}" height="${cvH}" fill="${bgColor}"/>\n${defs}\n${paths.trim()}\n</svg>`;
+  const bgRect = s.bgTransparent ? "" : `\n<rect width="${cvW}" height="${cvH}" fill="${bgColor}"/>`;
+  return `<svg width="${cvW}" height="${cvH}" viewBox="0 0 ${cvW} ${cvH}" xmlns="http://www.w3.org/2000/svg">${bgRect}\n${defs}\n${paths.trim()}\n</svg>`;
 }
 
 // ---- 既存SVGの属性を書き換えて更新（再insert不要） ----
@@ -103,7 +104,13 @@ function updateSVGInPlace(s) {
 
   // 背景
   const bg = svg.querySelector("rect");
-  if (bg) bg.setAttribute("fill", bgColor);
+  if (bg) {
+    if (s.bgTransparent) {
+      bg.setAttribute("fill", "none");
+    } else {
+      bg.setAttribute("fill", bgColor);
+    }
+  }
 
   // フィルター
   arrows.forEach((a, i) => {
