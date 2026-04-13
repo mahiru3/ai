@@ -1,1 +1,312 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>矢印SVGジェネレーター</title>
+  <link rel="stylesheet" href="../../01-css/00-style.css" />
+  <link rel="stylesheet" href="../../01-css/31-csv-20-yjrs.css" />
+</head>
+<body>
+<div class="page-wrap">
 
+  <h1 class="page-title">🏹 矢印SVGジェネレーター</h1>
+  <p class="page-subtitle">ネオン矢印アニメーションSVGをカスタマイズしてダウンロードできます。ページ内完結・サーバー送信なし。</p>
+
+  <!-- ① プレビュー -->
+  <details class="accordion-008 acc-color-1" id="acc-1" open>
+    <summary>① プレビュー</summary>
+    <div class="accordion-body">
+      <div class="preview-area">
+        <div class="svg-preview-wrap" id="previewWrap">
+          <!-- SVG がここに挿入される -->
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <!-- ② 全体設定 -->
+  <details class="accordion-008 acc-color-2" id="acc-2" open>
+    <summary>② 全体設定</summary>
+    <div class="accordion-body">
+      <div class="ctrl-grid">
+
+        <div class="ctrl-section-title">キャンバス</div>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label">幅 (px)</span>
+          <input type="range" id="cvW" min="200" max="800" step="10" value="480" />
+          <span class="ctrl-val" id="cvWVal">480</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">高さ (px)</span>
+          <input type="range" id="cvH" min="200" max="800" step="10" value="480" />
+          <span class="ctrl-val" id="cvHVal">480</span>
+        </div>
+
+        <div class="ctrl-section-title">色</div>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label">背景色</span>
+          <input type="color" id="bgColor" value="#0a0a0f" />
+          <span class="ctrl-val" id="bgColorVal">#0a0a0f</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">矢印色</span>
+          <input type="color" id="arrowColor" value="#00ffcc" />
+          <span class="ctrl-val" id="arrowColorVal">#00ffcc</span>
+        </div>
+
+        <div class="ctrl-section-title">矢印の形</div>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label">左端 X</span>
+          <input type="range" id="xLeft" min="0" max="400" step="5" value="100" />
+          <span class="ctrl-val" id="xLeftVal">100</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">右端 X</span>
+          <input type="range" id="xRight" min="100" max="800" step="5" value="380" />
+          <span class="ctrl-val" id="xRightVal">380</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">頂点 X</span>
+          <input type="range" id="xMid" min="50" max="750" step="5" value="240" />
+          <span class="ctrl-val" id="xMidVal">240</span>
+        </div>
+
+        <div class="ctrl-section-title">アニメーション</div>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label">速度 (秒)</span>
+          <input type="range" id="dur" min="0.5" max="6" step="0.1" value="2.4" />
+          <span class="ctrl-val" id="durVal">2.4s</span>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+  <!-- ③ 矢印ごとの設定 -->
+  <details class="accordion-008 acc-color-3" id="acc-3" open>
+    <summary>③ 矢印ごとの設定（V1=上 / V4=下・常時表示）</summary>
+    <div class="accordion-body">
+      <div class="arrow-settings" id="arrowSettings">
+        <!-- JS で生成 -->
+      </div>
+    </div>
+  </details>
+
+  <!-- ④ コード出力・DL -->
+  <details class="accordion-008 acc-color-4" id="acc-4">
+    <summary>④ コード出力・ダウンロード</summary>
+    <div class="accordion-body">
+      <div class="menu-btn-row">
+        <button class="menu-btn primary" id="btnCopy">📋 SVGコードをコピー</button>
+        <button class="menu-btn dl" id="btnDL">💾 .svgダウンロード</button>
+      </div>
+      <div class="status-msg" id="codeStatus"></div>
+      <div class="code-output" id="codeOutput">← 上の設定を変更するとここに反映されます</div>
+    </div>
+  </details>
+
+</div>
+
+<script>
+/* =============================================
+   矢印SVGジェネレーター
+   ============================================= */
+
+// ---- デフォルト値 ----
+const DEFAULTS = {
+  cvW: 480, cvH: 480,
+  bgColor: "#0a0a0f", arrowColor: "#00ffcc",
+  xLeft: 100, xRight: 380, xMid: 240,
+  dur: 2.4,
+  arrows: [
+    // { yTop, yTip, sw, glow, label }
+    { yTop: 110, yTip: 160, sw: 30, glow: 6  },  // V1
+    { yTop: 175, yTip: 225, sw: 35, glow: 7  },  // V2
+    { yTop: 250, yTip: 300, sw: 40, glow: 9  },  // V3
+    { yTop: 340, yTip: 410, sw: 60, glow: 12 },  // V4 常時
+  ]
+};
+
+// SMIL keyTimes / values for each V (V4 = always-on, no animate)
+const ANIM_KEYFRAMES = [
+  { values: "0;0;0;0;0;0;1;1;0", keyTimes: "0;0.1;0.2;0.35;0.45;0.55;0.65;0.9;1" }, // V1
+  { values: "0;0;0;0;1;1;1;1;0", keyTimes: "0;0.1;0.2;0.35;0.45;0.6;0.7;0.9;1"  }, // V2
+  { values: "0;0;1;1;1;1;1;1;0", keyTimes: "0;0.1;0.2;0.4;0.6;0.7;0.8;0.9;1"   }, // V3
+];
+
+let state = JSON.parse(JSON.stringify(DEFAULTS));
+
+// ---- ユーティリティ ----
+function get(id) { return document.getElementById(id); }
+function bind(id, key, fmt) {
+  const el = get(id);
+  const valEl = get(id + "Val");
+  el.addEventListener("input", () => {
+    let v = el.type === "color" ? el.value : Number(el.value);
+    state[key] = v;
+    if (valEl) valEl.textContent = fmt ? fmt(v) : v;
+    render();
+  });
+  // 初期表示
+  if (valEl) valEl.textContent = fmt ? fmt(el.value) : el.value;
+}
+
+// ---- 矢印ごと行を生成 ----
+function buildArrowSettings() {
+  const wrap = get("arrowSettings");
+  wrap.innerHTML = "";
+  state.arrows.forEach((a, i) => {
+    const isV4 = (i === 3);
+    const row = document.createElement("div");
+    row.className = "arrow-row";
+    row.innerHTML = `
+      <span class="arrow-row-label">V${i+1}${isV4 ? "★" : ""}</span>
+      <span class="ctrl-label">上端Y</span>
+      <input type="range" class="av" data-i="${i}" data-k="yTop" min="0" max="700" step="5" value="${a.yTop}" style="flex:1" />
+      <span class="ctrl-val av-val" data-i="${i}" data-k="yTop">${a.yTop}</span>
+      <span class="ctrl-label" style="margin-left:8px;">頂点Y</span>
+      <input type="range" class="av" data-i="${i}" data-k="yTip" min="10" max="780" step="5" value="${a.yTip}" style="flex:1" />
+      <span class="ctrl-val av-val" data-i="${i}" data-k="yTip">${a.yTip}</span>
+      <span class="ctrl-label" style="margin-left:8px;">線幅</span>
+      <input type="range" class="av" data-i="${i}" data-k="sw" min="4" max="100" step="1" value="${a.sw}" style="flex:1" />
+      <span class="ctrl-val av-val" data-i="${i}" data-k="sw">${a.sw}</span>
+      <span class="ctrl-label" style="margin-left:8px;">グロー</span>
+      <input type="range" class="av" data-i="${i}" data-k="glow" min="1" max="30" step="1" value="${a.glow}" style="flex:1" />
+      <span class="ctrl-val av-val" data-i="${i}" data-k="glow">${a.glow}</span>
+    `;
+    wrap.appendChild(row);
+  });
+
+  // イベント委譲
+  wrap.addEventListener("input", e => {
+    const el = e.target;
+    if (!el.classList.contains("av")) return;
+    const i = +el.dataset.i;
+    const k = el.dataset.k;
+    state.arrows[i][k] = Number(el.value);
+    // val表示更新
+    wrap.querySelector(`.av-val[data-i="${i}"][data-k="${k}"]`).textContent = el.value;
+    render();
+  });
+}
+
+// ---- SVG生成 ----
+function buildSVG() {
+  const { cvW, cvH, bgColor, arrowColor, xLeft, xRight, xMid, dur, arrows } = state;
+  const col = arrowColor;
+
+  // defs / filters
+  let defs = `<defs>\n`;
+  arrows.forEach((a, i) => {
+    const sd = a.glow;
+    defs += `  <filter id="g${i+1}" x="-60%" y="-60%" width="220%" height="220%">
+    <feGaussianBlur stdDeviation="${sd}" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>\n`;
+  });
+  defs += `</defs>`;
+
+  // arrows
+  let paths = "";
+  arrows.forEach((a, i) => {
+    const isV4 = (i === 3);
+    const path = `M ${xLeft},${a.yTop} L ${xMid},${a.yTip} L ${xRight},${a.yTop}`;
+    if (isV4) {
+      paths += `<!-- V4: 常時表示 -->
+<path d="${path}"
+  fill="none" stroke="${col}" stroke-width="${a.sw}"
+  stroke-linecap="round" stroke-linejoin="round"
+  filter="url(#g${i+1})"/>
+`;
+    } else {
+      const kf = ANIM_KEYFRAMES[i];
+      paths += `<!-- V${i+1} -->
+<g opacity="0">
+  <path d="${path}"
+    fill="none" stroke="${col}" stroke-width="${a.sw}"
+    stroke-linecap="round" stroke-linejoin="round"
+    filter="url(#g${i+1})"/>
+  <animate attributeName="opacity"
+    values="${kf.values}"
+    keyTimes="${kf.keyTimes}"
+    dur="${dur}s" repeatCount="indefinite"/>
+</g>
+`;
+    }
+  });
+
+  return `<svg width="${cvW}" height="${cvH}" viewBox="0 0 ${cvW} ${cvH}" xmlns="http://www.w3.org/2000/svg">
+<rect width="${cvW}" height="${cvH}" fill="${bgColor}"/>
+${defs}
+${paths.trim()}
+</svg>`;
+}
+
+// ---- レンダリング ----
+function render() {
+  const svg = buildSVG();
+
+  // プレビュー
+  get("previewWrap").innerHTML = svg;
+
+  // コード出力
+  get("codeOutput").textContent = svg;
+}
+
+// ---- グローバルバインド ----
+function bindAll() {
+  bind("cvW",       "cvW",       v => v);
+  bind("cvH",       "cvH",       v => v);
+  bind("bgColor",   "bgColor",   v => v);
+  bind("arrowColor","arrowColor",v => v);
+  bind("xLeft",     "xLeft",     v => v);
+  bind("xRight",    "xRight",    v => v);
+  bind("xMid",      "xMid",      v => v);
+  bind("dur",       "dur",       v => v + "s");
+}
+
+// ---- コピー・DL ----
+get("btnCopy").addEventListener("click", () => {
+  const svg = buildSVG();
+  navigator.clipboard.writeText(svg).then(() => {
+    showStatus("ok", "SVGコードをクリップボードにコピーしました！");
+  }).catch(() => {
+    showStatus("err", "コピーに失敗しました。手動でコピーしてください。");
+  });
+});
+
+get("btnDL").addEventListener("click", () => {
+  const svg = buildSVG();
+  const a = Object.assign(document.createElement("a"), {
+    href: URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" })),
+    download: "arrow.svg"
+  });
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showStatus("ok", "ダウンロードしました！");
+});
+
+function showStatus(type, msg) {
+  const el = get("codeStatus");
+  el.textContent = msg;
+  el.className = "status-msg show " + type;
+}
+
+// ---- accordion open (naviから呼ぶ) ----
+function openAccordion(id) {
+  const el = document.getElementById(id);
+  if (el) { el.setAttribute("open", ""); el.scrollIntoView({ behavior: "smooth", block: "start" }); }
+}
+
+// ---- 初期化 ----
+bindAll();
+buildArrowSettings();
+render();
+</script>
+</body>
+</html>
