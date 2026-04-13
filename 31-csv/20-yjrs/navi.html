@@ -12,63 +12,277 @@
 
   <div class="navi-tool-title">🏹 矢印SVGジェネレーター</div>
 
-  <!-- ① プレビュー -->
+  <!-- ① 全体設定 -->
   <details class="navi-acc navi-acc-1" open>
-    <summary>① プレビュー</summary>
+    <summary>① 全体設定</summary>
     <div class="navi-acc-body">
-      リアルタイムでSVGを確認<br>
-      キャンバスサイズも変更可<br>
-      <a class="navi-link" href="index.html" target="center"
-         onclick="openAccInCenter('acc-1')">▶ プレビューを開く</a>
+
+      <div class="ctrl-section-title">キャンバス</div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">幅</span>
+        <input type="range" id="cvW" min="200" max="800" step="10" value="480" />
+        <span class="ctrl-val" id="cvWVal">480</span>
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">高さ</span>
+        <input type="range" id="cvH" min="200" max="800" step="10" value="480" />
+        <span class="ctrl-val" id="cvHVal">480</span>
+      </div>
+
+      <div class="ctrl-section-title">色</div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">背景色</span>
+        <input type="color" id="bgColor" value="#0a0a0f" />
+        <span class="ctrl-val" id="bgColorVal">#0a0a0f</span>
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">矢印色</span>
+        <input type="color" id="arrowColor" value="#00ffcc" />
+        <span class="ctrl-val" id="arrowColorVal">#00ffcc</span>
+      </div>
+
+      <div class="ctrl-section-title">矢印の形（X座標）</div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">左端 X</span>
+        <input type="range" id="xLeft" min="0" max="400" step="5" value="100" />
+        <span class="ctrl-val" id="xLeftVal">100</span>
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">右端 X</span>
+        <input type="range" id="xRight" min="100" max="800" step="5" value="380" />
+        <span class="ctrl-val" id="xRightVal">380</span>
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">頂点 X</span>
+        <input type="range" id="xMid" min="50" max="750" step="5" value="240" />
+        <span class="ctrl-val" id="xMidVal">240</span>
+      </div>
+
+      <div class="ctrl-section-title">アニメーション速度</div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">周期 (秒)</span>
+        <input type="range" id="dur" min="0.5" max="6" step="0.1" value="2.4" />
+        <span class="ctrl-val" id="durVal">2.4s</span>
+      </div>
+
     </div>
   </details>
 
-  <!-- ② 全体設定 -->
-  <details class="navi-acc navi-acc-2">
-    <summary>② 全体設定</summary>
+  <!-- ② 矢印ごとの設定 -->
+  <details class="navi-acc navi-acc-2" open>
+    <summary>② 矢印ごとの設定</summary>
     <div class="navi-acc-body">
-      背景色・矢印色・キャンバスサイズ<br>
-      左端・右端・頂点のX座標<br>
-      アニメーション速度<br>
-      <a class="navi-link" href="index.html" target="center"
-         onclick="openAccInCenter('acc-2')">▶ 全体設定を開く</a>
+      <p class="navi-hint">V1=上（点滅） V4=下（常時表示）<br>行間＝Vどうしの間隔スライダーで調整</p>
+      <div id="arrowSettings"><!-- JS生成 --></div>
     </div>
   </details>
 
-  <!-- ③ 矢印ごとの設定 -->
+  <!-- リンク -->
   <details class="navi-acc navi-acc-3">
-    <summary>③ 矢印ごとの設定</summary>
+    <summary>③ コード出力・DL</summary>
     <div class="navi-acc-body">
-      V1〜V4の線幅・Y座標・グロー強度<br>
-      V4は常時表示（アニメなし）<br>
+      SVGコードのコピー・.svgダウンロード<br>
       <a class="navi-link" href="index.html" target="center"
-         onclick="openAccInCenter('acc-3')">▶ 矢印設定を開く</a>
-    </div>
-  </details>
-
-  <!-- ④ コード出力 -->
-  <details class="navi-acc navi-acc-4">
-    <summary>④ コード出力・DL</summary>
-    <div class="navi-acc-body">
-      SVGコードのコピー<br>
-      .svgファイルのダウンロード<br>
-      <a class="navi-link" href="index.html" target="center"
-         onclick="openAccInCenter('acc-4')">▶ コード出力を開く</a>
+         onclick="openAccInCenter('acc-code')">▶ コード出力を開く</a>
     </div>
   </details>
 
   <p class="navi-note">※サーバー送信なし・完全ローカル処理</p>
 
 </div>
-
 <script>
+/* =============================================
+   navi.html — 設定パネル全部入り
+   変更のたびに postMessage で index.html へ送信
+   ============================================= */
+
+// ---- デフォルト ----
+// Y座標は「先頭の上端Y」＋「間隔」で計算する
+// arrows[i].yTop / yTip は計算して送る
+const DEFAULTS = {
+  cvW: 480, cvH: 480,
+  bgColor: "#0a0a0f", arrowColor: "#00ffcc",
+  xLeft: 100, xRight: 380, xMid: 240,
+  dur: 2.4,
+  // V固有
+  v: [
+    { sw: 30, glow: 6,  tipOffset: 50 },  // V1: tipOffset = 頂点Y - 上端Y
+    { sw: 35, glow: 7,  tipOffset: 50 },  // V2
+    { sw: 40, glow: 9,  tipOffset: 50 },  // V3
+    { sw: 60, glow: 12, tipOffset: 70 },  // V4
+  ],
+  // 最初の上端Y
+  yStart: 110,
+  // 行間（V1-V2, V2-V3, V3-V4 の上端Y差）
+  gaps: [65, 75, 90],
+};
+
+let state = JSON.parse(JSON.stringify(DEFAULTS));
+let pausing = false;   // 操作中フラグ
+let resumeTimer = null;
+
+// ---- Y座標計算 ----
+function calcArrows() {
+  const arr = [];
+  let yTop = state.yStart;
+  for (let i = 0; i < 4; i++) {
+    const v = state.v[i];
+    arr.push({ yTop, yTip: yTop + v.tipOffset, sw: v.sw, glow: v.glow });
+    if (i < 3) yTop += state.gaps[i];
+  }
+  return arr;
+}
+
+// ---- postMessage 送信 ----
+function send(isPausing) {
+  const center = parent && parent.frames && parent.frames["center"];
+  if (!center) return;
+  const arrows = calcArrows();
+  center.postMessage({
+    type: "yjrs-update",
+    pausing: isPausing,
+    state: {
+      cvW: state.cvW, cvH: state.cvH,
+      bgColor: state.bgColor, arrowColor: state.arrowColor,
+      xLeft: state.xLeft, xRight: state.xRight, xMid: state.xMid,
+      dur: state.dur,
+      arrows
+    }
+  }, "*");
+}
+
+// ---- 操作中: pause 送信、操作終了: resume 送信 ----
+function onInput(updateFn) {
+  updateFn();
+  clearTimeout(resumeTimer);
+  pausing = true;
+  send(true);   // アニメ停止しながらプレビュー更新
+  resumeTimer = setTimeout(() => {
+    pausing = false;
+    send(false); // アニメ再開（新SVGを再insert）
+  }, 600);
+}
+
+// ---- 共通バインド ----
+function bindRange(id, setter, fmt) {
+  const el  = document.getElementById(id);
+  const val = document.getElementById(id + "Val");
+  el.addEventListener("input", () => {
+    onInput(() => setter(Number(el.value)));
+    if (val) val.textContent = fmt ? fmt(Number(el.value)) : el.value;
+  });
+  if (val) val.textContent = fmt ? fmt(el.value) : el.value;
+}
+function bindColor(id, setter) {
+  const el  = document.getElementById(id);
+  const val = document.getElementById(id + "Val");
+  el.addEventListener("input", () => {
+    onInput(() => setter(el.value));
+    if (val) val.textContent = el.value;
+  });
+  if (val) val.textContent = el.value;
+}
+
+// ---- 矢印ごとの設定 UI ----
+function buildArrowSettings() {
+  const wrap = document.getElementById("arrowSettings");
+  wrap.innerHTML = "";
+
+  // V1〜V4 各矢印
+  for (let i = 0; i < 4; i++) {
+    const isV4 = i === 3;
+    const v = state.v[i];
+
+    const sec = document.createElement("div");
+    sec.className = "arrow-block";
+    sec.innerHTML = `
+      <div class="arrow-block-title">V${i+1}${isV4 ? " ★常時表示" : ""}</div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">線幅</span>
+        <input type="range" class="av" data-i="${i}" data-k="sw" min="4" max="100" step="1" value="${v.sw}" />
+        <span class="ctrl-val av-val" data-i="${i}" data-k="sw">${v.sw}</span>
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">頂点の深さ</span>
+        <input type="range" class="av" data-i="${i}" data-k="tipOffset" min="10" max="200" step="5" value="${v.tipOffset}" />
+        <span class="ctrl-val av-val" data-i="${i}" data-k="tipOffset">${v.tipOffset}</span>
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">グロー</span>
+        <input type="range" class="av" data-i="${i}" data-k="glow" min="1" max="30" step="1" value="${v.glow}" />
+        <span class="ctrl-val av-val" data-i="${i}" data-k="glow">${v.glow}</span>
+      </div>
+      ${i < 3 ? `
+      <div class="ctrl-row gap-row">
+        <span class="ctrl-label">↕ V${i+1}→V${i+2} 行間</span>
+        <input type="range" class="ag" data-gi="${i}" min="20" max="200" step="5" value="${state.gaps[i]}" />
+        <span class="ctrl-val ag-val" data-gi="${i}">${state.gaps[i]}</span>
+      </div>` : ""}
+    `;
+    wrap.appendChild(sec);
+  }
+
+  // 先頭のY
+  const yStartBlock = document.createElement("div");
+  yStartBlock.className = "arrow-block";
+  yStartBlock.innerHTML = `
+    <div class="arrow-block-title">全体の位置</div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">開始Y（V1上端）</span>
+      <input type="range" id="yStart" min="0" max="400" step="5" value="${state.yStart}" />
+      <span class="ctrl-val" id="yStartVal">${state.yStart}</span>
+    </div>
+  `;
+  wrap.prepend(yStartBlock);
+
+  // ---- イベント委譲（矢印プロパティ） ----
+  wrap.addEventListener("input", e => {
+    const el = e.target;
+
+    if (el.classList.contains("av")) {
+      const i = +el.dataset.i;
+      const k = el.dataset.k;
+      onInput(() => { state.v[i][k] = Number(el.value); });
+      wrap.querySelector(`.av-val[data-i="${i}"][data-k="${k}"]`).textContent = el.value;
+    }
+
+    if (el.classList.contains("ag")) {
+      const gi = +el.dataset.gi;
+      onInput(() => { state.gaps[gi] = Number(el.value); });
+      wrap.querySelector(`.ag-val[data-gi="${gi}"]`).textContent = el.value;
+    }
+
+    if (el.id === "yStart") {
+      onInput(() => { state.yStart = Number(el.value); });
+      document.getElementById("yStartVal").textContent = el.value;
+    }
+  });
+}
+
+// ---- グローバルバインド ----
+bindRange("cvW",       v => state.cvW = v);
+bindRange("cvH",       v => state.cvH = v);
+bindColor("bgColor",   v => state.bgColor = v);
+bindColor("arrowColor",v => state.arrowColor = v);
+bindRange("xLeft",     v => state.xLeft = v);
+bindRange("xRight",    v => state.xRight = v);
+bindRange("xMid",      v => state.xMid = v);
+bindRange("dur",       v => state.dur = v, v => v + "s");
+
+// ---- 初期化 ----
+buildArrowSettings();
+
+// ページ読み込み後に初回送信（少し待って center iframe が準備できてから）
+window.addEventListener("load", () => {
+  setTimeout(() => send(false), 300);
+});
+
+// ---- naviからcenterを開く ----
 function openAccInCenter(accId) {
   const center = parent && parent.frames && parent.frames["center"];
   if (!center) return;
   setTimeout(() => {
-    try {
-      if (center.openAccordion) center.openAccordion(accId);
-    } catch(e) {}
+    try { if (center.openAccordion) center.openAccordion(accId); } catch(e){}
   }, 400);
 }
 </script>
