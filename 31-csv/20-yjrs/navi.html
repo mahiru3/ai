@@ -1,1 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>矢印SVG ナビ</title>
+  <link rel="stylesheet" href="../../01-css/00-style.css" />
+  <link rel="stylesheet" href="../../01-css/31-csv-20-yjrs.css" />
+</head>
+<body>
+<div class="navi-wrap">
 
+  <div class="navi-tool-title">🏹 矢印SVGジェネレーター</div>
+
+  <!-- ① プレビュー -->
+  <details class="navi-acc navi-acc-1" open>
+    <summary>① プレビュー</summary>
+    <div class="navi-acc-body">
+      リアルタイムでSVGを確認<br>
+      キャンバスサイズも変更可<br>
+      <a class="navi-link" href="index.html" target="center"
+         onclick="openAccInCenter('acc-1')">▶ プレビューを開く</a>
+    </div>
+  </details>
+
+  <!-- ② 全体設定 -->
+  <details class="navi-acc navi-acc-2">
+    <summary>② 全体設定</summary>
+    <div class="navi-acc-body">
+      背景色・矢印色・キャンバスサイズ<br>
+      左端・右端・頂点のX座標<br>
+      アニメーション速度<br>
+      <a class="navi-link" href="index.html" target="center"
+         onclick="openAccInCenter('acc-2')">▶ 全体設定を開く</a>
+    </div>
+  </details>
+
+  <!-- ③ 矢印ごとの設定 -->
+  <details class="navi-acc navi-acc-3">
+    <summary>③ 矢印ごとの設定</summary>
+    <div class="navi-acc-body">
+      V1〜V4の線幅・Y座標・グロー強度<br>
+      V4は常時表示（アニメなし）<br>
+      <a class="navi-link" href="index.html" target="center"
+         onclick="openAccInCenter('acc-3')">▶ 矢印設定を開く</a>
+    </div>
+  </details>
+
+  <!-- ④ コード出力 -->
+  <details class="navi-acc navi-acc-4">
+    <summary>④ コード出力・DL</summary>
+    <div class="navi-acc-body">
+      SVGコードのコピー<br>
+      .svgファイルのダウンロード<br>
+      <a class="navi-link" href="index.html" target="center"
+         onclick="openAccInCenter('acc-4')">▶ コード出力を開く</a>
+    </div>
+  </details>
+
+  <p class="navi-note">※サーバー送信なし・完全ローカル処理</p>
+
+</div>
+
+<script>
+function openAccInCenter(accId) {
+  const center = parent && parent.frames && parent.frames["center"];
+  if (!center) return;
+  setTimeout(() => {
+    try {
+      if (center.openAccordion) center.openAccordion(accId);
+    } catch(e) {}
+  }, 400);
+}
+</script>
+</body>
+</html>
