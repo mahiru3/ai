@@ -40,6 +40,7 @@
         <span class="ctrl-label">背景色</span>
         <input type="color" id="bgColor" value="#0a0a0f" />
         <input type="text"  id="bgColorN" value="#0a0a0f" class="hex-input" maxlength="7" />
+        <label class="trans-label"><input type="checkbox" id="bgTransparent" /> 透明</label>
       </div>
       <div class="ctrl-row">
         <span class="ctrl-label">矢印色</span>
@@ -110,6 +111,7 @@
 const DEFAULTS = {
   cvW: 480, cvH: 480,
   bgColor: "#0a0a0f", arrowColor: "#00ffcc",
+  bgTransparent: false,
   xLeft: 100, xRight: 380, xMid: 240,
   dur: 2.4,
   v: [
@@ -149,7 +151,8 @@ function sendUpdate() {
     type: "yjrs-update",
     state: {
       cvW: state.cvW, cvH: state.cvH,
-      bgColor: state.bgColor, arrowColor: state.arrowColor,
+      bgColor: state.bgColor, bgTransparent: state.bgTransparent,
+      arrowColor: state.arrowColor,
       xLeft: state.xLeft, xRight: state.xRight, xMid: state.xMid,
       dur: state.dur,
       arrows: calcArrows()
@@ -354,6 +357,14 @@ bindPair("xMid", "xMidN", v => state.xMid  = v);
 bindPair("dur",  "durN",  v => state.dur   = v);
 bindColorPair("bgColor",   "bgColorN",   v => state.bgColor    = v);
 bindColorPair("arrowColor","arrowColorN",v => state.arrowColor = v);
+
+// 透明チェックボックス
+document.getElementById("bgTransparent").addEventListener("change", function() {
+  const disabled = this.checked;
+  document.getElementById("bgColor").disabled  = disabled;
+  document.getElementById("bgColorN").disabled = disabled;
+  onChange(() => { state.bgTransparent = disabled; });
+});
 
 // ---- 初期化 ----
 buildArrowSettings();
