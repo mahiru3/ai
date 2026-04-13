@@ -17,7 +17,7 @@
   <details class="accordion-008 acc-color-1" id="acc-preview" open>
     <summary>① プレビュー</summary>
     <div class="accordion-body">
-      <div class="preview-hint" id="previewHint">⏸ 設定中はアニメーションを停止しています</div>
+      <div class="preview-hint" id="previewHint">⏸ 調整モード中 — 左パネルの「▶ プレビュー開始」でアニメーション確認</div>
       <div class="preview-area">
         <div class="svg-preview-wrap" id="previewWrap">
           <div class="preview-empty">左パネルで設定してください</div>
@@ -44,6 +44,14 @@
 /* =============================================
    index.html — プレビュー & コード出力のみ
    設定は navi.html → postMessage で受け取る
+
+   【アニメ制御の原則】
+   - SVGは常に1回だけinsertし、以後は再insertしない
+   - pause/resume は SVGSVGElement.pauseAnimations() / unpauseAnimations() のみ
+   - pausing=true → pauseAnimations()
+   - pausing=false → unpauseAnimations()
+   - state変更時はSVGを差し替えず属性だけ書き換える
+     （ただしSVGの構造変化=V数変更などはやむなく再insert→即pause）
    ============================================= */
 
 const ANIM_KF = [
@@ -52,9 +60,12 @@ const ANIM_KF = [
   { values:"0;0;1;1;1;1;1;1;0", keyTimes:"0;0.1;0.2;0.4;0.6;0.7;0.8;0.9;1"   },
 ];
 
-let currentSVG = "";
+let currentSVG  = "";
+let isPaused    = true;   // 初期は停止状態
+let svgInserted = false;  // SVGが既にinsert済みか
 
-function buildSVG(s) {
+// ---- SVGテキスト生成（ダウンロード用） ----
+function buildSVGText(s) {
   const { cvW, cvH, bgColor, arrowColor, xLeft, xRight, xMid, dur, arrows } = s;
   let defs = "<defs>\n";
   arrows.forEach((a, i) => {
@@ -68,67 +79,133 @@ function buildSVG(s) {
   arrows.forEach((a, i) => {
     const d = `M ${xLeft},${a.yTop} L ${xMid},${a.yTip} L ${xRight},${a.yTop}`;
     if (i === 3) {
-      paths += `<!-- V4: 常時表示 -->
-<path d="${d}" fill="none" stroke="${arrowColor}" stroke-width="${a.sw}"
-  stroke-linecap="round" stroke-linejoin="round" filter="url(#g4)"/>
-`;
+      paths += `<!-- V4: 常時表示 -->\n<path d="${d}" fill="none" stroke="${arrowColor}" stroke-width="${a.sw}" stroke-linecap="round" stroke-linejoin="round" filter="url(#g4)"/>\n`;
     } else {
       const kf = ANIM_KF[i];
-      paths += `<!-- V${i+1} -->
-<g opacity="0">
-  <path d="${d}" fill="none" stroke="${arrowColor}" stroke-width="${a.sw}"
-    stroke-linecap="round" stroke-linejoin="round" filter="url(#g${i+1})"/>
-  <animate attributeName="opacity" values="${kf.values}" keyTimes="${kf.keyTimes}"
-    dur="${dur}s" repeatCount="indefinite"/>
-</g>
-`;
+      paths += `<!-- V${i+1} -->\n<g opacity="0">\n  <path d="${d}" fill="none" stroke="${arrowColor}" stroke-width="${a.sw}" stroke-linecap="round" stroke-linejoin="round" filter="url(#g${i+1})"/>\n  <animate attributeName="opacity" values="${kf.values}" keyTimes="${kf.keyTimes}" dur="${dur}s" repeatCount="indefinite"/>\n</g>\n`;
     }
   });
-  return `<svg width="${cvW}" height="${cvH}" viewBox="0 0 ${cvW} ${cvH}" xmlns="http://www.w3.org/2000/svg">
-<rect width="${cvW}" height="${cvH}" fill="${bgColor}"/>
-${defs}
-${paths.trim()}
-</svg>`;
+  return `<svg width="${cvW}" height="${cvH}" viewBox="0 0 ${cvW} ${cvH}" xmlns="http://www.w3.org/2000/svg">\n<rect width="${cvW}" height="${cvH}" fill="${bgColor}"/>\n${defs}\n${paths.trim()}\n</svg>`;
+}
+
+// ---- 既存SVGの属性を書き換えて更新（再insert不要） ----
+function updateSVGInPlace(s) {
+  const wrap = document.getElementById("previewWrap");
+  const svg  = wrap.querySelector("svg");
+  if (!svg) return false; // SVGなければ失敗
+
+  const { cvW, cvH, bgColor, arrowColor, xLeft, xRight, xMid, dur, arrows } = s;
+
+  // SVGサイズ
+  svg.setAttribute("width",   cvW);
+  svg.setAttribute("height",  cvH);
+  svg.setAttribute("viewBox", `0 0 ${cvW} ${cvH}`);
+
+  // 背景
+  const bg = svg.querySelector("rect");
+  if (bg) bg.setAttribute("fill", bgColor);
+
+  // フィルター
+  arrows.forEach((a, i) => {
+    const blur = svg.querySelector(`#g${i+1} feGaussianBlur`);
+    if (blur) blur.setAttribute("stdDeviation", a.glow);
+  });
+
+  // パス
+  const groups = svg.querySelectorAll("g[opacity]");
+  const v4path = svg.querySelector("path:not(g > path)"); // V4（g外の直接path）
+
+  // V1-V3
+  groups.forEach((g, i) => {
+    const a = arrows[i];
+    if (!a) return;
+    const path = g.querySelector("path");
+    const anim = g.querySelector("animate");
+    const d = `M ${xLeft},${a.yTop} L ${xMid},${a.yTip} L ${xRight},${a.yTop}`;
+    if (path) {
+      path.setAttribute("d", d);
+      path.setAttribute("stroke", arrowColor);
+      path.setAttribute("stroke-width", a.sw);
+    }
+    if (anim) anim.setAttribute("dur", `${dur}s`);
+  });
+
+  // V4
+  if (v4path) {
+    const a = arrows[3];
+    const d = `M ${xLeft},${a.yTop} L ${xMid},${a.yTip} L ${xRight},${a.yTop}`;
+    v4path.setAttribute("d", d);
+    v4path.setAttribute("stroke", arrowColor);
+    v4path.setAttribute("stroke-width", a.sw);
+  }
+
+  return true;
+}
+
+// ---- 初回insert（または再insert）----
+function insertSVG(s) {
+  const wrap = document.getElementById("previewWrap");
+  currentSVG = buildSVGText(s);
+  wrap.innerHTML = currentSVG;
+  svgInserted = true;
+  // insertしたら必ずpause状態に合わせる
+  if (isPaused) {
+    const svg = wrap.querySelector("svg");
+    if (svg && svg.pauseAnimations) svg.pauseAnimations();
+  }
 }
 
 function getSVGEl() {
   return document.querySelector("#previewWrap svg");
 }
 
-function pauseAnim() {
-  document.getElementById("previewHint").classList.add("visible");
+function applyPause() {
   const svg = getSVGEl();
-  if (svg && svg.pauseAnimations) svg.pauseAnimations();
+  if (!svg) return;
+  if (isPaused) {
+    if (svg.pauseAnimations) svg.pauseAnimations();
+  } else {
+    if (svg.unpauseAnimations) svg.unpauseAnimations();
+  }
+  document.getElementById("previewHint").classList.toggle("visible", isPaused);
 }
 
-function resumeAnim() {
-  document.getElementById("previewHint").classList.remove("visible");
-  const svg = getSVGEl();
-  if (svg && svg.unpauseAnimations) svg.unpauseAnimations();
-}
-
+// ---- postMessage受信 ----
 window.addEventListener("message", e => {
   const msg = e.data;
-  if (!msg || msg.type !== "yjrs-update") return;
+  if (!msg) return;
 
-  currentSVG = buildSVG(msg.state);
-  document.getElementById("previewWrap").innerHTML = currentSVG;
-  document.getElementById("codeOutput").textContent = currentSVG;
-
-  // pausing=true の間は即停止、false になったら動かす（新SVGはデフォルトで動いている）
-  if (msg.pausing) {
-    pauseAnim();
+  if (msg.type === "yjrs-update") {
+    // state変更 → 属性書き換えで更新（再insertしない）
+    if (svgInserted && updateSVGInPlace(msg.state)) {
+      // 属性書き換え成功 → pause状態はそのまま維持
+    } else {
+      // 初回 or 構造変化 → 再insert
+      insertSVG(msg.state);
+    }
+    // コードテキストは再生成
+    currentSVG = buildSVGText(msg.state);
+    document.getElementById("codeOutput").textContent = currentSVG;
   }
-  // pausing=false のときは新SVGが自動でアニメ開始しているのでそのまま
+
+  if (msg.type === "yjrs-pause") {
+    isPaused = true;
+    applyPause();
+  }
+
+  if (msg.type === "yjrs-resume") {
+    isPaused = false;
+    applyPause();
+  }
 });
 
+// ---- コピー・DL ----
 document.getElementById("btnCopy").addEventListener("click", () => {
   if (!currentSVG) { showStatus("err","先に左パネルで設定してください"); return; }
   navigator.clipboard.writeText(currentSVG)
     .then(() => showStatus("ok","SVGコードをコピーしました！"))
     .catch(() => showStatus("err","コピー失敗。手動でコピーしてください。"));
 });
-
 document.getElementById("btnDL").addEventListener("click", () => {
   if (!currentSVG) { showStatus("err","先に左パネルで設定してください"); return; }
   const a = Object.assign(document.createElement("a"), {
@@ -143,7 +220,6 @@ function showStatus(type, msg) {
   const el = document.getElementById("codeStatus");
   el.textContent = msg; el.className = "status-msg show " + type;
 }
-
 function openAccordion(id) {
   const el = document.getElementById(id);
   if (el) { el.setAttribute("open",""); el.scrollIntoView({behavior:"smooth",block:"start"}); }
