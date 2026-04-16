@@ -1,1 +1,107 @@
+<!DOCTYPE html>
+<!-- 11-story/06-kizo/navi.html -->
+<!-- テキスト整形ツール：設定パネル（左ナビ） -->
+<!-- 結合ルール・文字列変換ルールの管理を行う -->
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>設定（左）</title>
+  <link rel="stylesheet" href="../../01-css/11-story-06-kizo.css">
+</head>
+<body class="navi">
 
+<h3>⚙ 整形設定</h3>
+
+<!-- 結合ルール -->
+<div class="section">
+  <label class="section-label">自動結合ルール</label>
+  <div class="check-row">
+    <input type="radio" name="mergeRule" id="mergePeriod" value="period" checked>
+    <label for="mergePeriod">句点のみ（。！？」』）</label>
+  </div>
+  <div class="check-row">
+    <input type="radio" name="mergeRule" id="mergeAll" value="all">
+    <label for="mergeAll">読点も含む（＋、，）</label>
+  </div>
+</div>
+
+<!-- 文字列変換ルール -->
+<div class="section">
+  <label class="section-label">文字列変換</label>
+  <div id="convList"></div>
+  <button id="addConvBtn">＋ 追加</button>
+</div>
+
+<button id="applyBtn">▶ 適用</button>
+
+<script>
+  // ── プリセット変換ルール ──────────────────────────
+  const PRESETS = [
+    { from: '《', to: '〈' },
+    { from: '》', to: '〉' },
+  ];
+
+  let convRules = [...PRESETS];
+
+  function renderConvList() {
+    const list = document.getElementById('convList');
+    list.innerHTML = '';
+    convRules.forEach((rule, i) => {
+      const row = document.createElement('div');
+      row.className = 'conv-row';
+
+      const fromInput = document.createElement('input');
+      fromInput.type      = 'text';
+      fromInput.className = 'conv-input';
+      fromInput.value     = rule.from;
+      fromInput.placeholder = '変換前';
+      fromInput.addEventListener('input', () => { convRules[i].from = fromInput.value; });
+
+      const arrow = document.createElement('span');
+      arrow.className   = 'conv-arrow';
+      arrow.textContent = '→';
+
+      const toInput = document.createElement('input');
+      toInput.type      = 'text';
+      toInput.className = 'conv-input';
+      toInput.value     = rule.to;
+      toInput.placeholder = '変換後';
+      toInput.addEventListener('input', () => { convRules[i].to = toInput.value; });
+
+      const delBtn = document.createElement('button');
+      delBtn.className   = 'conv-del';
+      delBtn.textContent = '×';
+      delBtn.addEventListener('click', () => {
+        convRules.splice(i, 1);
+        renderConvList();
+      });
+
+      row.appendChild(fromInput);
+      row.appendChild(arrow);
+      row.appendChild(toInput);
+      row.appendChild(delBtn);
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById('addConvBtn').addEventListener('click', () => {
+    convRules.push({ from: '', to: '' });
+    renderConvList();
+  });
+
+  // ── 適用ボタン → index.html へ postMessage ────────
+  document.getElementById('applyBtn').addEventListener('click', () => {
+    const mergeRule = document.querySelector('input[name="mergeRule"]:checked').value;
+    const cfg = {
+      mergeRule,
+      conversions: convRules.filter(r => r.from !== ''),
+    };
+    if (parent && parent.frames && parent.frames['center']) {
+      parent.frames['center'].postMessage({ type: 'kizoCfg', cfg }, '*');
+    }
+  });
+
+  renderConvList();
+</script>
+</body>
+</html>
