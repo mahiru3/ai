@@ -1,1 +1,188 @@
+/* 11-story-06-kizo.css */
+/* テキスト整形ツール専用CSS */
+/* index.html（メインコンテンツ）と navi.html（設定パネル）の両方に適用 */
 
+/* ========== 共通 ========== */
+* { box-sizing: border-box; }
+
+/* ========== navi.html ========== */
+body.navi {
+  margin: 0; padding: 10px;
+  font-family: sans-serif; font-size: 13px;
+  background: #1a2a1e; color: #ddd;
+  text-align: left;
+}
+body.navi h3 {
+  margin: 0 0 10px; font-size: 13px;
+  color: #ace; border-bottom: 1px solid #3a5a3a; padding-bottom: 6px;
+}
+.section { margin-bottom: 16px; }
+.section-label {
+  display: block; margin-bottom: 6px;
+  color: #9ba; font-size: 12px; font-weight: bold;
+}
+body.navi label { color: #bbb; font-size: 12px; }
+.check-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.check-row label { margin: 0; }
+
+/* 文字列変換ルール */
+.conv-row {
+  display: flex; align-items: center; gap: 4px;
+  margin-bottom: 4px;
+}
+.conv-input {
+  width: 52px; background: #2a3a2a; color: #ddd;
+  border: 1px solid #555; border-radius: 4px;
+  padding: 3px 5px; font-size: 12px;
+}
+.conv-arrow { color: #888; font-size: 12px; }
+.conv-del {
+  background: #5a2a2a; color: #f99;
+  border: none; border-radius: 4px;
+  padding: 2px 6px; font-size: 11px; cursor: pointer;
+}
+.conv-del:hover { background: #7a2a2a; }
+
+#addConvBtn {
+  width: 100%; padding: 5px;
+  background: #2a4a2a; color: #9d9;
+  border: 1px dashed #4a7a4a; border-radius: 4px;
+  font-size: 12px; cursor: pointer; margin-top: 4px;
+}
+#addConvBtn:hover { background: #3a5a3a; }
+
+#applyBtn {
+  width: 100%; padding: 8px;
+  background: #4a7a5a; color: #fff;
+  border: none; border-radius: 6px;
+  font-size: 13px; font-weight: bold; cursor: pointer;
+  margin-top: 4px;
+}
+#applyBtn:hover { background: #3a6a4a; }
+
+/* ========== index.html ========== */
+body {
+  font-family: sans-serif;
+  background: #1e2820;
+  color: #ddd;
+  padding: 1em;
+  margin: 0;
+}
+h1 {
+  font-size: 18px;
+  margin: 0 0 12px;
+  color: #ccffdd;
+  text-align: center;
+}
+
+/* 入力エリア */
+#inputWrap { margin-bottom: 12px; }
+#rawInput {
+  width: 100%; height: 120px;
+  background: #141e16; color: #ddd;
+  border: 1px solid #3a5a3a; border-radius: 6px;
+  padding: 8px; font-size: 13px;
+  font-family: "Noto Sans JP","Yu Gothic","Meiryo",monospace;
+  line-height: 1.6; resize: vertical;
+}
+
+.btn-row {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin-top: 8px;
+}
+button {
+  padding: 6px 12px; font-size: 12px;
+  cursor: pointer; border-radius: 4px;
+  font-weight: bold; border: none;
+  transition: background .15s;
+}
+#loadBtn  { background: #4a7a5a; color: #fff; }
+#loadBtn:hover  { background: #3a6a4a; }
+#mergeBtn { background: #4a6a9a; color: #fff; }
+#mergeBtn:hover { background: #3a5a8a; }
+#undoBtn  { background: #6a5a2a; color: #fff; }
+#undoBtn:hover  { background: #5a4a1a; }
+#copyBtn  { background: #4a7a4a; color: #fff; }
+#copyBtn:hover  { background: #3a6a3a; }
+#clearBtn { background: #6a3a3a; color: #fff; }
+#clearBtn:hover { background: #5a2a2a; }
+button:disabled { opacity: 0.4; cursor: default; }
+
+#status {
+  font-size: 12px; color: #aaa;
+  margin-top: 6px; min-height: 18px;
+}
+
+/* 行リスト */
+#listWrap {
+  border: 1px solid #3a5a3a;
+  border-radius: 6px;
+  background: #141e16;
+  overflow-y: auto;
+  max-height: calc(100vh - 280px);
+}
+#lineList {
+  list-style: none;
+  margin: 0; padding: 0;
+}
+
+/* 各行 */
+.line-row {
+  display: flex; align-items: center;
+  padding: 4px 6px;
+  border-bottom: 1px solid #2a3a2a;
+  min-height: 32px;
+  transition: background .1s;
+  position: relative;
+}
+.line-row:hover { background: #243024; }
+.line-row:last-child { border-bottom: none; }
+.line-row.drag-over { border-top: 2px solid #6aaa7a; }
+
+/* ドラッグハンドル */
+.drag-handle {
+  color: #4a6a4a; font-size: 14px;
+  cursor: grab; padding: 0 6px 0 2px;
+  user-select: none; flex-shrink: 0;
+}
+.drag-handle:active { cursor: grabbing; }
+
+/* テキスト本体 */
+.line-text {
+  flex: 1;
+  font-size: 13px;
+  font-family: "Noto Sans JP","Yu Gothic","Meiryo",monospace;
+  line-height: 1.6;
+  cursor: text;
+  word-break: break-all;
+}
+/* 文字ホバーで分割位置を示す */
+.line-text span {
+  border-left: 2px solid transparent;
+  transition: border-color .1s;
+}
+.line-text span:hover {
+  border-left-color: #6aff8a;
+  cursor: pointer;
+}
+
+/* 操作ボタン（ホバー時のみ表示） */
+.row-btns {
+  display: none;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: 6px;
+}
+.line-row:hover .row-btns { display: flex; }
+
+.row-btn {
+  padding: 2px 7px; font-size: 11px;
+  border-radius: 3px; border: none;
+  cursor: pointer; font-weight: bold;
+  background: #3a5a4a; color: #adc;
+  transition: background .1s;
+}
+.row-btn:hover   { background: #4a7a5a; }
+.row-btn:disabled { opacity: 0.3; cursor: default; }
+.del-btn { background: #5a2a2a; color: #f99; }
+.del-btn:hover { background: #7a3a3a; }
