@@ -1,1 +1,282 @@
+<!DOCTYPE html>
+<!-- 11-story/06-kizo/index.html -->
+<!-- テキスト整形ツール：PDFテキスト化後の整形・編集を行う -->
+<!-- 行分割（文字クリック）・削除・結合・並び替え・文字変換・アンドゥ対応 -->
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>テキスト整形</title>
+  <link rel="stylesheet" href="../../01-css/11-story-06-kizo.css">
+</head>
+<body>
 
+<h1>✂ テキスト整形</h1>
+
+<!-- 入力エリア -->
+<div id="inputWrap">
+  <textarea id="rawInput" placeholder="05-hnknで出力したテキストをここに貼り付け"></textarea>
+  <div class="btn-row">
+    <button id="loadBtn">▶ 読み込む</button>
+    <button id="mergeBtn" disabled>⛓ 自動結合</button>
+    <button id="undoBtn"  disabled>↩ 元に戻す</button>
+    <button id="copyBtn"  disabled>📋 コピー</button>
+    <button id="clearBtn" disabled>🗑 クリア</button>
+  </div>
+  <div id="status"></div>
+</div>
+
+<!-- 行リスト -->
+<div id="listWrap">
+  <ul id="lineList"></ul>
+</div>
+
+<script>
+  // ─── 状態管理 ──────────────────────────────────────
+  let lines   = [];   // 現在の行配列
+  let history = [];   // アンドゥ用スタック（最大30件）
+
+  // navi から受け取る設定
+  let cfg = {
+    mergeRule:   'period',   // 'period'=句点のみ, 'all'=読点も
+    conversions: [],         // [{from, to}, ...] 文字列変換ルール
+  };
+
+  window.addEventListener('message', e => {
+    if (e.data && e.data.type === 'kizoCfg') {
+      cfg = Object.assign(cfg, e.data.cfg);
+    }
+  });
+
+  // ─── 読み込み ──────────────────────────────────────
+  document.getElementById('loadBtn').addEventListener('click', () => {
+    const raw = document.getElementById('rawInput').value.trim();
+    if (!raw) { setStatus('テキストを貼り付けてください', true); return; }
+    saveHistory();
+    lines = raw.split('\n').map(l => l.trim()).filter(l => l !== '');
+    render();
+    document.getElementById('mergeBtn').disabled = false;
+    document.getElementById('copyBtn').disabled  = false;
+    document.getElementById('clearBtn').disabled = false;
+    setStatus(`${lines.length} 行読み込みました`);
+  });
+
+  // ─── 自動結合 ─────────────────────────────────────
+  // 句点・！・？・」・』で終わらない行は次の行と結合する
+  document.getElementById('mergeBtn').addEventListener('click', () => {
+    saveHistory();
+    const endChars = cfg.mergeRule === 'all'
+      ? /[。！？」』、，]$/
+      : /[。！？」』]$/;
+    const merged = [];
+    let buf = '';
+    for (const line of lines) {
+      if (buf === '') {
+        buf = line;
+      } else {
+        // 前の行が終端文字で終わっていれば確定、そうでなければ結合
+        if (endChars.test(buf)) {
+          merged.push(buf);
+          buf = line;
+        } else {
+          buf += line;
+        }
+      }
+    }
+    if (buf) merged.push(buf);
+    lines = merged;
+    render();
+    setStatus(`結合後 ${lines.length} 行`);
+  });
+
+  // ─── アンドゥ ─────────────────────────────────────
+  document.getElementById('undoBtn').addEventListener('click', undo);
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
+  });
+
+  function saveHistory() {
+    history.push([...lines]);
+    if (history.length > 30) history.shift();
+    document.getElementById('undoBtn').disabled = false;
+  }
+
+  function undo() {
+    if (history.length === 0) return;
+    lines = history.pop();
+    if (history.length === 0) document.getElementById('undoBtn').disabled = true;
+    render();
+    setStatus('元に戻しました');
+  }
+
+  // ─── コピー ───────────────────────────────────────
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    // 文字変換を適用してからコピー
+    const converted = lines.map(applyConversions);
+    navigator.clipboard.writeText(converted.join('\n')).then(() => {
+      setStatus('コピーしました 📋（スプレッドシートに貼り付け可）');
+    });
+  });
+
+  // ─── クリア ───────────────────────────────────────
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    saveHistory();
+    lines = [];
+    history = [];
+    render();
+    document.getElementById('rawInput').value    = '';
+    document.getElementById('mergeBtn').disabled = true;
+    document.getElementById('undoBtn').disabled  = true;
+    document.getElementById('copyBtn').disabled  = true;
+    document.getElementById('clearBtn').disabled = true;
+    setStatus('');
+  });
+
+  // ─── 文字変換適用 ─────────────────────────────────
+  function applyConversions(str) {
+    let s = str;
+    for (const rule of cfg.conversions) {
+      if (rule.from) s = s.replaceAll(rule.from, rule.to || '');
+    }
+    return s;
+  }
+
+  // ─── レンダリング ─────────────────────────────────
+  function render() {
+    const list = document.getElementById('lineList');
+    list.innerHTML = '';
+    lines.forEach((line, idx) => {
+      list.appendChild(makeRow(line, idx));
+    });
+  }
+
+  function makeRow(line, idx) {
+    const li = document.createElement('li');
+    li.className = 'line-row';
+    li.dataset.idx = idx;
+
+    // ドラッグハンドル
+    const handle = document.createElement('span');
+    handle.className = 'drag-handle';
+    handle.textContent = '⠿';
+    handle.draggable = true;
+    handle.addEventListener('dragstart', onDragStart);
+
+    // テキスト本体（文字クリックで分割）
+    const textSpan = document.createElement('span');
+    textSpan.className = 'line-text';
+    // 各文字をspanで包んでクリック位置を取得
+    [...line].forEach((ch, ci) => {
+      const cspan = document.createElement('span');
+      cspan.textContent = ch;
+      cspan.dataset.ci  = ci;
+      cspan.addEventListener('click', () => splitLine(idx, ci));
+      textSpan.appendChild(cspan);
+    });
+
+    // 操作ボタン群（ホバー時表示）
+    const btns = document.createElement('span');
+    btns.className = 'row-btns';
+
+    const mergeUpBtn = document.createElement('button');
+    mergeUpBtn.className = 'row-btn';
+    mergeUpBtn.title = '上の行と結合';
+    mergeUpBtn.textContent = '↑';
+    mergeUpBtn.disabled = idx === 0;
+    mergeUpBtn.addEventListener('click', () => mergeUp(idx));
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'row-btn del-btn';
+    delBtn.title = '削除';
+    delBtn.textContent = '×';
+    delBtn.addEventListener('click', () => deleteLine(idx));
+
+    btns.appendChild(mergeUpBtn);
+    btns.appendChild(delBtn);
+
+    li.appendChild(handle);
+    li.appendChild(textSpan);
+    li.appendChild(btns);
+
+    // ドロップ受け入れ
+    li.addEventListener('dragover',  onDragOver);
+    li.addEventListener('drop',      onDrop);
+    li.addEventListener('dragleave', onDragLeave);
+
+    return li;
+  }
+
+  // ─── 行操作 ───────────────────────────────────────
+
+  // 文字クリックで分割（ci文字目の前で分割）
+  function splitLine(idx, ci) {
+    if (ci === 0) return; // 先頭クリックは無視
+    saveHistory();
+    const line  = lines[idx];
+    const left  = line.slice(0, ci);
+    const right = line.slice(ci);
+    lines.splice(idx, 1, left, right);
+    render();
+    setStatus(`行 ${idx + 1} を分割しました`);
+  }
+
+  // 上の行と結合
+  function mergeUp(idx) {
+    if (idx === 0) return;
+    saveHistory();
+    lines[idx - 1] = lines[idx - 1] + lines[idx];
+    lines.splice(idx, 1);
+    render();
+    setStatus(`行 ${idx} と ${idx + 1} を結合しました`);
+  }
+
+  // 行削除
+  function deleteLine(idx) {
+    saveHistory();
+    lines.splice(idx, 1);
+    render();
+    setStatus(`行 ${idx + 1} を削除しました`);
+  }
+
+  // ─── ドラッグ＆ドロップ ───────────────────────────
+  let dragIdx = null;
+
+  function onDragStart(e) {
+    dragIdx = Number(e.target.closest('li').dataset.idx);
+    e.dataTransfer.effectAllowed = 'move';
+  }
+
+  function onDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    e.currentTarget.classList.add('drag-over');
+  }
+
+  function onDragLeave(e) {
+    e.currentTarget.classList.remove('drag-over');
+  }
+
+  function onDrop(e) {
+    e.preventDefault();
+    const li       = e.currentTarget;
+    li.classList.remove('drag-over');
+    const dropIdx  = Number(li.dataset.idx);
+    if (dragIdx === null || dragIdx === dropIdx) return;
+    saveHistory();
+    const [moved] = lines.splice(dragIdx, 1);
+    const target  = dragIdx < dropIdx ? dropIdx - 1 : dropIdx;
+    lines.splice(target, 0, moved);
+    dragIdx = null;
+    render();
+    setStatus('行を移動しました');
+  }
+
+  // ─── ステータス ───────────────────────────────────
+  function setStatus(msg, isError = false) {
+    const el = document.getElementById('status');
+    el.textContent = msg;
+    el.style.color = isError ? '#f66' : '#aaa';
+  }
+</script>
+</body>
+</html>
