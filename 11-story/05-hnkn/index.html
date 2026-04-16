@@ -1,1 +1,280 @@
+<!DOCTYPE html>
+<!-- 11-story/05-hnkn/index.html -->
+<!-- PDFテキスト化ツール：PDFを読み込み、テキストとして出力する -->
+<!-- 2段組対応（本文モード／注釈モード）、図・イラストは排除 -->
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PDFテキスト化</title>
+  <link rel="stylesheet" href="../../01-css/11-story-05-hnkn.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
 
+<h1>📄 PDFテキスト化</h1>
+
+<!-- ドロップゾーン -->
+<div id="dropZone">
+  <p>PDFをここにドロップ</p>
+  <p>または</p>
+  <label for="fileInput" id="fileLabel">📂 ファイルを選択</label>
+  <input type="file" id="fileInput" accept=".pdf">
+</div>
+
+<div id="status"></div>
+
+<!-- 出力エリア -->
+<div id="outputWrap">
+  <div class="btn-row">
+    <button id="copyBtn" disabled>📋 コピー</button>
+    <button id="dlBtn" disabled>💾 ダウンロード</button>
+    <button id="clearBtn" disabled>🗑 クリア</button>
+  </div>
+  <textarea id="output" readonly placeholder="ここにテキストが出力されます"></textarea>
+</div>
+
+<script>
+  // pdf.js ワーカー設定
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  // navi.html から受け取る設定
+  let cfg = {
+    mode: 'single',      // 'single'=1段組, 'double'=本文2段, 'annot'=注釈2段
+    splitRatio: 0.5,     // 左右の分割位置（ページ幅の割合）
+    annotIndent: '　',   // 注釈のインデント文字
+    annotBracket: false, // 注釈を（）で囲むか
+    pageBreak: false,    // ページ区切りを挿入するか
+    pageBreakStr: '----------',
+  };
+
+  window.addEventListener('message', e => {
+    if (e.data && e.data.type === 'hnknCfg') {
+      cfg = Object.assign(cfg, e.data.cfg);
+    }
+  });
+
+  // ─── ドロップ・ファイル選択 ───────────────────────
+  const dropZone  = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+
+  dropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+  });
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('drag-over');
+  });
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === 'application/pdf') processPdf(file);
+    else setStatus('PDFファイルを選択してください', true);
+  });
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) processPdf(file);
+  });
+
+  // ─── PDF処理メイン ────────────────────────────────
+  async function processPdf(file) {
+    setStatus('読み込み中…');
+    document.getElementById('copyBtn').disabled = true;
+    document.getElementById('dlBtn').disabled   = true;
+    document.getElementById('clearBtn').disabled = true;
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const pageCount = pdf.numPages;
+      const allLines = [];
+
+      for (let p = 1; p <= pageCount; p++) {
+        setStatus(`処理中… ${p} / ${pageCount} ページ`);
+        const page    = await pdf.getPage(p);
+        const content = await page.getTextContent();
+        const viewport = page.getViewport({ scale: 1 });
+        const pageWidth = viewport.width;
+
+        const lines = extractLines(content.items, pageWidth);
+        allLines.push(...lines);
+
+        if (cfg.pageBreak && p < pageCount) {
+          allLines.push(cfg.pageBreakStr);
+        }
+      }
+
+      const result = allLines.join('\n');
+      document.getElementById('output').value = result;
+      document.getElementById('copyBtn').disabled  = false;
+      document.getElementById('dlBtn').disabled    = false;
+      document.getElementById('clearBtn').disabled = false;
+      setStatus(`完了 ✅  ${pageCount}ページ処理しました`);
+
+    } catch (err) {
+      setStatus('エラー: ' + err.message, true);
+      console.error(err);
+    }
+  }
+
+  // ─── テキスト抽出・2段組処理 ─────────────────────
+  function extractLines(items, pageWidth) {
+
+    // テキストアイテムのみ（高さ0のものは図・空白として除外）
+    const textItems = items.filter(item =>
+      item.str.trim() !== '' && item.transform
+    );
+
+    if (textItems.length === 0) return [];
+
+    // Y座標でソート（PDF座標は下が0なので反転）
+    textItems.sort((a, b) => {
+      const ya = a.transform[5];
+      const yb = b.transform[5];
+      if (Math.abs(ya - yb) > 2) return yb - ya; // Y降順（上から）
+      return a.transform[4] - b.transform[4];      // X昇順（左から）
+    });
+
+    const splitX = pageWidth * cfg.splitRatio;
+
+    if (cfg.mode === 'single') {
+      // 1段組：そのまま結合
+      return mergeToLines(textItems);
+
+    } else if (cfg.mode === 'double') {
+      // 本文2段：左列全部→右列全部
+      const left  = textItems.filter(i => i.transform[4] < splitX);
+      const right = textItems.filter(i => i.transform[4] >= splitX);
+      return [
+        ...mergeToLines(left),
+        ...mergeToLines(right),
+      ];
+
+    } else if (cfg.mode === 'annot') {
+      // 注釈2段：左の段落直後に対応する右を挿入
+      const left  = textItems.filter(i => i.transform[4] < splitX);
+      const right = textItems.filter(i => i.transform[4] >= splitX);
+      return mergeWithAnnotation(left, right);
+    }
+
+    return mergeToLines(textItems);
+  }
+
+  // テキストアイテムを行単位にまとめる
+  function mergeToLines(items) {
+    if (items.length === 0) return [];
+    const lines = [];
+    let currentY   = null;
+    let currentLine = '';
+    const Y_THRESH = 3; // 同一行と見なすY座標の誤差
+
+    for (const item of items) {
+      const y = Math.round(item.transform[5]);
+      if (currentY === null) {
+        currentY = y;
+        currentLine = item.str;
+      } else if (Math.abs(y - currentY) <= Y_THRESH) {
+        currentLine += item.str;
+      } else {
+        if (currentLine.trim()) lines.push(currentLine.trim());
+        currentY = y;
+        currentLine = item.str;
+      }
+    }
+    if (currentLine.trim()) lines.push(currentLine.trim());
+    return lines;
+  }
+
+  // 注釈モード：左段落の直後に対応Y位置の右テキストを挿入
+  function mergeWithAnnotation(leftItems, rightItems) {
+    const leftLines  = groupByParagraph(leftItems);
+    const rightLines = groupByParagraph(rightItems);
+    const result = [];
+
+    for (const lp of leftLines) {
+      result.push(lp.text);
+      // 対応する注釈を探す（Y座標が重なるもの）
+      const matched = rightLines.filter(rp =>
+        rp.yMax >= lp.yMin && rp.yMin <= lp.yMax
+      );
+      for (const rp of matched) {
+        const annotText = cfg.annotBracket
+          ? `${cfg.annotIndent}（${rp.text}）`
+          : `${cfg.annotIndent}${rp.text}`;
+        result.push(annotText);
+      }
+    }
+    return result;
+  }
+
+  // テキストアイテムを段落単位にグループ化（Y範囲付き）
+  function groupByParagraph(items) {
+    if (items.length === 0) return [];
+    const LINE_GAP = 20; // この差以上で段落区切り
+    const paragraphs = [];
+    let group = [items[0]];
+
+    for (let i = 1; i < items.length; i++) {
+      const prevY = items[i - 1].transform[5];
+      const currY = items[i].transform[5];
+      if (Math.abs(prevY - currY) > LINE_GAP) {
+        paragraphs.push(group);
+        group = [];
+      }
+      group.push(items[i]);
+    }
+    paragraphs.push(group);
+
+    return paragraphs.map(g => {
+      const ys   = g.map(i => i.transform[5]);
+      const text = mergeToLines(g).join('\n');
+      return {
+        text,
+        yMin: Math.min(...ys),
+        yMax: Math.max(...ys),
+      };
+    });
+  }
+
+  // ─── ボタン操作 ───────────────────────────────────
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    const val = document.getElementById('output').value;
+    navigator.clipboard.writeText(val).then(() => {
+      setStatus('クリップボードにコピーしました 📋');
+    });
+  });
+
+  document.getElementById('dlBtn').addEventListener('click', () => {
+    const val = document.getElementById('output').value;
+    if (!val) return;
+    const blob = new Blob([val], { type: 'text/plain;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `pdf_text_${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setStatus('ダウンロード開始 💾');
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    document.getElementById('output').value = '';
+    document.getElementById('copyBtn').disabled  = true;
+    document.getElementById('dlBtn').disabled    = true;
+    document.getElementById('clearBtn').disabled = true;
+    document.getElementById('fileInput').value   = '';
+    setStatus('');
+  });
+
+  function setStatus(msg, isError = false) {
+    const el = document.getElementById('status');
+    el.textContent  = msg;
+    el.style.color  = isError ? '#f66' : '#aaa';
+  }
+</script>
+</body>
+</html>
