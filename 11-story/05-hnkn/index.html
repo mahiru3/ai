@@ -98,7 +98,8 @@
         const viewport = page.getViewport({ scale: 1 });
         const pageWidth = viewport.width;
 
-        const lines = extractLines(content.items, pageWidth);
+        const pageHeight = viewport.height;
+        const lines = extractLines(content.items, pageWidth, pageHeight);
         allLines.push(...lines);
 
         if (cfg.pageBreak && p < pageCount) {
@@ -120,70 +121,87 @@
   }
 
   // ─── テキスト抽出・2段組処理 ─────────────────────
-  function extractLines(items, pageWidth) {
+  function extractLines(items, pageWidth, pageHeight) {
 
-    // テキストアイテムのみ（高さ0のものは図・空白として除外）
+    // 空文字・transformなしを除外
     const textItems = items.filter(item =>
       item.str.trim() !== '' && item.transform
     );
-
     if (textItems.length === 0) return [];
 
-    // Y座標でソート（PDF座標は下が0なので反転）
-    textItems.sort((a, b) => {
-      const ya = a.transform[5];
-      const yb = b.transform[5];
-      if (Math.abs(ya - yb) > 2) return yb - ya; // Y降順（上から）
-      return a.transform[4] - b.transform[4];      // X昇順（左から）
+    // ヘッダー・フッター除去（ページ上端5%・下端8%）
+    const topEdge    = pageHeight * 0.92;
+    const bottomEdge = pageHeight * 0.08;
+    const body = textItems.filter(i => {
+      const y = i.transform[5];
+      return y < topEdge && y > bottomEdge;
     });
-
-    const splitX = pageWidth * cfg.splitRatio;
+    if (body.length === 0) return [];
 
     if (cfg.mode === 'single') {
-      // 1段組：そのまま結合
-      return mergeToLines(textItems);
+      return mergeToLines(body);
 
     } else if (cfg.mode === 'double') {
-      // 本文2段：左列全部→右列全部
-      const left  = textItems.filter(i => i.transform[4] < splitX);
-      const right = textItems.filter(i => i.transform[4] >= splitX);
-      return [
-        ...mergeToLines(left),
-        ...mergeToLines(right),
-      ];
+      // X座標の最大ギャップを自動検出してsplitXを決める
+      const autoSplitX = detectSplitX(body, pageWidth);
+      const left  = body.filter(i => i.transform[4] < autoSplitX);
+      const right = body.filter(i => i.transform[4] >= autoSplitX);
+      return [...mergeToLines(left), ...mergeToLines(right)];
 
     } else if (cfg.mode === 'annot') {
-      // 注釈2段：左の段落直後に対応する右を挿入
-      const left  = textItems.filter(i => i.transform[4] < splitX);
-      const right = textItems.filter(i => i.transform[4] >= splitX);
+      const autoSplitX = detectSplitX(body, pageWidth);
+      const left  = body.filter(i => i.transform[4] < autoSplitX);
+      const right = body.filter(i => i.transform[4] >= autoSplitX);
       return mergeWithAnnotation(left, right);
     }
 
-    return mergeToLines(textItems);
+    return mergeToLines(body);
   }
 
-  // テキストアイテムを行単位にまとめる
-  function mergeToLines(items) {
-    if (items.length === 0) return [];
-    const lines = [];
-    let currentY   = null;
-    let currentLine = '';
-    const Y_THRESH = 3; // 同一行と見なすY座標の誤差
-
-    for (const item of items) {
-      const y = Math.round(item.transform[5]);
-      if (currentY === null) {
-        currentY = y;
-        currentLine = item.str;
-      } else if (Math.abs(y - currentY) <= Y_THRESH) {
-        currentLine += item.str;
-      } else {
-        if (currentLine.trim()) lines.push(currentLine.trim());
-        currentY = y;
-        currentLine = item.str;
+  // X座標の最大ギャップからsplitXを自動検出する
+  function detectSplitX(items, pageWidth) {
+    const xs = [...new Set(items.map(i => i.transform[4]))].sort((a, b) => a - b);
+    let maxGap = 0, splitX = pageWidth * cfg.splitRatio;
+    for (let i = 1; i < xs.length; i++) {
+      const gap = xs[i] - xs[i - 1];
+      // ページ左端(10%)〜右端(80%)の間のギャップだけ対象にする
+      if (gap > maxGap && xs[i - 1] > pageWidth * 0.1 && xs[i] < pageWidth * 0.8) {
+        maxGap = gap;
+        splitX = (xs[i - 1] + xs[i]) / 2;
       }
     }
-    if (currentLine.trim()) lines.push(currentLine.trim());
+    return splitX;
+  }
+
+  // テキストアイテムをY座標でソートして行単位にまとめる
+  function mergeToLines(items) {
+    if (items.length === 0) return [];
+
+    // Y降順・同Y内はX昇順
+    const sorted = [...items].sort((a, b) => {
+      const ya = a.transform[5], yb = b.transform[5];
+      if (Math.abs(ya - yb) > 3) return yb - ya;
+      return a.transform[4] - b.transform[4];
+    });
+
+    const lines = [];
+    let curY = null, curLine = '';
+    const Y_THRESH = 3;
+
+    for (const item of sorted) {
+      const y = item.transform[5];
+      if (curY === null) {
+        curY = y; curLine = item.str;
+      } else if (Math.abs(y - curY) <= Y_THRESH) {
+        // 同一行：X座標が離れている場合はスペースを補完
+        const lastX = curLine.length > 0 ? item.transform[4] : 0;
+        curLine += item.str;
+      } else {
+        if (curLine.trim()) lines.push(curLine.trim());
+        curY = y; curLine = item.str;
+      }
+    }
+    if (curLine.trim()) lines.push(curLine.trim());
     return lines;
   }
 
