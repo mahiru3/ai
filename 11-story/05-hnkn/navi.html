@@ -24,11 +24,18 @@
 
 <!-- 左右分割位置（2段組時のみ有効） -->
 <div class="section" id="splitSection">
-  <div class="row">
-    <label>左右分割位置</label>
-    <span class="val" id="splitVal">50</span>%
+  <label class="section-label">左右分割位置</label>
+  <div class="check-row" style="margin-bottom:6px;">
+    <input type="checkbox" id="splitAuto" checked>
+    <label for="splitAuto">自動検出（推奨）</label>
   </div>
-  <input type="range" id="splitRatio" min="20" max="80" value="50">
+  <div id="splitManual" style="opacity:0.4; pointer-events:none;">
+    <div class="row">
+      <label>手動指定</label>
+      <span class="val" id="splitVal">50</span>%
+    </div>
+    <input type="range" id="splitRatio" min="10" max="90" value="50">
+  </div>
 </div>
 
 <!-- 注釈設定（注釈モード時のみ有効） -->
@@ -78,9 +85,11 @@
     el.style.pointerEvents = enabled ? 'auto' : 'none';
   }
 
-  // ── ページ区切りチェック ──────────────────────────
-  document.getElementById('pageBreak').addEventListener('change', function() {
-    setEnabled('pageBreakStrRow', this.checked);
+  // ── 自動/手動切替 ─────────────────────────────────
+  document.getElementById('splitAuto').addEventListener('change', function() {
+    const manual = document.getElementById('splitManual');
+    manual.style.opacity       = this.checked ? '0.4' : '1';
+    manual.style.pointerEvents = this.checked ? 'none' : 'auto';
   });
 
   // ── スライダー表示値 ──────────────────────────────
@@ -88,12 +97,19 @@
     document.getElementById('splitVal').textContent = this.value;
   });
 
+  // ── ページ区切りチェック ──────────────────────────
+  document.getElementById('pageBreak').addEventListener('change', function() {
+    setEnabled('pageBreakStrRow', this.checked);
+  });
+
   // ── 適用ボタン → index.html へ postMessage ────────
   document.getElementById('applyBtn').addEventListener('click', () => {
-    const activeMode = document.querySelector('.mode-btn.active').dataset.mode;
+    const activeMode  = document.querySelector('.mode-btn.active').dataset.mode;
+    const isAuto      = document.getElementById('splitAuto').checked;
+    const splitRatio  = isAuto ? null : Number(document.getElementById('splitRatio').value) / 100;
     const cfg = {
       mode:          activeMode,
-      splitRatio:    Number(document.getElementById('splitRatio').value) / 100,
+      splitRatio,
       annotIndent:   document.getElementById('annotIndent').value,
       annotBracket:  document.getElementById('annotBracket').checked,
       pageBreak:     document.getElementById('pageBreak').checked,
