@@ -12,7 +12,7 @@
 </head>
 <body>
 
-<h1>📄 PDFテキスト化</h1>
+<h1>📄 PDFテキスト化したい</h1>
 
 <!-- ドロップゾーン -->
 <div id="dropZone">
@@ -41,17 +41,24 @@
 
   // navi.html から受け取る設定
   let cfg = {
-    mode: 'double',      // 'single'=1段組, 'double'=本文2段, 'annot'=注釈2段
-    splitRatio: 0.5,     // 左右の分割位置（ページ幅の割合）
-    annotIndent: '　',   // 注釈のインデント文字
-    annotBracket: false, // 注釈を（）で囲むか
-    pageBreak: false,    // ページ区切りを挿入するか
+    mode: 'double',
+    splitRatio: null,    // null=自動検出, 0〜1=手動指定
+    annotIndent: '　',
+    annotBracket: false,
+    pageBreak: false,
     pageBreakStr: '----------',
   };
 
-  window.addEventListener('message', e => {
+  // 読み込み済みPDFを保持（再処理用）
+  let loadedPdf = null;
+
+  window.addEventListener('message', async e => {
     if (e.data && e.data.type === 'hnknCfg') {
       cfg = Object.assign(cfg, e.data.cfg);
+      // 適用時にPDFが読み込み済みなら再処理
+      if (loadedPdf) {
+        await runExtract(loadedPdf);
+      }
     }
   });
 
@@ -81,43 +88,46 @@
   // ─── PDF処理メイン ────────────────────────────────
   async function processPdf(file) {
     setStatus('読み込み中…');
-    document.getElementById('copyBtn').disabled = true;
-    document.getElementById('dlBtn').disabled   = true;
-    document.getElementById('clearBtn').disabled = true;
-
+    disableButtons();
     try {
       const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      const pageCount = pdf.numPages;
-      const allLines = [];
-
-      for (let p = 1; p <= pageCount; p++) {
-        setStatus(`処理中… ${p} / ${pageCount} ページ`);
-        const page    = await pdf.getPage(p);
-        const content = await page.getTextContent();
-        const viewport = page.getViewport({ scale: 1 });
-        const pageWidth = viewport.width;
-
-        const pageHeight = viewport.height;
-        const lines = extractLines(content.items, pageWidth, pageHeight);
-        allLines.push(...lines);
-
-        if (cfg.pageBreak && p < pageCount) {
-          allLines.push(cfg.pageBreakStr);
-        }
-      }
-
-      const result = allLines.join('\n');
-      document.getElementById('output').value = result;
-      document.getElementById('copyBtn').disabled  = false;
-      document.getElementById('dlBtn').disabled    = false;
-      document.getElementById('clearBtn').disabled = false;
-      setStatus(`完了 ✅  ${pageCount}ページ処理しました`);
-
+      loadedPdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      await runExtract(loadedPdf);
     } catch (err) {
       setStatus('エラー: ' + err.message, true);
       console.error(err);
     }
+  }
+
+  // ─── テキスト抽出実行（再処理にも使う） ──────────
+  async function runExtract(pdf) {
+    disableButtons();
+    const pageCount = pdf.numPages;
+    const allLines = [];
+    try {
+      for (let p = 1; p <= pageCount; p++) {
+        setStatus(`処理中… ${p} / ${pageCount} ページ`);
+        const page     = await pdf.getPage(p);
+        const content  = await page.getTextContent();
+        const viewport = page.getViewport({ scale: 1 });
+        const lines = extractLines(content.items, viewport.width, viewport.height);
+        allLines.push(...lines);
+        if (cfg.pageBreak && p < pageCount) allLines.push(cfg.pageBreakStr);
+      }
+      document.getElementById('output').value = allLines.join('\n');
+      enableButtons();
+      setStatus(`完了 ✅  ${pageCount}ページ処理しました`);
+    } catch (err) {
+      setStatus('エラー: ' + err.message, true);
+      console.error(err);
+    }
+  }
+
+  function disableButtons() {
+    ['copyBtn','dlBtn','clearBtn'].forEach(id => document.getElementById(id).disabled = true);
+  }
+  function enableButtons() {
+    ['copyBtn','dlBtn','clearBtn'].forEach(id => document.getElementById(id).disabled = false);
   }
 
   // ─── テキスト抽出・2段組処理 ─────────────────────
@@ -158,16 +168,22 @@
     return mergeToLines(body);
   }
 
-  // X座標の最大ギャップからsplitXを自動検出する
+  // X座標の分布からsplitXを自動検出する
+  // cfg.splitRatioが手動指定されている場合はそちらを優先
   function detectSplitX(items, pageWidth) {
-    const xs = [...new Set(items.map(i => i.transform[4]))].sort((a, b) => a - b);
-    let maxGap = 0, splitX = pageWidth * cfg.splitRatio;
+    if (cfg.splitRatio !== null) {
+      return pageWidth * cfg.splitRatio;
+    }
+    // 左半分（5%〜50%）の最大ギャップを境界とする
+    const xs = items.map(i => i.transform[4]).sort((a, b) => a - b);
+    const half = pageWidth * 0.5;
+    let maxGap = 0, splitX = pageWidth * 0.5;
     for (let i = 1; i < xs.length; i++) {
       const gap = xs[i] - xs[i - 1];
-      // ページ左端(10%)〜右端(80%)の間のギャップだけ対象にする
-      if (gap > maxGap && xs[i - 1] > pageWidth * 0.1 && xs[i] < pageWidth * 0.8) {
+      const mid = (xs[i - 1] + xs[i]) / 2;
+      if (gap > maxGap && mid > pageWidth * 0.05 && mid < half) {
         maxGap = gap;
-        splitX = (xs[i - 1] + xs[i]) / 2;
+        splitX = mid;
       }
     }
     return splitX;
@@ -177,7 +193,6 @@
   function mergeToLines(items) {
     if (items.length === 0) return [];
 
-    // Y降順・同Y内はX昇順
     const sorted = [...items].sort((a, b) => {
       const ya = a.transform[5], yb = b.transform[5];
       if (Math.abs(ya - yb) > 3) return yb - ya;
@@ -193,8 +208,6 @@
       if (curY === null) {
         curY = y; curLine = item.str;
       } else if (Math.abs(y - curY) <= Y_THRESH) {
-        // 同一行：X座標が離れている場合はスペースを補完
-        const lastX = curLine.length > 0 ? item.transform[4] : 0;
         curLine += item.str;
       } else {
         if (curLine.trim()) lines.push(curLine.trim());
@@ -281,10 +294,9 @@
 
   document.getElementById('clearBtn').addEventListener('click', () => {
     document.getElementById('output').value = '';
-    document.getElementById('copyBtn').disabled  = true;
-    document.getElementById('dlBtn').disabled    = true;
-    document.getElementById('clearBtn').disabled = true;
-    document.getElementById('fileInput').value   = '';
+    loadedPdf = null;
+    disableButtons();
+    document.getElementById('fileInput').value = '';
     setStatus('');
   });
 
