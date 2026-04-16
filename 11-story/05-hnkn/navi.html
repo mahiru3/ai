@@ -1,1 +1,108 @@
+<!DOCTYPE html>
+<!-- 11-story/05-hnkn/navi.html -->
+<!-- PDFテキスト化ツール：設定パネル（左ナビ） -->
+<!-- 2段組モード切替・分割位置・注釈設定・ページ区切りを制御する -->
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>設定（左）</title>
+  <link rel="stylesheet" href="../../01-css/11-story-05-hnkn.css">
+</head>
+<body class="navi">
 
+<h3>⚙ PDF設定</h3>
+
+<!-- 段組モード -->
+<div class="section">
+  <label class="section-label">段組モード</label>
+  <div class="mode-btns">
+    <button class="mode-btn active" id="modeSingle" data-mode="single">1段組</button>
+    <button class="mode-btn" id="modeDouble" data-mode="double">本文（2段）</button>
+    <button class="mode-btn" id="modeAnnot"  data-mode="annot">注釈（2段）</button>
+  </div>
+</div>
+
+<!-- 左右分割位置（2段組時のみ有効） -->
+<div class="section" id="splitSection" style="opacity:0.4; pointer-events:none;">
+  <div class="row">
+    <label>左右分割位置</label>
+    <span class="val" id="splitVal">50</span>%
+  </div>
+  <input type="range" id="splitRatio" min="20" max="80" value="50">
+</div>
+
+<!-- 注釈設定（注釈モード時のみ有効） -->
+<div class="section" id="annotSection" style="opacity:0.4; pointer-events:none;">
+  <label class="section-label">注釈の書式</label>
+  <div class="row">
+    <label>インデント文字</label>
+    <input type="text" id="annotIndent" value="　" class="short-input">
+  </div>
+  <div class="check-row">
+    <input type="checkbox" id="annotBracket">
+    <label for="annotBracket">（）で囲む</label>
+  </div>
+</div>
+
+<!-- ページ区切り -->
+<div class="section">
+  <label class="section-label">ページ区切り</label>
+  <div class="check-row">
+    <input type="checkbox" id="pageBreak">
+    <label for="pageBreak">ページ間に区切り線を入れる</label>
+  </div>
+  <div class="row" id="pageBreakStrRow" style="margin-top:6px; opacity:0.4; pointer-events:none;">
+    <label>区切り文字列</label>
+    <input type="text" id="pageBreakStr" value="----------" class="long-input">
+  </div>
+</div>
+
+<button id="applyBtn">▶ 適用</button>
+
+<script>
+  // ── モード切替 ────────────────────────────────────
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const mode = btn.dataset.mode;
+      const is2col = mode === 'double' || mode === 'annot';
+      setEnabled('splitSection',  is2col);
+      setEnabled('annotSection',  mode === 'annot');
+    });
+  });
+
+  function setEnabled(id, enabled) {
+    const el = document.getElementById(id);
+    el.style.opacity       = enabled ? '1' : '0.4';
+    el.style.pointerEvents = enabled ? 'auto' : 'none';
+  }
+
+  // ── ページ区切りチェック ──────────────────────────
+  document.getElementById('pageBreak').addEventListener('change', function() {
+    setEnabled('pageBreakStrRow', this.checked);
+  });
+
+  // ── スライダー表示値 ──────────────────────────────
+  document.getElementById('splitRatio').addEventListener('input', function() {
+    document.getElementById('splitVal').textContent = this.value;
+  });
+
+  // ── 適用ボタン → index.html へ postMessage ────────
+  document.getElementById('applyBtn').addEventListener('click', () => {
+    const activeMode = document.querySelector('.mode-btn.active').dataset.mode;
+    const cfg = {
+      mode:          activeMode,
+      splitRatio:    Number(document.getElementById('splitRatio').value) / 100,
+      annotIndent:   document.getElementById('annotIndent').value,
+      annotBracket:  document.getElementById('annotBracket').checked,
+      pageBreak:     document.getElementById('pageBreak').checked,
+      pageBreakStr:  document.getElementById('pageBreakStr').value,
+    };
+    if (parent && parent.frames && parent.frames['center']) {
+      parent.frames['center'].postMessage({ type: 'hnknCfg', cfg }, '*');
+    }
+  });
+</script>
+</body>
+</html>
