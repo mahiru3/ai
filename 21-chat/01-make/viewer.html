@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>jobs.json / skills.json ビュワー（開発確認用）</title>
+<link rel="stylesheet" href="./css/viewer.css">
+</head>
+<body>
+
+<header>
+  <h1>jobs.json / skills.json ビュワー（開発確認用）</h1>
+  <div class="stats" id="stats">読込中...</div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" data-mode="jobs">職業一覧</button>
+  <button class="tab" data-mode="skills">技能一覧</button>
+  <button class="tab" data-mode="reverse">技能→職業逆引き</button>
+</div>
+
+<div class="controls" id="controls">
+  <input type="text" id="search" placeholder="検索 (職業名・ID・番号・技能名)">
+  <label>source:
+    <select id="sourceFilter">
+      <option value="">すべて</option>
+      <option value="基本">基本</option>
+      <option value="2010">2010</option>
+      <option value="2015">2015</option>
+    </select>
+  </label>
+  <label>verified:
+    <select id="verifiedFilter">
+      <option value="">すべて</option>
+      <option value="pending">pending</option>
+      <option value="verified">verified</option>
+      <option value="mismatch">mismatch</option>
+    </select>
+  </label>
+</div>
+
+<main>
+  <div class="list-pane" id="listPane"><div class="empty">読込中...</div></div>
+  <div class="detail-pane" id="detailPane"><div class="empty">左のリストから項目を選択してください</div></div>
+</main>
+
+<footer>
+  開発用ビュワー｜ データソース: ./data/jobs.json, ./data/skills.json, ./data/specialties.json
+</footer>
+
+<script>
+// =============================================================
+// データ
+// =============================================================
+let jobsData = null;
+let skillsData = null;
+let specialtiesData = null;
+
+let currentMode = "jobs";
+let selectedJobId = null;
+let selectedSkillId = null;
+let reverseSelectedSkills = new Set();
+
+const skillsMap = new Map();
+
+// 技能ID解決: `art:dance` 等の専門分野付きにも対応
+function resolveSkillName(skillKey) {
+  if (skillKey.includes(":")) {
+    const [parent, specialty] = skillKey.split(":");
+    const parentSkill = skillsMap.get(parent);
+    const parentName = parentSkill ? parentSkill.name : parent;
+    let specialtyName = specialty;
+    if (specialtiesData && specialtiesData.specialties[parent]) {
+      const found = specialtiesData.specialties[parent].find(s => s.id === specialty);
+      if (found) specialtyName = found.name;
+    }
+    return `${parentName}（${specialtyName}）`;
+  }
+  const s = skillsMap.get(skillKey);
+  return s ? s.name : skillKey;
+}
+
+// =============================================================
+// 初期化
+// =============================================================
+async function init() {
+  try {
+    const [jobsRes, skillsRes, specRes] = await Promise.all([
+      fetch("./data/jobs.json"),
+      fetch("./data/skills.json"),
+      fetch("./data/specialties.json"),
+    ]);
+    jobsData = await jobsRes.json();
+    skillsData = await skillsRes.json();
+    specialtiesData = await specRes.json();
+
+    skillsData.skills.forEach(s => skillsMap.set(s.id, s));
+    updateStats();
+    renderList();
+  } catch (e) {
+    document.getElementById("listPane").innerHTML =
+      `<div class="empty">データ読込エラー: ${e.message}<br><br>このビューワーは <code>./data/jobs.json</code>, <code>./data/skills.json</code>, <code>./data/specialties.json</code> を参照します。ローカルで開く場合はhttpサーバ経由で開いてください。</div>`;
+    console.error(e);
+  }
+}
+
+function updateStats() {
+  const jobs = jobsData.jobs;
+  const byVerified = {pending:0, verified:0, mismatch:0};
+  jobs.forEach(j => { byVerified[j.verified || "pending"]++; });
+  document.getElementById("stats").innerHTML =
+    `職業 <b>${jobs.length}</b>件 ` +
+    `(<span class="status-pending">?${byVerified.pending}</span> ` +
+    `<span class="status-verified">✓${byVerified.verified}</span> ` +
+    `<span class="status-mismatch">⚠${byVerified.mismatch}</span>) ／ ` +
+    `技能 <b>${skillsData.skills.length}</b>件`;
+}
+
+// =============================================================
+// タブ切替
+// =============================================================
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    currentMode = tab.dataset.mode;
+    document.getElementById("search").value = "";
+    reverseSelectedSkills.clear();
+    renderList();
+    renderDetail();
+  });
+});
+
+// =============================================================
+// 検索・フィルタ
+// =============================================================
+document.getElementById("search").addEventListener("input", renderList);
+document.getElementById("sourceFilter").addEventListener("change", renderList);
+document.getElementById("verifiedFilter").addEventListener("change", renderList);
+
+// =============================================================
+// リスト描画
+// =============================================================
+function renderList() {
+  const pane = document.getElementById("listPane");
+  const q = document.getElementById("search").value.toLowerCase().trim();
+  const sourceF = document.getElementById("sourceFilter").value;
+  const verifiedF = document.getElementById("verifiedFilter").value;
+
+  if (currentMode === "jobs") {
+    const filtered = jobsData.jobs.filter(j => {
+      if (sourceF && j.source !== sourceF) return false;
+      if (verifiedF && (j.verified || "pending") !== verifiedF) return false;
+      if (!q) return true;
+      const hay = [j.name, j.id, j.number, j.source].join(" ").toLowerCase();
+      const skillNames = [...j.fixed_skills, ...j.choice_groups.flatMap(g => g.candidates)]
+        .map(s => resolveSkillName(s)).join(" ").toLowerCase();
+      return hay.includes(q) || skillNames.includes(q);
+    });
+    pane.innerHTML = filtered.map(j => {
+      const status = j.verified || "pending";
+      const icon = {pending:"?", verified:"✓", mismatch:"⚠"}[status];
+      return `
+        <div class="job-row ${j.id === selectedJobId ? 'selected' : ''}" data-id="${j.id}">
+          <span class="status-icon status-${status}">${icon}</span>
+          <span class="num">${j.number}</span>
+          <span class="name">${j.name}<br><small>${j.id} · ${j.source}</small></span>
+        </div>
+      `;
+    }).join("") || `<div class="empty">該当なし</div>`;
+    pane.querySelectorAll(".job-row").forEach(el => {
+      el.addEventListener("click", () => {
+        selectedJobId = el.dataset.id;
+        pane.querySelectorAll(".job-row").forEach(r => r.classList.remove("selected"));
+        el.classList.add("selected");
+        renderJobDetail(selectedJobId);
+      });
+    });
+  }
+
+  else if (currentMode === "skills") {
+    const filtered = skillsData.skills.filter(s => {
+      if (!q) return true;
+      const hay = [s.id, s.name, s.category, s.subcategory].join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+    const byCat = {};
+    filtered.forEach(s => {
+      if (!byCat[s.category]) byCat[s.category] = [];
+      byCat[s.category].push(s);
+    });
+    let html = "";
+    skillsData.categories.forEach(cat => {
+      if (!byCat[cat.id]) return;
+      html += `<div class="category-header">${cat.name}</div>`;
+      byCat[cat.id].forEach(s => {
+        html += `
+          <div class="skill-row ${s.id === selectedSkillId ? 'selected' : ''}" data-id="${s.id}">
+            <span>${s.name} <small class="skill-chip-id-inline">${s.id}</small></span>
+            <span class="cat">${s.subcategory || ""}</span>
+          </div>
+        `;
+      });
+    });
+    pane.innerHTML = html || `<div class="empty">該当なし</div>`;
+    pane.querySelectorAll(".skill-row").forEach(el => {
+      el.addEventListener("click", () => {
+        selectedSkillId = el.dataset.id;
+        pane.querySelectorAll(".skill-row").forEach(r => r.classList.remove("selected"));
+        el.classList.add("selected");
+        renderSkillDetail(selectedSkillId);
+      });
+    });
+  }
+
+  else if (currentMode === "reverse") {
+    const filtered = skillsData.skills.filter(s => {
+      if (!q) return true;
+      const hay = [s.id, s.name].join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+    let html = `<div class="reverse-search-hint">技能を選択すると、その技能を<b>職業技能として持つ職業</b>が右側に表示されます。複数選択可能（AND条件）。</div>`;
+    const byCat = {};
+    filtered.forEach(s => {
+      if (!byCat[s.category]) byCat[s.category] = [];
+      byCat[s.category].push(s);
+    });
+    skillsData.categories.forEach(cat => {
+      if (!byCat[cat.id]) return;
+      html += `<div class="category-header">${cat.name}</div>`;
+      byCat[cat.id].forEach(s => {
+        const checked = reverseSelectedSkills.has(s.id) ? "checked" : "";
+        html += `
+          <label class="skill-row">
+            <span><input type="checkbox" data-id="${s.id}" ${checked}> ${s.name} <small class="skill-chip-id-inline">${s.id}</small></span>
+          </label>
+        `;
+      });
+    });
+    pane.innerHTML = html;
+    pane.querySelectorAll("input[type=checkbox]").forEach(cb => {
+      cb.addEventListener("change", () => {
+        if (cb.checked) reverseSelectedSkills.add(cb.dataset.id);
+        else reverseSelectedSkills.delete(cb.dataset.id);
+        renderReverseDetail();
+      });
+    });
+    renderReverseDetail();
+  }
+}
+
+// =============================================================
+// 詳細描画
+// =============================================================
+function renderDetail() {
+  if (currentMode === "jobs" && selectedJobId) renderJobDetail(selectedJobId);
+  else if (currentMode === "skills" && selectedSkillId) renderSkillDetail(selectedSkillId);
+  else if (currentMode === "reverse") renderReverseDetail();
+  else document.getElementById("detailPane").innerHTML = `<div class="empty">左のリストから項目を選択してください</div>`;
+}
+
+function renderJobDetail(id) {
+  const j = jobsData.jobs.find(x => x.id === id);
+  if (!j) return;
+  const status = j.verified || "pending";
+  const statusIcon = {pending:"?", verified:"✓", mismatch:"⚠"}[status];
+  const statusLabel = {pending:"未検証", verified:"検証済み", mismatch:"不一致"}[status];
+
+  const fixedChips = j.fixed_skills.map(s =>
+    `<span class="skill-chip" title="${s}">${resolveSkillName(s)}<br><span class="skill-chip id">${s}</span></span>`
+  ).join("");
+
+  const choiceHtml = j.choice_groups.map(g => `
+    <div class="choice-group">
+      <div class="label">${g.label}</div>
+      ${g.candidates.map(c => `<span class="skill-chip" title="${c}">${resolveSkillName(c)}<br><span class="skill-chip id">${c}</span></span>`).join("")}
+    </div>
+  `).join("");
+
+  document.getElementById("detailPane").innerHTML = `
+    <div class="job-detail">
+      <h2><span class="status-icon status-${status}">${statusIcon}</span> ${j.number}. ${j.name}</h2>
+      <div>
+        <span class="badge">ID: ${j.id}</span>
+        <span class="badge">source: ${j.source}</span>
+        <span class="badge">edition: ${j.edition}</span>
+        <span class="badge">${statusLabel}</span>
+        <span class="badge">${j.skill_points_formula}</span>
+      </div>
+      ${j.description ? `<p class="description">${j.description}</p>` : ""}
+      ${j.verified_note ? `<p class="verified-note">📝 ${j.verified_note}</p>` : ""}
+
+      <h3>固定の職業技能 (${j.fixed_skills.length})</h3>
+      <div>${fixedChips || '<span class="empty-inline">なし</span>'}</div>
+
+      <h3>選択式の職業技能 (${j.choice_groups.length}グループ)</h3>
+      ${choiceHtml || '<span class="empty-inline">なし</span>'}
+
+      <details class="raw-toggle">
+        <summary>raw JSON</summary>
+        <pre class="raw-json">${escapeHtml(JSON.stringify(j, null, 2))}</pre>
+      </details>
+    </div>
+  `;
+}
+
+function renderSkillDetail(id) {
+  const s = skillsMap.get(id);
+  if (!s) return;
+  const cat = skillsData.categories.find(c => c.id === s.category);
+  const sub = cat && cat.subcategories.find(sc => sc.id === s.subcategory);
+
+  const relatedJobs = jobsData.jobs.filter(j => {
+    return j.fixed_skills.includes(id) ||
+           j.choice_groups.some(g => g.candidates.includes(id));
+  });
+
+  const specialtyJobs = {};
+  jobsData.jobs.forEach(j => {
+    const allSkills = [...j.fixed_skills, ...j.choice_groups.flatMap(g => g.candidates)];
+    allSkills.forEach(sk => {
+      if (sk.startsWith(id + ":")) {
+        if (!specialtyJobs[sk]) specialtyJobs[sk] = [];
+        specialtyJobs[sk].push(j);
+      }
+    });
+  });
+
+  const initialText = s.initial_formula ? `式: ${s.initial_formula}` : (s.initial_value !== undefined ? `${s.initial_value}%` : "?");
+
+  document.getElementById("detailPane").innerHTML = `
+    <div class="job-detail">
+      <h2>${s.name}</h2>
+      <div>
+        <span class="badge">ID: ${s.id}</span>
+        <span class="badge">${cat ? cat.name : s.category}</span>
+        ${sub ? `<span class="badge">${sub.name}</span>` : ""}
+        <span class="badge">初期値: ${initialText}</span>
+        ${s.is_specialty ? '<span class="badge badge-accent">専門分野あり</span>' : ""}
+      </div>
+      ${s.description ? `<p class="description">${s.description}</p>` : ""}
+
+      ${s.is_specialty && specialtiesData.specialties[s.id] ? `
+        <h3>定義済み専門分野 (${specialtiesData.specialties[s.id].length})</h3>
+        <div>${specialtiesData.specialties[s.id].map(sp =>
+          `<span class="skill-chip">${sp.name}<br><span class="skill-chip id">${s.id}:${sp.id}</span></span>`
+        ).join("")}</div>
+      ` : ""}
+
+      <h3>この技能を職業技能に持つ職業 (${relatedJobs.length})</h3>
+      ${relatedJobs.map(j => {
+        const isFixed = j.fixed_skills.includes(id);
+        return `<span class="skill-chip clickable" data-jump="${j.id}">
+          ${j.number}. ${j.name} <small>(${isFixed ? '固定' : '選択'})</small>
+        </span>`;
+      }).join("") || '<span class="empty-inline">なし</span>'}
+
+      ${Object.keys(specialtyJobs).length > 0 ? `
+        <h3>専門分野付きで持つ職業</h3>
+        ${Object.entries(specialtyJobs).map(([key, jobs]) => `
+          <div class="specialty-row">
+            <b>${resolveSkillName(key)}</b>:
+            ${jobs.map(j => `<span class="skill-chip clickable" data-jump="${j.id}">${j.number}. ${j.name}</span>`).join("")}
+          </div>
+        `).join("")}
+      ` : ""}
+
+      <details class="raw-toggle">
+        <summary>raw JSON</summary>
+        <pre class="raw-json">${escapeHtml(JSON.stringify(s, null, 2))}</pre>
+      </details>
+    </div>
+  `;
+
+  document.querySelectorAll("[data-jump]").forEach(el => {
+    el.addEventListener("click", () => jumpToJob(el.dataset.jump));
+  });
+}
+
+function renderReverseDetail() {
+  const selected = [...reverseSelectedSkills];
+  const pane = document.getElementById("detailPane");
+
+  if (selected.length === 0) {
+    pane.innerHTML = `<div class="empty">左のチェックボックスで技能を選択してください</div>`;
+    return;
+  }
+
+  const matches = jobsData.jobs.filter(j => {
+    const allSkills = new Set([
+      ...j.fixed_skills,
+      ...j.choice_groups.flatMap(g => g.candidates)
+    ]);
+    return selected.every(s => allSkills.has(s));
+  });
+
+  pane.innerHTML = `
+    <div class="job-detail">
+      <h2>逆引き結果</h2>
+      <div class="selected-skills">
+        選択中の技能:
+        ${selected.map(s => `<span class="filter-chip" data-remove="${s}">${resolveSkillName(s)} ×</span>`).join("")}
+      </div>
+      <div class="result-count">
+        これらをすべて職業技能として持つ職業: <b>${matches.length}件</b>
+      </div>
+      ${matches.length === 0 ? '<div class="empty">該当なし</div>' : matches.map(j => {
+        const status = j.verified || "pending";
+        const icon = {pending:"?", verified:"✓", mismatch:"⚠"}[status];
+        return `
+          <div class="job-row clickable" data-jump="${j.id}">
+            <span class="status-icon status-${status}">${icon}</span>
+            <span class="num">${j.number}</span>
+            <span class="name">${j.name} <small>(${j.source})</small></span>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+
+  pane.querySelectorAll("[data-jump]").forEach(el => {
+    el.addEventListener("click", () => jumpToJob(el.dataset.jump));
+  });
+  pane.querySelectorAll("[data-remove]").forEach(el => {
+    el.addEventListener("click", () => toggleReverse(el.dataset.remove));
+  });
+}
+
+function toggleReverse(id) {
+  reverseSelectedSkills.delete(id);
+  renderList();
+  renderReverseDetail();
+}
+
+function jumpToJob(id) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelector('.tab[data-mode="jobs"]').classList.add("active");
+  currentMode = "jobs";
+  document.getElementById("search").value = "";
+  selectedJobId = id;
+  renderList();
+  renderJobDetail(id);
+  setTimeout(() => {
+    const el = document.querySelector(`.job-row[data-id="${id}"]`);
+    if (el) el.scrollIntoView({block:"center"});
+  }, 50);
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+init();
+</script>
+</body>
+</html>
