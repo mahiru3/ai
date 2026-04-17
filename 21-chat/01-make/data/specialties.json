@@ -1,656 +1,92 @@
 {
   "version": "1.0",
   "edition": "6",
-  "comment": "クトゥルフ神話TRPG第6版 技能マスタ。基本ルルブ＋2010・2015サプリ準拠。IDは英語snake_case、表示は日本語nameフィールドを使用。",
-  "categories": [
-    {
-      "id": "combat",
-      "name": "戦闘",
-      "subcategories": [
-        { "id": "combat_melee",  "name": "近接・格闘" },
-        { "id": "combat_ranged", "name": "射撃" },
-        { "id": "combat_defense","name": "防御" }
-      ]
-    },
-    {
-      "id": "exploration",
-      "name": "探索・行動",
-      "subcategories": [
-        { "id": "search",    "name": "探索" },
-        { "id": "stealth",   "name": "隠密・侵入" },
-        { "id": "athletic",  "name": "運動" },
-        { "id": "tech",      "name": "技術・修理" },
-        { "id": "operation", "name": "運転・操縦" }
-      ]
-    },
-    {
-      "id": "knowledge",
-      "name": "交渉・知識",
-      "subcategories": [
-        { "id": "negotiation", "name": "交渉" },
-        { "id": "language",    "name": "言語" },
-        { "id": "humanities",  "name": "人文知識" },
-        { "id": "science",     "name": "自然科学" },
-        { "id": "art_craft",   "name": "芸術・製作" },
-        { "id": "mythos",      "name": "神話" },
-        { "id": "other",       "name": "その他" }
-      ]
-    }
-  ],
-  "skills": [
-    {
-      "id": "dodge",
-      "name": "回避",
-      "category": "combat",
-      "subcategory": "combat_defense",
-      "initial_formula": "DEX*2",
-      "description": "攻撃を避ける"
-    },
-    {
-      "id": "martial_arts",
-      "name": "マーシャルアーツ",
-      "category": "combat",
-      "subcategory": "combat_melee",
-      "initial_value": 1,
-      "is_specialty": true,
-      "specialty_optional": true,
-      "specialty_suggestions": ["柔道", "空手", "合気道", "ボクシング", "レスリング"],
-      "description": "格闘技全般。分野を指定することもある"
-    },
-    {
-      "id": "fist",
-      "name": "こぶし",
-      "category": "combat",
-      "subcategory": "combat_melee",
-      "initial_value": 50,
-      "aliases": ["こぶし（パンチ）", "パンチ"]
-    },
-    {
-      "id": "kick",
-      "name": "キック",
-      "category": "combat",
-      "subcategory": "combat_melee",
-      "initial_value": 25
-    },
-    {
-      "id": "grapple",
-      "name": "組み付き",
-      "category": "combat",
-      "subcategory": "combat_melee",
-      "initial_value": 25,
-      "aliases": ["組みつき"]
-    },
-    {
-      "id": "head_butt",
-      "name": "頭突き",
-      "category": "combat",
-      "subcategory": "combat_melee",
-      "initial_value": 10
-    },
-    {
-      "id": "japanese_sword",
-      "name": "日本刀",
-      "category": "combat",
-      "subcategory": "combat_melee",
-      "initial_value": 15
-    },
-    {
-      "id": "knife",
-      "name": "ナイフ",
-      "category": "combat",
-      "subcategory": "combat_melee",
-      "initial_value": 25
-    },
-    {
-      "id": "staff",
-      "name": "杖",
-      "category": "combat",
-      "subcategory": "combat_melee",
-      "initial_value": 25
-    },
-    {
-      "id": "naginata",
-      "name": "薙刀",
-      "category": "combat",
-      "subcategory": "combat_melee",
-      "initial_value": 15
-    },
-    {
-      "id": "bow",
-      "name": "弓",
-      "category": "combat",
-      "subcategory": "combat_ranged",
-      "initial_value": 15
-    },
-    {
-      "id": "archery",
-      "name": "競技用アーチェリー",
-      "category": "combat",
-      "subcategory": "combat_ranged",
-      "initial_value": 15
-    },
-    {
-      "id": "chainsaw",
-      "name": "チェーンソー",
-      "category": "combat",
-      "subcategory": "combat_melee",
-      "initial_value": 15
-    },
-    {
-      "id": "throwing",
-      "name": "投擲",
-      "category": "combat",
-      "subcategory": "combat_ranged",
-      "initial_value": 25
-    },
-    {
-      "id": "handgun",
-      "name": "拳銃",
-      "category": "combat",
-      "subcategory": "combat_ranged",
-      "initial_value": 20
-    },
-    {
-      "id": "rifle",
-      "name": "ライフル",
-      "category": "combat",
-      "subcategory": "combat_ranged",
-      "initial_value": 25
-    },
-    {
-      "id": "shotgun",
-      "name": "ショットガン",
-      "category": "combat",
-      "subcategory": "combat_ranged",
-      "initial_value": 30
-    },
-    {
-      "id": "submachine_gun",
-      "name": "サブマシンガン",
-      "category": "combat",
-      "subcategory": "combat_ranged",
-      "initial_value": 15
-    },
-    {
-      "id": "machine_gun",
-      "name": "マシンガン",
-      "category": "combat",
-      "subcategory": "combat_ranged",
-      "initial_value": 15
-    },
-    {
-      "id": "artillery",
-      "name": "砲",
-      "category": "combat",
-      "subcategory": "combat_ranged",
-      "initial_value": 1
-    },
-    {
-      "id": "grenade_launcher",
-      "name": "グレネード・ランチャー",
-      "category": "combat",
-      "subcategory": "combat_ranged",
-      "initial_value": 15
-    },
-    {
-      "id": "stun_gun",
-      "name": "スタンガン",
-      "category": "combat",
-      "subcategory": "combat_ranged",
-      "initial_value": 50
-    },
-
-    {
-      "id": "spot_hidden",
-      "name": "目星",
-      "category": "exploration",
-      "subcategory": "search",
-      "initial_value": 25
-    },
-    {
-      "id": "listen",
-      "name": "聞き耳",
-      "category": "exploration",
-      "subcategory": "search",
-      "initial_value": 25
-    },
-    {
-      "id": "library_use",
-      "name": "図書館",
-      "category": "exploration",
-      "subcategory": "search",
-      "initial_value": 25
-    },
-    {
-      "id": "track",
-      "name": "追跡",
-      "category": "exploration",
-      "subcategory": "search",
-      "initial_value": 10
-    },
-    {
-      "id": "photography",
-      "name": "写真術",
-      "category": "exploration",
-      "subcategory": "search",
-      "initial_value": 10
-    },
-    {
-      "id": "navigate",
-      "name": "ナビゲート",
-      "category": "exploration",
-      "subcategory": "search",
-      "initial_value": 10
-    },
-
-    {
-      "id": "conceal",
-      "name": "隠す",
-      "category": "exploration",
-      "subcategory": "stealth",
-      "initial_value": 15
-    },
-    {
-      "id": "hide",
-      "name": "隠れる",
-      "category": "exploration",
-      "subcategory": "stealth",
-      "initial_value": 10
-    },
-    {
-      "id": "sneak",
-      "name": "忍び歩き",
-      "category": "exploration",
-      "subcategory": "stealth",
-      "initial_value": 10
-    },
-    {
-      "id": "lock_pick",
-      "name": "鍵開け",
-      "category": "exploration",
-      "subcategory": "stealth",
-      "initial_value": 1
-    },
-    {
-      "id": "disguise",
-      "name": "変装",
-      "category": "exploration",
-      "subcategory": "stealth",
-      "initial_value": 1
-    },
-
-    {
-      "id": "first_aid",
-      "name": "応急手当",
-      "category": "exploration",
-      "subcategory": "athletic",
-      "initial_value": 30
-    },
-    {
-      "id": "climb",
-      "name": "登攀",
-      "category": "exploration",
-      "subcategory": "athletic",
-      "initial_value": 40
-    },
-    {
-      "id": "jump",
-      "name": "跳躍",
-      "category": "exploration",
-      "subcategory": "athletic",
-      "initial_value": 25
-    },
-    {
-      "id": "swim",
-      "name": "水泳",
-      "category": "exploration",
-      "subcategory": "athletic",
-      "initial_value": 25
-    },
-    {
-      "id": "ride",
-      "name": "乗馬",
-      "category": "exploration",
-      "subcategory": "athletic",
-      "initial_value": 5
-    },
-    {
-      "id": "parachute",
-      "name": "パラシュート",
-      "category": "exploration",
-      "subcategory": "athletic",
-      "initial_value": 1
-    },
-
-    {
-      "id": "mech_repair",
-      "name": "機械修理",
-      "category": "exploration",
-      "subcategory": "tech",
-      "initial_value": 20
-    },
-    {
-      "id": "elec_repair",
-      "name": "電気修理",
-      "category": "exploration",
-      "subcategory": "tech",
-      "initial_value": 10
-    },
-    {
-      "id": "heavy_machine",
-      "name": "重機械操作",
-      "category": "exploration",
-      "subcategory": "tech",
-      "initial_value": 1
-    },
-    {
-      "id": "craft",
-      "name": "製作",
-      "category": "exploration",
-      "subcategory": "tech",
-      "initial_value": 5,
-      "is_specialty": true,
-      "specialty_suggestions": ["料理", "裁縫", "作曲", "作詞", "大工", "溶接", "配管", "農作物", "畜産", "養蜂", "古書修復", "古美術修復", "コンピューター・ウイルス"]
-    },
-
-    {
-      "id": "drive",
-      "name": "運転",
-      "category": "exploration",
-      "subcategory": "operation",
-      "initial_value": 20,
-      "is_specialty": true,
-      "specialty_suggestions": ["自動車", "二輪車"]
-    },
-    {
-      "id": "pilot",
-      "name": "操縦",
-      "category": "exploration",
-      "subcategory": "operation",
-      "initial_value": 1,
-      "is_specialty": true,
-      "specialty_suggestions": ["船舶", "ボート", "潜水艦", "ヘリコプター", "民間プロペラ機", "民間ジェット機", "定期旅客機", "ジェット戦闘機", "戦闘機", "戦車", "航空機", "飛行機", "大型機"]
-    },
-
-    {
-      "id": "fast_talk",
-      "name": "言いくるめ",
-      "category": "knowledge",
-      "subcategory": "negotiation",
-      "initial_value": 5
-    },
-    {
-      "id": "credit_rating",
-      "name": "信用",
-      "category": "knowledge",
-      "subcategory": "negotiation",
-      "initial_value": 15
-    },
-    {
-      "id": "persuade",
-      "name": "説得",
-      "category": "knowledge",
-      "subcategory": "negotiation",
-      "initial_value": 15
-    },
-    {
-      "id": "bargain",
-      "name": "値切り",
-      "category": "knowledge",
-      "subcategory": "negotiation",
-      "initial_value": 5
-    },
-    {
-      "id": "psychology",
-      "name": "心理学",
-      "category": "knowledge",
-      "subcategory": "negotiation",
-      "initial_value": 5
-    },
-    {
-      "id": "psychoanalysis",
-      "name": "精神分析",
-      "category": "knowledge",
-      "subcategory": "negotiation",
-      "initial_value": 1
-    },
-
-    {
-      "id": "native_language",
-      "name": "母国語",
-      "category": "knowledge",
-      "subcategory": "language",
-      "initial_formula": "EDU*5",
-      "tags": ["language_native"]
-    },
-    {
-      "id": "english",
-      "name": "英語",
-      "category": "knowledge",
-      "subcategory": "language",
-      "initial_value": 1,
-      "tags": ["language_foreign"]
-    },
-    {
-      "id": "latin",
-      "name": "ラテン語",
-      "category": "knowledge",
-      "subcategory": "language",
-      "initial_value": 1,
-      "tags": ["language_foreign", "language_dead"]
-    },
-    {
-      "id": "german",
-      "name": "ドイツ語",
-      "category": "knowledge",
-      "subcategory": "language",
-      "initial_value": 1,
-      "tags": ["language_foreign"]
-    },
-    {
-      "id": "chinese",
-      "name": "中国語",
-      "category": "knowledge",
-      "subcategory": "language",
-      "initial_value": 1,
-      "tags": ["language_foreign"]
-    },
-    {
-      "id": "korean",
-      "name": "朝鮮語",
-      "category": "knowledge",
-      "subcategory": "language",
-      "initial_value": 1,
-      "tags": ["language_foreign"]
-    },
-    {
-      "id": "russian",
-      "name": "ロシア語",
-      "category": "knowledge",
-      "subcategory": "language",
-      "initial_value": 1,
-      "tags": ["language_foreign"]
-    },
-    {
-      "id": "classical_chinese",
-      "name": "漢文",
-      "category": "knowledge",
-      "subcategory": "language",
-      "initial_value": 1,
-      "tags": ["language_foreign", "language_dead"]
-    },
-    {
-      "id": "other_language",
-      "name": "ほかの言語",
-      "category": "knowledge",
-      "subcategory": "language",
-      "initial_value": 1,
-      "is_specialty": true,
-      "specialty_optional": true,
-      "specialty_suggestions": ["フランス語", "スペイン語", "イタリア語", "アラビア語", "スワヒリ語"],
-      "description": "英語・ラテン語等の個別技能に含まれない言語"
-    },
-
-    {
-      "id": "history",
-      "name": "歴史",
-      "category": "knowledge",
-      "subcategory": "humanities",
-      "initial_value": 20
-    },
-    {
-      "id": "archaeology",
-      "name": "考古学",
-      "category": "knowledge",
-      "subcategory": "humanities",
-      "initial_value": 1
-    },
-    {
-      "id": "anthropology",
-      "name": "人類学",
-      "category": "knowledge",
-      "subcategory": "humanities",
-      "initial_value": 1
-    },
-    {
-      "id": "law",
-      "name": "法律",
-      "category": "knowledge",
-      "subcategory": "humanities",
-      "initial_value": 5
-    },
-    {
-      "id": "occult",
-      "name": "オカルト",
-      "category": "knowledge",
-      "subcategory": "humanities",
-      "initial_value": 5
-    },
-    {
-      "id": "accounting",
-      "name": "経理",
-      "category": "knowledge",
-      "subcategory": "humanities",
-      "initial_value": 10
-    },
-
-    {
-      "id": "medicine",
-      "name": "医学",
-      "category": "knowledge",
-      "subcategory": "science",
-      "initial_value": 5
-    },
-    {
-      "id": "pharmacy",
-      "name": "薬学",
-      "category": "knowledge",
-      "subcategory": "science",
-      "initial_value": 1
-    },
-    {
-      "id": "chemistry",
-      "name": "化学",
-      "category": "knowledge",
-      "subcategory": "science",
-      "initial_value": 1
-    },
-    {
-      "id": "biology",
-      "name": "生物学",
-      "category": "knowledge",
-      "subcategory": "science",
-      "initial_value": 1
-    },
-    {
-      "id": "physics",
-      "name": "物理学",
-      "category": "knowledge",
-      "subcategory": "science",
-      "initial_value": 1
-    },
-    {
-      "id": "geology",
-      "name": "地質学",
-      "category": "knowledge",
-      "subcategory": "science",
-      "initial_value": 1
-    },
-    {
-      "id": "astronomy",
-      "name": "天文学",
-      "category": "knowledge",
-      "subcategory": "science",
-      "initial_value": 1
-    },
-    {
-      "id": "electronics",
-      "name": "電子工学",
-      "category": "knowledge",
-      "subcategory": "science",
-      "initial_value": 1
-    },
-    {
-      "id": "natural_history",
-      "name": "博物学",
-      "category": "knowledge",
-      "subcategory": "science",
-      "initial_value": 10
-    },
-    {
-      "id": "computer_use",
-      "name": "コンピューター",
-      "category": "knowledge",
-      "subcategory": "science",
-      "initial_value": 1
-    },
-
-    {
-      "id": "art",
-      "name": "芸術",
-      "category": "knowledge",
-      "subcategory": "art_craft",
-      "initial_value": 5,
-      "is_specialty": true,
-      "specialty_suggestions": ["歌唱", "演劇", "演技", "絵画", "ダンス", "文学", "音楽", "音楽演奏", "楽器演奏", "美術", "司会", "アナウンス", "ファッション", "物語", "ギャンブル", "詩的表現", "トリビア知識", "イカサマ", "刺青彫", "アロマ", "ゲーム", "ハッキング", "握手", "何かのスポーツ", "任意のスポーツ競技"]
-    },
-
-    {
-      "id": "cthulhu_mythos",
-      "name": "クトゥルフ神話",
-      "category": "knowledge",
-      "subcategory": "mythos",
-      "initial_value": 0,
-      "can_hobby": false,
-      "description": "第6版において、趣味技能ポイントでは伸ばせない"
-    },
-
-    {
-      "id": "survival",
-      "name": "サバイバル",
-      "category": "knowledge",
-      "subcategory": "other",
-      "initial_value": 10,
-      "is_specialty": true,
-      "specialty_suggestions": ["海", "山", "砂漠", "森林", "極地", "都市"]
-    },
-    {
-      "id": "personal_interest",
-      "name": "個人の関心",
-      "category": "knowledge",
-      "subcategory": "other",
-      "initial_value": 0,
-      "is_meta": true,
-      "description": "自由選択。職業技能枠で任意の技能1つ分として使う"
-    },
-    {
-      "id": "personal_specialty",
-      "name": "個人の専門技能",
-      "category": "knowledge",
-      "subcategory": "other",
-      "initial_value": 0,
-      "is_meta": true,
-      "description": "職業固有の専門技能枠。自由選択"
-    }
-  ]
+  "comment": "専門分野付き技能で使う分野IDの辞書。親技能(parent)ごとにidと表示名を定義。IDは英語snake_case。",
+  "specialties": {
+    "martial_arts": [
+      { "id": "judo",       "name": "柔道" },
+      { "id": "karate",     "name": "空手" },
+      { "id": "aikido",     "name": "合気道" },
+      { "id": "boxing",     "name": "ボクシング" },
+      { "id": "wrestling",  "name": "レスリング" },
+      { "id": "any",        "name": "任意" }
+    ],
+    "craft": [
+      { "id": "cooking",             "name": "料理" },
+      { "id": "sewing",              "name": "裁縫" },
+      { "id": "cleaning",            "name": "掃除" },
+      { "id": "composing",           "name": "作曲" },
+      { "id": "lyrics",              "name": "作詞" },
+      { "id": "carpentry",           "name": "大工" },
+      { "id": "welding",             "name": "溶接" },
+      { "id": "plumbing",            "name": "配管" },
+      { "id": "agriculture",         "name": "農作物" },
+      { "id": "livestock",           "name": "畜産" },
+      { "id": "beekeeping",          "name": "養蜂" },
+      { "id": "book_restoration",    "name": "古書修復" },
+      { "id": "antique_restoration", "name": "古美術修復" },
+      { "id": "wine_tasting",        "name": "ワイン鑑定" },
+      { "id": "computer_virus",      "name": "コンピューター・ウイルス" },
+      { "id": "any",                 "name": "任意" }
+    ],
+    "drive": [
+      { "id": "car",        "name": "自動車" },
+      { "id": "motorcycle", "name": "二輪車" }
+    ],
+    "pilot": [
+      { "id": "ship",             "name": "船舶" },
+      { "id": "boat",             "name": "ボート" },
+      { "id": "submarine",        "name": "潜水艦" },
+      { "id": "helicopter",       "name": "ヘリコプター" },
+      { "id": "civilian_prop",    "name": "民間プロペラ機" },
+      { "id": "civilian_jet",     "name": "民間ジェット機" },
+      { "id": "airliner",         "name": "定期旅客機" },
+      { "id": "fighter_jet",      "name": "ジェット戦闘機" },
+      { "id": "fighter",          "name": "戦闘機" },
+      { "id": "tank",             "name": "戦車" },
+      { "id": "aircraft",         "name": "航空機" },
+      { "id": "airplane",         "name": "飛行機" },
+      { "id": "large_aircraft",   "name": "大型機" }
+    ],
+    "art": [
+      { "id": "singing",          "name": "歌唱" },
+      { "id": "drama",            "name": "演劇" },
+      { "id": "acting",           "name": "演技" },
+      { "id": "painting",         "name": "絵画" },
+      { "id": "dance",            "name": "ダンス" },
+      { "id": "literature",       "name": "文学" },
+      { "id": "music",            "name": "音楽" },
+      { "id": "music_play",       "name": "音楽演奏" },
+      { "id": "instrument",       "name": "楽器演奏" },
+      { "id": "fine_art",         "name": "美術" },
+      { "id": "mc",               "name": "司会" },
+      { "id": "announce",         "name": "アナウンス" },
+      { "id": "fashion",          "name": "ファッション" },
+      { "id": "storytelling",     "name": "物語" },
+      { "id": "gambling",         "name": "ギャンブル" },
+      { "id": "poetry",           "name": "詩的表現" },
+      { "id": "trivia",           "name": "トリビア知識" },
+      { "id": "cheating",         "name": "イカサマ" },
+      { "id": "tattoo",           "name": "刺青彫" },
+      { "id": "aroma",            "name": "アロマ" },
+      { "id": "game",             "name": "ゲーム" },
+      { "id": "hacking",          "name": "ハッキング" },
+      { "id": "handshake",        "name": "握手" },
+      { "id": "sports_any",       "name": "任意のスポーツ競技" },
+      { "id": "sports_some",      "name": "何かのスポーツ" },
+      { "id": "music_some",       "name": "何かの音楽演奏" },
+      { "id": "any",              "name": "任意" }
+    ],
+    "survival": [
+      { "id": "sea",     "name": "海" },
+      { "id": "mountain","name": "山" },
+      { "id": "desert",  "name": "砂漠" },
+      { "id": "forest",  "name": "森林" },
+      { "id": "polar",   "name": "極地" },
+      { "id": "urban",   "name": "都市" }
+    ],
+    "other_language": [
+      { "id": "any", "name": "任意" }
+    ]
+  }
 }
