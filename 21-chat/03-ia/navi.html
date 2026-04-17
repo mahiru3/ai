@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ナビ</title>
+  <link rel="stylesheet" href="../../01-css/00-style.css">
+  <link rel="stylesheet" href="../../01-css/21-chat-03-ia.css">
+</head>
+<body>
+
+  <h3>いあきゃら変換</h3>
+
+  <div class="guide">
+    1) いあきゃら貼り付け → <b>解析</b><br>
+    &nbsp;&nbsp;&nbsp;statusの並び替え/追加/削除/編集 &amp; name編集<br>
+    2) <b>▶ 実行</b> → 3) <b>📋 コピー</b>
+  </div>
+
+  <div class="guide-sub">
+    status を並び替え／追加／削除／編集し、<br>
+    name を必要なら変更してから ▶ 実行。
+  </div>
+
+  <button class="button-29" onclick="call('doParse')">解析</button>
+  <button class="button-29" onclick="call('doRun')">▶ 実行</button>
+  <button class="button-29" onclick="call('doCopy')">📋 コピー</button>
+
+  <script>
+    function call(fn) {
+      const c = parent && parent.frames && parent.frames['center'];
+      if (c && typeof c[fn] === 'function') c[fn]();
+    }
+  </script>
+
+</body>
+</html>
