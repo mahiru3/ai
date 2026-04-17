@@ -1,0 +1,2051 @@
+{
+  "version": "1.0",
+  "edition": "6",
+  "comment": "第6版 職業マスタ。skill_points_formulaは原則EDU*20。choice_groupsで選択式職業技能を表現。",
+  "jobs": [
+    {
+      "id": "doctor_2010",
+      "name": "医師",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "first_aid",
+        "credit_rating",
+        "persuade",
+        "english",
+        "latin",
+        "german",
+        "medicine",
+        "pharmacy",
+        "biology",
+        "accounting",
+        "craft:beekeeping"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "surgeon_2015",
+      "name": "外科医",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "first_aid",
+        "credit_rating",
+        "persuade",
+        "english",
+        "latin",
+        "german",
+        "medicine",
+        "pharmacy",
+        "biology",
+        "accounting"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "dentist_2015",
+      "name": "歯科医",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "first_aid",
+        "throwing",
+        "credit_rating",
+        "persuade",
+        "english",
+        "latin",
+        "german",
+        "medicine",
+        "pharmacy",
+        "biology",
+        "accounting"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "animal_therapist_2015",
+      "name": "アニマルセラピスト",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "listen",
+        "first_aid",
+        "psychoanalysis",
+        "psychology",
+        "track",
+        "jump",
+        "biology",
+        "natural_history",
+        "art:any",
+        "personal_interest"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "nurse_2015",
+      "name": "看護師",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "listen",
+        "first_aid",
+        "psychology",
+        "pharmacy",
+        "chemistry",
+        "biology"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "fast_talk",
+            "persuade"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "paramedic_2015",
+      "name": "救急救命士",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "first_aid",
+        "lock_pick",
+        "climb",
+        "elec_repair",
+        "mech_repair",
+        "medicine",
+        "chemistry"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "plastic_surgeon_2015",
+      "name": "形成外科医",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "first_aid",
+        "psychology",
+        "persuade",
+        "bargain",
+        "english",
+        "medicine",
+        "pharmacy",
+        "accounting"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "psychiatrist_2015",
+      "name": "精神科医",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "psychoanalysis",
+        "psychology",
+        "persuade",
+        "other_language",
+        "medicine",
+        "pharmacy",
+        "chemistry",
+        "biology"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "black_market_doctor_2015",
+      "name": "闇医者",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "first_aid",
+        "persuade",
+        "other_language",
+        "medicine",
+        "pharmacy",
+        "law",
+        "accounting",
+        "personal_interest"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "coast_guard_2015",
+      "name": "海上保安官",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "navigate",
+        "climb",
+        "pilot:ship",
+        "mech_repair",
+        "heavy_machine",
+        "credit_rating",
+        "law",
+        "survival:sea"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "forensic_researcher_2015",
+      "name": "科学捜査研究員",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "photography",
+        "medicine",
+        "pharmacy",
+        "chemistry",
+        "biology",
+        "anthropology",
+        "law",
+        "computer_use"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "mountain_rescue_2015",
+      "name": "山岳救助隊員",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "listen",
+        "first_aid",
+        "lock_pick",
+        "navigate",
+        "track",
+        "climb",
+        "jump",
+        "other_language",
+        "survival:mountain"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "firefighter_2015",
+      "name": "消防士",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "first_aid",
+        "dodge",
+        "throwing",
+        "climb",
+        "jump",
+        "drive:car",
+        "mech_repair",
+        "heavy_machine"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "artist_basic",
+      "name": "芸術家",
+      "edition": "6",
+      "source": "基本",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "psychology"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から3つ選択",
+          "select_count": 3,
+          "candidates": [
+            "photography",
+            "biology",
+            "astronomy",
+            "computer_use"
+          ]
+        },
+        {
+          "label": "次の技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "fast_talk",
+            "persuade"
+          ]
+        },
+        {
+          "label": "次の技能から1つ選択 (別群)",
+          "select_count": 1,
+          "candidates": [
+            "natural_history",
+            "history"
+          ]
+        },
+        {
+          "label": "次の技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "craft:any",
+            "art:any"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dancer_2015",
+      "name": "ダンサー",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "dodge",
+        "sneak",
+        "climb",
+        "jump",
+        "art:dance",
+        "personal_interest"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "designer_2015",
+      "name": "デザイナー",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "library_use",
+        "psychology",
+        "computer_use",
+        "personal_interest"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "fast_talk",
+            "persuade"
+          ]
+        },
+        {
+          "label": "次の技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "craft:any",
+            "art:any"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fashion_artist_2015",
+      "name": "ファッション系芸術家",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "psychology",
+        "disguise",
+        "bargain",
+        "personal_interest"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "fast_talk",
+            "persuade"
+          ]
+        },
+        {
+          "label": "次の技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "craft:any",
+            "art:any"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdf_member_2010",
+      "name": "自衛官",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "first_aid",
+        "navigate",
+        "drive:car",
+        "pilot:ship",
+        "pilot:submarine",
+        "pilot:helicopter",
+        "pilot:civilian_prop",
+        "pilot:civilian_jet",
+        "pilot:airliner",
+        "pilot:fighter_jet",
+        "pilot:tank",
+        "mech_repair",
+        "heavy_machine"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から2つ選択",
+          "select_count": 2,
+          "candidates": [
+            "listen",
+            "dodge",
+            "kick",
+            "grapple",
+            "fist",
+            "martial_arts:any",
+            "handgun",
+            "submachine_gun",
+            "rifle",
+            "artillery",
+            "grenade_launcher",
+            "hide",
+            "sneak",
+            "credit_rating",
+            "persuade",
+            "bargain",
+            "other_language",
+            "law",
+            "accounting"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gsdf_2015",
+      "name": "陸上自衛隊員",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "first_aid",
+        "dodge",
+        "hide",
+        "survival:mountain",
+        "survival:desert"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から2つ選択",
+          "select_count": 2,
+          "candidates": [
+            "artillery",
+            "sneak",
+            "climb",
+            "swim",
+            "mech_repair",
+            "heavy_machine",
+            "other_language",
+            "parachute"
+          ]
+        },
+        {
+          "label": "任意の近接戦闘技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "fist",
+            "kick",
+            "grapple",
+            "head_butt",
+            "japanese_sword",
+            "knife",
+            "staff",
+            "naginata",
+            "bow",
+            "archery",
+            "chainsaw",
+            "throwing",
+            "martial_arts:any"
+          ]
+        },
+        {
+          "label": "任意の火器技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "handgun",
+            "rifle",
+            "shotgun",
+            "submachine_gun",
+            "machine_gun",
+            "artillery",
+            "grenade_launcher",
+            "stun_gun",
+            "bow",
+            "archery"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "msdf_2015",
+      "name": "海上自衛隊員",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "first_aid",
+        "navigate",
+        "swim",
+        "pilot:boat",
+        "heavy_machine",
+        "parachute",
+        "survival:sea"
+      ],
+      "choice_groups": [
+        {
+          "label": "任意の近接戦闘技能から2つ選択",
+          "select_count": 2,
+          "candidates": [
+            "fist",
+            "kick",
+            "grapple",
+            "head_butt",
+            "japanese_sword",
+            "knife",
+            "staff",
+            "naginata",
+            "bow",
+            "archery",
+            "chainsaw",
+            "throwing",
+            "martial_arts:any"
+          ]
+        },
+        {
+          "label": "任意の火器技能から2つ選択",
+          "select_count": 2,
+          "candidates": [
+            "handgun",
+            "rifle",
+            "shotgun",
+            "submachine_gun",
+            "machine_gun",
+            "artillery",
+            "grenade_launcher",
+            "stun_gun",
+            "bow",
+            "archery"
+          ]
+        },
+        {
+          "label": "次の技能から2つ選択",
+          "select_count": 2,
+          "candidates": [
+            "artillery",
+            "elec_repair",
+            "mech_repair"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdf_pilot_2015",
+      "name": "自衛隊パイロット",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "navigate",
+        "pilot:helicopter",
+        "pilot:large_aircraft",
+        "pilot:fighter",
+        "elec_repair",
+        "mech_repair",
+        "heavy_machine",
+        "astronomy",
+        "parachute",
+        "personal_interest"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "pmc_member_2015",
+      "name": "民間軍事会社メンバー",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "dodge",
+        "hide",
+        "sneak"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から2つ選択",
+          "select_count": 2,
+          "candidates": [
+            "first_aid",
+            "mech_repair",
+            "other_language",
+            "survival:mountain",
+            "survival:desert"
+          ]
+        },
+        {
+          "label": "次の技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "climb",
+            "swim"
+          ]
+        },
+        {
+          "label": "任意の近接戦闘技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "fist",
+            "kick",
+            "grapple",
+            "head_butt",
+            "japanese_sword",
+            "knife",
+            "staff",
+            "naginata",
+            "bow",
+            "archery",
+            "chainsaw",
+            "throwing",
+            "martial_arts:any"
+          ]
+        },
+        {
+          "label": "任意の火器技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "handgun",
+            "rifle",
+            "shotgun",
+            "submachine_gun",
+            "machine_gun",
+            "artillery",
+            "grenade_launcher",
+            "stun_gun",
+            "bow",
+            "archery"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dex_athlete_2015",
+      "name": "DEX系アスリート",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "dodge",
+        "throwing",
+        "climb",
+        "jump"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から3つ選択",
+          "select_count": 3,
+          "candidates": [
+            "first_aid",
+            "kick",
+            "grapple",
+            "fist",
+            "martial_arts:any",
+            "naginata",
+            "japanese_sword",
+            "staff",
+            "bow",
+            "archery",
+            "handgun",
+            "shotgun",
+            "rifle",
+            "sneak",
+            "swim",
+            "ride"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "athlete_2015",
+      "name": "スポーツ選手",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "dodge",
+        "throwing",
+        "climb",
+        "jump",
+        "art:sports_any"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から3つ選択",
+          "select_count": 3,
+          "candidates": [
+            "first_aid",
+            "kick",
+            "grapple",
+            "fist",
+            "martial_arts:any",
+            "naginata",
+            "japanese_sword",
+            "staff",
+            "bow",
+            "archery",
+            "handgun",
+            "shotgun",
+            "rifle",
+            "swim",
+            "ride"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "adventurer_professor_2015",
+      "name": "冒険家教授",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "library_use",
+        "first_aid",
+        "climb",
+        "jump",
+        "persuade",
+        "other_language"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から2つ選択",
+          "select_count": 2,
+          "candidates": [
+            "geology",
+            "archaeology",
+            "history"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "critic_2015",
+      "name": "評論家",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "library_use",
+        "psychology",
+        "credit_rating",
+        "persuade",
+        "bargain",
+        "native_language"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から2つ選択",
+          "select_count": 2,
+          "candidates": [
+            "natural_history",
+            "history",
+            "occult"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "idol_2015",
+      "name": "アイドル",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "psychology",
+        "disguise",
+        "fast_talk",
+        "persuade",
+        "art:singing",
+        "art:dance",
+        "personal_interest"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "announcer_2015",
+      "name": "アナウンサー",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "library_use",
+        "psychology",
+        "fast_talk",
+        "credit_rating",
+        "persuade",
+        "native_language",
+        "art:announce",
+        "personal_interest"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "comedian_2015",
+      "name": "コメディアン",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "listen",
+        "psychology",
+        "disguise",
+        "fast_talk",
+        "art:storytelling",
+        "art:drama",
+        "personal_interest"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "sports_talent_2015",
+      "name": "スポーツタレント",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "psychology",
+        "disguise",
+        "fast_talk",
+        "art:drama",
+        "personal_interest"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "climb",
+            "jump"
+          ]
+        },
+        {
+          "label": "任意の素手近接戦技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "fist",
+            "kick",
+            "grapple",
+            "head_butt",
+            "martial_arts:any"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tv_commentator_2015",
+      "name": "テレビ・コメンテーター",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "listen",
+        "library_use",
+        "psychology",
+        "fast_talk",
+        "credit_rating",
+        "persuade",
+        "bargain",
+        "personal_specialty"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "net_talent_2015",
+      "name": "ネットタレント",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "psychology",
+        "elec_repair",
+        "persuade",
+        "computer_use",
+        "art:singing",
+        "art:instrument",
+        "art:dance",
+        "art:drama",
+        "personal_interest"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "actor_2015",
+      "name": "俳優",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "psychology",
+        "disguise",
+        "drive:car",
+        "fast_talk",
+        "persuade",
+        "art:drama",
+        "personal_interest"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "producer_manager_2015",
+      "name": "プロデューサー/マネージャー",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "listen",
+        "hide",
+        "sneak",
+        "drive:car",
+        "fast_talk",
+        "bargain",
+        "law",
+        "personal_interest"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "ghost_hunter_2015",
+      "name": "ゴーストハンター",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "photography",
+        "elec_repair",
+        "mech_repair",
+        "persuade",
+        "chemistry",
+        "biology",
+        "physics",
+        "occult"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "fortune_teller_2015",
+      "name": "占い師",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "psychology",
+        "fast_talk",
+        "credit_rating",
+        "persuade",
+        "bargain",
+        "occult",
+        "art:drama",
+        "personal_interest"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "butler_maid_2015",
+      "name": "執事/メイド",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "first_aid",
+        "psychology",
+        "other_language",
+        "accounting"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "fast_talk",
+            "persuade"
+          ]
+        },
+        {
+          "label": "次の技能から1つ選択 (別群)",
+          "select_count": 1,
+          "candidates": [
+            "craft:sewing",
+            "craft:cleaning",
+            "craft:cooking",
+            "craft:wine_tasting",
+            "art:any"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "salesperson_2015",
+      "name": "セールスマン",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "idea_skill",
+        "psychology",
+        "drive:car",
+        "fast_talk",
+        "persuade",
+        "bargain",
+        "accounting",
+        "art:drama",
+        "personal_interest"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "host_2015",
+      "name": "ホスト",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "listen",
+        "psychology",
+        "dodge",
+        "fast_talk",
+        "persuade",
+        "bargain",
+        "accounting"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "mechanic_2015",
+      "name": "メカニック",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "climb",
+        "drive:car",
+        "elec_repair",
+        "mech_repair",
+        "heavy_machine",
+        "craft:carpentry",
+        "craft:welding",
+        "craft:plumbing",
+        "personal_interest"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "chef_2015",
+      "name": "料理人",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "other_language",
+        "chemistry",
+        "biology",
+        "natural_history",
+        "history",
+        "craft:cooking"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "knife",
+            "staff"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gambler_2015",
+      "name": "ギャンブラー",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "listen",
+        "psychology",
+        "conceal",
+        "fast_talk",
+        "accounting",
+        "art:drama",
+        "personal_interest"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "white_collar_criminal_2015",
+      "name": "経済犯罪者",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "psychology",
+        "fast_talk",
+        "credit_rating",
+        "persuade",
+        "bargain",
+        "law",
+        "accounting",
+        "computer_use"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "street_rogue_2015",
+      "name": "ストリート・ローグ",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "psychology",
+        "hide",
+        "fast_talk"
+      ],
+      "choice_groups": [
+        {
+          "label": "任意の素手近接戦技能から4つ選択",
+          "select_count": 4,
+          "candidates": [
+            "fist",
+            "kick",
+            "grapple",
+            "head_butt",
+            "martial_arts:any"
+          ]
+        },
+        {
+          "label": "次の技能から4つ選択",
+          "select_count": 4,
+          "candidates": [
+            "throwing",
+            "knife",
+            "disguise",
+            "climb",
+            "jump",
+            "art:dance",
+            "art:fashion"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cybercriminal_2015",
+      "name": "ネット犯罪者",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "library_use",
+        "psychology",
+        "law",
+        "computer_use",
+        "craft:computer_virus",
+        "art:hacking",
+        "personal_interest"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "bodyguard_2015",
+      "name": "用心棒",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "psychology",
+        "lock_pick",
+        "hide",
+        "disguise",
+        "sneak",
+        "track"
+      ],
+      "choice_groups": [
+        {
+          "label": "任意の近接戦闘技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "fist",
+            "kick",
+            "grapple",
+            "head_butt",
+            "japanese_sword",
+            "knife",
+            "staff",
+            "naginata",
+            "bow",
+            "archery",
+            "chainsaw",
+            "throwing",
+            "martial_arts:any"
+          ]
+        },
+        {
+          "label": "任意の火器技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "handgun",
+            "rifle",
+            "shotgun",
+            "submachine_gun",
+            "machine_gun",
+            "artillery",
+            "grenade_launcher",
+            "stun_gun",
+            "bow",
+            "archery"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "zealot_2010",
+      "name": "狂信者",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "library_use",
+        "psychology",
+        "conceal",
+        "hide",
+        "persuade",
+        "other_language"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から2つ選択",
+          "select_count": 2,
+          "candidates": [
+            "stun_gun",
+            "shotgun",
+            "rifle",
+            "elec_repair",
+            "pharmacy",
+            "chemistry",
+            "law"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "elected_official_2015",
+      "name": "公選職",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "listen",
+        "psychology",
+        "fast_talk",
+        "persuade",
+        "native_language",
+        "history",
+        "law",
+        "art:handshake"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "home_guard_2015",
+      "name": "自宅警備員",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "listen",
+        "library_use",
+        "hide",
+        "sneak",
+        "computer_use",
+        "personal_interest"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "human_mountain_2015",
+      "name": "人間山脈",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "throwing",
+        "martial_arts:any",
+        "personal_interest"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "game_tester_2015",
+      "name": "ビデオ・ゲーム・テスター",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "listen",
+        "elec_repair",
+        "fast_talk",
+        "bargain",
+        "computer_use",
+        "art:game",
+        "personal_interest"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "video_journalist_2015",
+      "name": "ビデオ・ジャーナリスト",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "conceal",
+        "photography",
+        "elec_repair",
+        "fast_talk",
+        "law"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から2つ選択",
+          "select_count": 2,
+          "candidates": [
+            "hide",
+            "navigate",
+            "drive:car"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "engineer_2010",
+      "name": "エンジニア",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "library_use",
+        "elec_repair",
+        "mech_repair",
+        "heavy_machine",
+        "english",
+        "physics",
+        "computer_use"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "chemistry",
+            "geology",
+            "electronics"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "detective_2010",
+      "name": "刑事",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "listen",
+        "psychology",
+        "track",
+        "fast_talk",
+        "persuade",
+        "law"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "grapple",
+            "martial_arts:judo",
+            "japanese_sword",
+            "staff",
+            "handgun",
+            "drive:car",
+            "drive:motorcycle",
+            "credit_rating"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "police_basic",
+      "name": "警官",
+      "edition": "6",
+      "source": "基本",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "first_aid",
+        "psychology",
+        "dodge",
+        "grapple",
+        "fast_talk",
+        "law"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から2つ選択",
+          "select_count": 2,
+          "candidates": [
+            "spot_hidden",
+            "martial_arts",
+            "ride",
+            "drive:car",
+            "bargain"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "detective_basic",
+      "name": "刑事",
+      "edition": "6",
+      "source": "基本",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "listen",
+        "psychology",
+        "fast_talk",
+        "persuade",
+        "bargain",
+        "law",
+        "personal_interest"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "antiquarian_2010",
+      "name": "古物研究家",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "library_use",
+        "bargain",
+        "other_language",
+        "history",
+        "computer_use",
+        "craft:book_restoration",
+        "craft:antique_restoration",
+        "art:any"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "computer_tech_2010",
+      "name": "コンピューター技術者",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "library_use",
+        "elec_repair",
+        "fast_talk",
+        "english",
+        "other_language",
+        "accounting",
+        "physics",
+        "electronics",
+        "computer_use"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "writer_2010",
+      "name": "作家",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "library_use",
+        "psychology",
+        "persuade",
+        "native_language",
+        "other_language",
+        "history",
+        "occult",
+        "art:poetry",
+        "art:trivia"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "journalist_2010",
+      "name": "ジャーナリスト",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "library_use",
+        "psychology",
+        "photography",
+        "fast_talk",
+        "persuade",
+        "native_language",
+        "other_language",
+        "history"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "religious_2010",
+      "name": "宗教家",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "listen",
+        "library_use",
+        "psychology",
+        "persuade",
+        "other_language",
+        "history",
+        "accounting",
+        "occult"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "fast_talk",
+            "credit_rating"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shopkeeper_2010",
+      "name": "商店主",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "listen",
+        "psychology",
+        "fast_talk",
+        "credit_rating",
+        "bargain",
+        "accounting",
+        "personal_specialty"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "drive:car",
+            "drive:motorcycle",
+            "computer_use"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "private_investigator_2010",
+      "name": "私立探偵",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "library_use",
+        "psychology",
+        "fist",
+        "stun_gun",
+        "lock_pick",
+        "track",
+        "fast_talk",
+        "law"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "listen",
+            "photography",
+            "bargain"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fishery_worker_2010",
+      "name": "水産業従事者",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "navigate",
+        "swim",
+        "pilot:ship",
+        "mech_repair",
+        "heavy_machine",
+        "natural_history",
+        "astronomy"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "professor_2010",
+      "name": "大学教授",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "library_use",
+        "psychology",
+        "credit_rating",
+        "persuade",
+        "bargain",
+        "other_language"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から2つ選択",
+          "select_count": 2,
+          "candidates": [
+            "medicine",
+            "chemistry",
+            "biology",
+            "natural_history",
+            "astronomy",
+            "geology",
+            "archaeology",
+            "anthropology",
+            "history",
+            "law",
+            "physics",
+            "electronics"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "talent_2010",
+      "name": "タレント",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "listen",
+        "psychology",
+        "disguise",
+        "fast_talk",
+        "credit_rating",
+        "persuade",
+        "english",
+        "art:singing",
+        "art:instrument",
+        "art:dance",
+        "art:acting",
+        "art:mc"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "parapsychologist_2010",
+      "name": "超心理学者",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "library_use",
+        "psychoanalysis",
+        "psychology",
+        "photography",
+        "other_language",
+        "anthropology",
+        "history",
+        "occult"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "dilettante_2010",
+      "name": "ディレッタント",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "library_use",
+        "drive:car",
+        "credit_rating",
+        "other_language",
+        "law",
+        "art:sports_some",
+        "art:music",
+        "art:dance",
+        "art:fine_art",
+        "art:literature"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から2つ選択",
+          "select_count": 2,
+          "candidates": [
+            "martial_arts:any",
+            "handgun",
+            "shotgun",
+            "rifle",
+            "photography",
+            "ride",
+            "pilot:ship",
+            "pilot:aircraft"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "driver_2010",
+      "name": "ドライバー",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "listen",
+        "navigate",
+        "drive:car",
+        "drive:motorcycle",
+        "elec_repair",
+        "mech_repair",
+        "heavy_machine",
+        "bargain"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "boat_racer_2015",
+      "name": "ボートレーサー",
+      "edition": "6",
+      "source": "2015",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "listen",
+        "navigate",
+        "pilot:civilian_prop",
+        "elec_repair",
+        "mech_repair",
+        "heavy_machine",
+        "bargain"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "farmer_2010",
+      "name": "農林業従事者",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "first_aid",
+        "track",
+        "elec_repair",
+        "mech_repair",
+        "heavy_machine",
+        "physics",
+        "craft:agriculture",
+        "craft:livestock",
+        "craft:beekeeping"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "staff",
+            "chainsaw",
+            "shotgun",
+            "rifle"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pilot_job_2010",
+      "name": "パイロット",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "navigate",
+        "pilot:helicopter",
+        "pilot:civilian_prop",
+        "pilot:civilian_jet",
+        "pilot:airliner",
+        "pilot:fighter_jet",
+        "pilot:airplane",
+        "elec_repair",
+        "mech_repair",
+        "heavy_machine",
+        "english",
+        "other_language",
+        "astronomy",
+        "physics"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "businessman_2010",
+      "name": "ビジネスマン",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "fast_talk",
+        "credit_rating",
+        "persuade",
+        "bargain",
+        "english",
+        "other_language",
+        "law",
+        "accounting",
+        "computer_use"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "lawyer_2010",
+      "name": "法律家",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "library_use",
+        "psychology",
+        "fast_talk",
+        "credit_rating",
+        "persuade",
+        "bargain",
+        "law",
+        "accounting"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "yakuza_2010",
+      "name": "暴力団組員",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "psychology",
+        "conceal",
+        "fast_talk",
+        "bargain",
+        "art:cheating",
+        "art:tattoo"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から2つ選択",
+          "select_count": 2,
+          "candidates": [
+            "kick",
+            "grapple",
+            "fist",
+            "martial_arts:any",
+            "knife",
+            "japanese_sword",
+            "handgun",
+            "hide"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "drifter_2010",
+      "name": "放浪者",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "spot_hidden",
+        "listen",
+        "psychology",
+        "hide",
+        "sneak",
+        "fast_talk",
+        "bargain"
+      ],
+      "choice_groups": [
+        {
+          "label": "次の技能から1つ選択",
+          "select_count": 1,
+          "candidates": [
+            "drive:car",
+            "drive:motorcycle",
+            "other_language",
+            "art:gambling"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "musician_2010",
+      "name": "ミュージシャン",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "listen",
+        "psychology",
+        "fast_talk",
+        "persuade",
+        "bargain",
+        "other_language",
+        "craft:composing",
+        "craft:lyrics",
+        "art:music_some",
+        "art:singing"
+      ],
+      "choice_groups": []
+    },
+    {
+      "id": "mental_therapist_2010",
+      "name": "メンタルセラピスト",
+      "edition": "6",
+      "source": "2010",
+      "description": "",
+      "skill_points_formula": "EDU*20",
+      "fixed_skills": [
+        "psychoanalysis",
+        "psychology",
+        "fast_talk",
+        "credit_rating",
+        "persuade",
+        "other_language",
+        "law",
+        "art:singing",
+        "art:music_play",
+        "art:painting",
+        "art:aroma"
+      ],
+      "choice_groups": []
+    }
+  ]
+}
