@@ -1,11 +1,13 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "edition": "6",
-  "comment": "第6版 職業マスタ。skill_points_formulaは原則EDU*20。choice_groupsで選択式職業技能を表現。",
+  "comment": "第6版 職業マスタ。numberは固定連番。verifiedはpending/verified/mismatchの3段階。",
   "jobs": [
     {
       "id": "doctor_2010",
+      "number": "001",
       "name": "医師",
+      "display_name": "001. 医師（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -23,11 +25,17 @@
         "accounting",
         "craft:beekeeping"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "surgeon_2015",
+      "number": "002",
       "name": "外科医",
+      "display_name": "002. 外科医（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -44,11 +52,17 @@
         "biology",
         "accounting"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "dentist_2015",
+      "number": "003",
       "name": "歯科医",
+      "display_name": "003. 歯科医（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -66,11 +80,17 @@
         "biology",
         "accounting"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "animal_therapist_2015",
+      "number": "004",
       "name": "アニマルセラピスト",
+      "display_name": "004. アニマルセラピスト（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -87,11 +107,17 @@
         "art:any",
         "personal_interest"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "nurse_2015",
+      "number": "005",
       "name": "看護師",
+      "display_name": "005. 看護師（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -114,11 +140,17 @@
             "persuade"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "paramedic_2015",
+      "number": "006",
       "name": "救急救命士",
+      "display_name": "006. 救急救命士（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -132,11 +164,17 @@
         "medicine",
         "chemistry"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "plastic_surgeon_2015",
+      "number": "007",
       "name": "形成外科医",
+      "display_name": "007. 形成外科医（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -151,11 +189,17 @@
         "pharmacy",
         "accounting"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "psychiatrist_2015",
+      "number": "008",
       "name": "精神科医",
+      "display_name": "008. 精神科医（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -170,11 +214,17 @@
         "chemistry",
         "biology"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "black_market_doctor_2015",
+      "number": "009",
       "name": "闇医者",
+      "display_name": "009. 闇医者（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -189,11 +239,17 @@
         "accounting",
         "personal_interest"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "coast_guard_2015",
+      "number": "010",
       "name": "海上保安官",
+      "display_name": "010. 海上保安官（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -208,11 +264,17 @@
         "law",
         "survival:sea"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "forensic_researcher_2015",
+      "number": "011",
       "name": "科学捜査研究員",
+      "display_name": "011. 科学捜査研究員（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -227,11 +289,17 @@
         "law",
         "computer_use"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "mountain_rescue_2015",
+      "number": "012",
       "name": "山岳救助隊員",
+      "display_name": "012. 山岳救助隊員（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -247,11 +315,17 @@
         "other_language",
         "survival:mountain"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "firefighter_2015",
+      "number": "013",
       "name": "消防士",
+      "display_name": "013. 消防士（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -266,11 +340,17 @@
         "mech_repair",
         "heavy_machine"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "artist_basic",
+      "number": "014",
       "name": "芸術家",
+      "display_name": "014. 芸術家（基本）",
       "edition": "6",
       "source": "基本",
       "description": "",
@@ -314,11 +394,17 @@
             "art:any"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "dancer_2015",
+      "number": "015",
       "name": "ダンサー",
+      "display_name": "015. ダンサー（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -332,11 +418,17 @@
         "art:dance",
         "personal_interest"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "designer_2015",
+      "number": "016",
       "name": "デザイナー",
+      "display_name": "016. デザイナー（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -365,11 +457,17 @@
             "art:any"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "fashion_artist_2015",
+      "number": "017",
       "name": "ファッション系芸術家",
+      "display_name": "017. ファッション系芸術家（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -398,11 +496,17 @@
             "art:any"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "sdf_member_2010",
+      "number": "018",
       "name": "自衛官",
+      "display_name": "018. 自衛官（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -448,11 +552,17 @@
             "accounting"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "元データのeditionが不明(？？？？？)のため、2010サプリと推定",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "gsdf_2015",
+      "number": "019",
       "name": "陸上自衛隊員",
+      "display_name": "019. 陸上自衛隊員（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -514,11 +624,17 @@
             "archery"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "msdf_2015",
+      "number": "020",
       "name": "海上自衛隊員",
+      "display_name": "020. 海上自衛隊員（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -577,11 +693,17 @@
             "mech_repair"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "sdf_pilot_2015",
+      "number": "021",
       "name": "自衛隊パイロット",
+      "display_name": "021. 自衛隊パイロット（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -598,11 +720,17 @@
         "parachute",
         "personal_interest"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "pmc_member_2015",
+      "number": "022",
       "name": "民間軍事会社メンバー",
+      "display_name": "022. 民間軍事会社メンバー（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -667,11 +795,17 @@
             "archery"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "dex_athlete_2015",
+      "number": "023",
       "name": "DEX系アスリート",
+      "display_name": "023. DEX系アスリート（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -705,11 +839,17 @@
             "ride"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "athlete_2015",
+      "number": "024",
       "name": "スポーツ選手",
+      "display_name": "024. スポーツ選手（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -743,11 +883,17 @@
             "ride"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "adventurer_professor_2015",
+      "number": "025",
       "name": "冒険家教授",
+      "display_name": "025. 冒険家教授（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -770,11 +916,17 @@
             "history"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "critic_2015",
+      "number": "026",
       "name": "評論家",
+      "display_name": "026. 評論家（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -797,11 +949,17 @@
             "occult"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "idol_2015",
+      "number": "027",
       "name": "アイドル",
+      "display_name": "027. アイドル（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -815,11 +973,17 @@
         "art:dance",
         "personal_interest"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "announcer_2015",
+      "number": "028",
       "name": "アナウンサー",
+      "display_name": "028. アナウンサー（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -834,11 +998,17 @@
         "art:announce",
         "personal_interest"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "comedian_2015",
+      "number": "029",
       "name": "コメディアン",
+      "display_name": "029. コメディアン（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -852,11 +1022,17 @@
         "art:drama",
         "personal_interest"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "sports_talent_2015",
+      "number": "030",
       "name": "スポーツタレント",
+      "display_name": "030. スポーツタレント（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -888,11 +1064,17 @@
             "martial_arts:any"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "tv_commentator_2015",
+      "number": "031",
       "name": "テレビ・コメンテーター",
+      "display_name": "031. テレビ・コメンテーター（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -907,11 +1089,17 @@
         "bargain",
         "personal_specialty"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "net_talent_2015",
+      "number": "032",
       "name": "ネットタレント",
+      "display_name": "032. ネットタレント（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -927,11 +1115,17 @@
         "art:drama",
         "personal_interest"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "actor_2015",
+      "number": "033",
       "name": "俳優",
+      "display_name": "033. 俳優（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -945,11 +1139,17 @@
         "art:drama",
         "personal_interest"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "producer_manager_2015",
+      "number": "034",
       "name": "プロデューサー/マネージャー",
+      "display_name": "034. プロデューサー/マネージャー（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -964,11 +1164,17 @@
         "law",
         "personal_interest"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "ghost_hunter_2015",
+      "number": "035",
       "name": "ゴーストハンター",
+      "display_name": "035. ゴーストハンター（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -983,11 +1189,17 @@
         "physics",
         "occult"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "fortune_teller_2015",
+      "number": "036",
       "name": "占い師",
+      "display_name": "036. 占い師（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -1002,11 +1214,17 @@
         "art:drama",
         "personal_interest"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "butler_maid_2015",
+      "number": "037",
       "name": "執事/メイド",
+      "display_name": "037. 執事/メイド（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -1038,11 +1256,17 @@
             "art:any"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "salesperson_2015",
+      "number": "038",
       "name": "セールスマン",
+      "display_name": "038. セールスマン（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -1058,11 +1282,17 @@
         "art:drama",
         "personal_interest"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "host_2015",
+      "number": "039",
       "name": "ホスト",
+      "display_name": "039. ホスト（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -1077,11 +1307,17 @@
         "bargain",
         "accounting"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "mechanic_2015",
+      "number": "040",
       "name": "メカニック",
+      "display_name": "040. メカニック（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -1097,11 +1333,17 @@
         "craft:plumbing",
         "personal_interest"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "chef_2015",
+      "number": "041",
       "name": "料理人",
+      "display_name": "041. 料理人（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -1124,11 +1366,17 @@
             "staff"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "gambler_2015",
+      "number": "042",
       "name": "ギャンブラー",
+      "display_name": "042. ギャンブラー（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -1143,11 +1391,17 @@
         "art:drama",
         "personal_interest"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "white_collar_criminal_2015",
+      "number": "043",
       "name": "経済犯罪者",
+      "display_name": "043. 経済犯罪者（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -1162,11 +1416,17 @@
         "accounting",
         "computer_use"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "street_rogue_2015",
+      "number": "044",
       "name": "ストリート・ローグ",
+      "display_name": "044. ストリート・ローグ（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -1202,11 +1462,17 @@
             "art:fashion"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "cybercriminal_2015",
+      "number": "045",
       "name": "ネット犯罪者",
+      "display_name": "045. ネット犯罪者（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -1220,11 +1486,17 @@
         "art:hacking",
         "personal_interest"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "bodyguard_2015",
+      "number": "046",
       "name": "用心棒",
+      "display_name": "046. 用心棒（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -1273,11 +1545,17 @@
             "archery"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "zealot_2010",
+      "number": "047",
       "name": "狂信者",
+      "display_name": "047. 狂信者（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1304,11 +1582,17 @@
             "law"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "elected_official_2015",
+      "number": "048",
       "name": "公選職",
+      "display_name": "048. 公選職（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -1323,11 +1607,17 @@
         "law",
         "art:handshake"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "home_guard_2015",
+      "number": "049",
       "name": "自宅警備員",
+      "display_name": "049. 自宅警備員（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -1340,11 +1630,17 @@
         "computer_use",
         "personal_interest"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "human_mountain_2015",
+      "number": "050",
       "name": "人間山脈",
+      "display_name": "050. 人間山脈（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -1354,11 +1650,17 @@
         "martial_arts:any",
         "personal_interest"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "game_tester_2015",
+      "number": "051",
       "name": "ビデオ・ゲーム・テスター",
+      "display_name": "051. ビデオ・ゲーム・テスター（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -1372,11 +1674,17 @@
         "art:game",
         "personal_interest"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "video_journalist_2015",
+      "number": "052",
       "name": "ビデオ・ジャーナリスト",
+      "display_name": "052. ビデオ・ジャーナリスト（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -1399,11 +1707,17 @@
             "drive:car"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "engineer_2010",
+      "number": "053",
       "name": "エンジニア",
+      "display_name": "053. エンジニア（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1427,11 +1741,17 @@
             "electronics"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "detective_2010",
+      "number": "054",
       "name": "刑事",
+      "display_name": "054. 刑事（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1460,11 +1780,17 @@
             "credit_rating"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "police_basic",
+      "number": "055",
       "name": "警官",
+      "display_name": "055. 警官（基本）",
       "edition": "6",
       "source": "基本",
       "description": "",
@@ -1489,11 +1815,17 @@
             "bargain"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "detective_basic",
+      "number": "056",
       "name": "刑事",
+      "display_name": "056. 刑事（基本）",
       "edition": "6",
       "source": "基本",
       "description": "",
@@ -1508,11 +1840,17 @@
         "law",
         "personal_interest"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "antiquarian_2010",
+      "number": "057",
       "name": "古物研究家",
+      "display_name": "057. 古物研究家（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1528,11 +1866,17 @@
         "craft:antique_restoration",
         "art:any"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "computer_tech_2010",
+      "number": "058",
       "name": "コンピューター技術者",
+      "display_name": "058. コンピューター技術者（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1548,11 +1892,17 @@
         "electronics",
         "computer_use"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "writer_2010",
+      "number": "059",
       "name": "作家",
+      "display_name": "059. 作家（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1568,11 +1918,17 @@
         "art:poetry",
         "art:trivia"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "journalist_2010",
+      "number": "060",
       "name": "ジャーナリスト",
+      "display_name": "060. ジャーナリスト（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1587,11 +1943,17 @@
         "other_language",
         "history"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "religious_2010",
+      "number": "061",
       "name": "宗教家",
+      "display_name": "061. 宗教家（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1615,11 +1977,17 @@
             "credit_rating"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "shopkeeper_2010",
+      "number": "062",
       "name": "商店主",
+      "display_name": "062. 商店主（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1643,11 +2011,17 @@
             "computer_use"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "private_investigator_2010",
+      "number": "063",
       "name": "私立探偵",
+      "display_name": "063. 私立探偵（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1673,11 +2047,17 @@
             "bargain"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "fishery_worker_2010",
+      "number": "064",
       "name": "水産業従事者",
+      "display_name": "064. 水産業従事者（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1692,11 +2072,17 @@
         "natural_history",
         "astronomy"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "professor_2010",
+      "number": "065",
       "name": "大学教授",
+      "display_name": "065. 大学教授（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1728,11 +2114,17 @@
             "electronics"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "talent_2010",
+      "number": "066",
       "name": "タレント",
+      "display_name": "066. タレント（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1751,11 +2143,17 @@
         "art:acting",
         "art:mc"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "parapsychologist_2010",
+      "number": "067",
       "name": "超心理学者",
+      "display_name": "067. 超心理学者（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1770,11 +2168,17 @@
         "history",
         "occult"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "dilettante_2010",
+      "number": "068",
       "name": "ディレッタント",
+      "display_name": "068. ディレッタント（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1806,11 +2210,17 @@
             "pilot:aircraft"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "driver_2010",
+      "number": "069",
       "name": "ドライバー",
+      "display_name": "069. ドライバー（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1826,11 +2236,17 @@
         "heavy_machine",
         "bargain"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "boat_racer_2015",
+      "number": "070",
       "name": "ボートレーサー",
+      "display_name": "070. ボートレーサー（2015）",
       "edition": "6",
       "source": "2015",
       "description": "",
@@ -1845,11 +2261,17 @@
         "heavy_machine",
         "bargain"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "farmer_2010",
+      "number": "071",
       "name": "農林業従事者",
+      "display_name": "071. 農林業従事者（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1876,11 +2298,17 @@
             "rifle"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "pilot_job_2010",
+      "number": "072",
       "name": "パイロット",
+      "display_name": "072. パイロット（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1901,11 +2329,17 @@
         "astronomy",
         "physics"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "businessman_2010",
+      "number": "073",
       "name": "ビジネスマン",
+      "display_name": "073. ビジネスマン（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1921,11 +2355,17 @@
         "accounting",
         "computer_use"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "lawyer_2010",
+      "number": "074",
       "name": "法律家",
+      "display_name": "074. 法律家（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1940,11 +2380,17 @@
         "law",
         "accounting"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "yakuza_2010",
+      "number": "075",
       "name": "暴力団組員",
+      "display_name": "075. 暴力団組員（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -1973,11 +2419,17 @@
             "hide"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "drifter_2010",
+      "number": "076",
       "name": "放浪者",
+      "display_name": "076. 放浪者（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -2002,11 +2454,17 @@
             "art:gambling"
           ]
         }
-      ]
+      ],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "musician_2010",
+      "number": "077",
       "name": "ミュージシャン",
+      "display_name": "077. ミュージシャン（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -2023,11 +2481,17 @@
         "art:music_some",
         "art:singing"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     },
     {
       "id": "mental_therapist_2010",
+      "number": "078",
       "name": "メンタルセラピスト",
+      "display_name": "078. メンタルセラピスト（2010）",
       "edition": "6",
       "source": "2010",
       "description": "",
@@ -2045,7 +2509,11 @@
         "art:painting",
         "art:aroma"
       ],
-      "choice_groups": []
+      "choice_groups": [],
+      "verified": "pending",
+      "verified_note": "",
+      "verified_at": null,
+      "verified_source": null
     }
   ]
 }
