@@ -52,6 +52,28 @@ header .stats {
   color: var(--muted);
 }
 
+/* ---- ヘッダーボタン群 ---- */
+.header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.btn {
+  padding: 6px 12px;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn:hover { background: var(--hover); }
+.btn-primary { background: var(--accent); color: #000; border-color: var(--accent); }
+.btn-primary:hover { background: #4a90e2; }
+.btn-danger:hover { background: #5a2020; color: #ffb0b0; }
+
 /* ---- コントロールバー ---- */
 .controls {
   padding: 10px 20px;
@@ -96,6 +118,7 @@ header .stats {
   color: var(--muted);
   font-size: 13px;
   border-bottom: 2px solid transparent;
+  font-family: inherit;
 }
 .tab.active {
   color: var(--fg);
@@ -107,7 +130,7 @@ main {
   display: grid;
   grid-template-columns: 420px 1fr;
   gap: 0;
-  height: calc(100vh - 120px);
+  height: calc(100vh - 160px);
 }
 .list-pane {
   border-right: 1px solid var(--border);
@@ -280,7 +303,11 @@ footer {
   border-top: 1px solid var(--border);
   font-size: 11px;
   color: var(--muted);
-  text-align: right;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 code {
@@ -294,7 +321,7 @@ code {
   color: var(--muted);
   margin-top: 12px;
 }
-.verified-note {
+.verified-note-display {
   color: var(--mismatch);
   font-size: 12px;
   margin-top: 8px;
@@ -337,4 +364,112 @@ code {
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 10px;
   margin-left: 4px;
+}
+
+/* ============================================================
+   検証フォーム
+   ============================================================ */
+.verify-form {
+  background: #1f2a3a;
+  border: 1px solid #3a5070;
+  border-radius: 6px;
+  padding: 14px 18px;
+  margin: 16px 0;
+}
+.verify-form h3 {
+  color: #a8c4e0;
+  font-size: 13px;
+  margin: 0 0 10px 0;
+  border: none;
+  padding: 0;
+}
+.verify-form .form-row {
+  margin: 8px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.verify-form .form-row label.field-label {
+  min-width: 80px;
+  font-size: 12px;
+  color: var(--muted);
+  padding-top: 4px;
+}
+.verify-form .radio-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.verify-form .radio-group label {
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.verify-form input[type="text"],
+.verify-form textarea {
+  flex: 1;
+  background: #111;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+}
+.verify-form textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+.verify-form .form-footer {
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.save-indicator {
+  color: var(--verified);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.save-indicator.show { opacity: 1; }
+
+/* ローカル変更マーク */
+.modified-mark {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  margin-left: 4px;
+}
+
+/* モーダル */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-box {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px;
+  max-width: 500px;
+  width: 90%;
+}
+.modal-box h3 { margin-top: 0; color: var(--fg); }
+.modal-box p { color: var(--muted); font-size: 13px; }
+.modal-box .actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
