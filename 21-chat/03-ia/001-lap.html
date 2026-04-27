@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<!--
+  21-chat/03-ia/001-lap.html
+  いあきゃら → ココフォリア 変換ツール（単独動作版）
+  - フレーム構造（index+navi）を使わず、1つのHTMLで完結する
+  - JSONを貼り付け→解析→編集→実行→コピーの流れで駒データを生成
+  - 既存の 31-csv/01-chara/ と同じ変換ロジックを単独HTMLに統合したもの
+-->
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>いあきゃら → ココフォリア（単独版）</title>
+  <link rel="stylesheet" href="../../01-css/00-style.css">
+  <link rel="stylesheet" href="../../01-css/31-csv-01chara.css">
+  <link rel="stylesheet" href="../../01-css/21-chat-03-ia-001-lap.css">
+</head>
+<body>
+
+<!-- タイトル -->
+<div class="sticky">
+  <div class="title">いあきゃら → ココフォリア 変換</div>
+</div>
+
+<div class="box">
+
+  <!-- 使い方ガイド（旧navi.htmlの.guide相当を本体内に表示） -->
+  <div class="lap-guide">
+    1) いあきゃら貼り付け → <b>解析</b><br>
+    &nbsp;&nbsp;&nbsp;statusの並び替え/追加/削除/編集 &amp; name編集<br>
+    2) <b>▶ 実行</b> → 3) <b>📋 コピー</b>
+  </div>
+
+  <!-- 入力・出力テキストエリア -->
+  <div class="row">
+    <div style="flex:1;min-width:320px">
+      <label><b>いあきゃら（貼り付け）</b></label>
+      <textarea id="input" placeholder="いあきゃらでコピーしたものを貼り付け"></textarea>
+    </div>
+    <div style="flex:1;min-width:320px">
+      <label><b>変換結果（ココフォリアに貼り付け可）</b></label>
+      <textarea id="output" placeholder="ここに結果が表示されます"></textarea>
+    </div>
+  </div>
+
+  <!-- 操作ボタン群（旧navi.htmlのボタンを本体に統合） -->
+  <div class="row lap-buttons">
+    <button class="button-29" onclick="doParse()">解析</button>
+    <button class="button-29" onclick="doRun()">▶ 実行</button>
+    <button class="button-29" onclick="doCopy()">📋 コピー</button>
+  </div>
+
+  <div class="row">
+    <span id="msg" class="small"></span>
+  </div>
+
+  <!-- キャラクター名 -->
+  <div id="metaBox" style="display:none">
+    <div class="name-heading">
+      <input id="nameInput" type="text" placeholder="キャラクター名">
+    </div>
+  </div>
+
+  <!-- statusテーブル（並び替え・追加・削除・編集） -->
+  <div id="statusBox" class="small" style="display:none;margin-top:8px">
+    <table id="statusTable">
+      <thead>
+        <tr>
+          <th style="width:2rem">↕</th>
+          <th>ラベル</th>
+          <th style="width:8rem">値 (value)</th>
+          <th style="width:8rem">最大 (max)</th>
+          <th style="width:6rem">操作</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button id="addRowBtn" style="margin-top:8px">＋ 行を追加</button>
+  </div>
+
+</div>
+
+<!-- 変換ロジック本体 -->
+<script src="../../03-js/21-chat-03-ia-001-lap.js"></script>
+
+</body>
+</html>
