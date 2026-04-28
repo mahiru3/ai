@@ -1,11 +1,10 @@
 /* =========================================
    03-js/21-chat-03-ia-001-lap.js
-   21-chat/03-ia/001-lap.html 専用：いあきゃら→ココフォリア一括変換ロジック
-   - スプレッドシートTSV解析（1行目=キャラ名、2行目以降=ラベル+値）
-   - HP/MP/SAN = 共通status / DB = チャパレ側で扱う / それ以外 = 共通params
-   - 共通params：並び順変更・全員適用切替・追加
-   - 各キャラ：name・URL・status値・params値・個別追加削除・個人チャパレ・個別コピー
-   - 共通チャパレ：全員のcommands先頭に挿入
+   21-chat/03-ia/001-lap.html 専用：横一列表形式・sticky見出し版
+   - status / params をそれぞれ別アコーディオンの大きな表で管理
+   - 表の見出し行はsticky（キャラ名・URL・個人チャパレ・コピーボタン）
+   - ラベルのドラッグ複数選択 → 選択行を一括削除
+   - チェックボックスは「削除するもの」（ON＝そのキャラから除外）
 ========================================= */
 
 /* =========================================
@@ -13,14 +12,14 @@
 ========================================= */
 const state = {
   charNames: [],       // ['水','金',...]
-  commonStatus: [],    // ['HP','MP','SAN']（順番）
-  commonParams: [],    // [{ label:'STR', applyAll:true }, ...]
+  commonStatus: [],    // [{ label, applyAll }, ...] (HP/MP/SAN以外の追加もアリ)
+  commonParams: [],    // [{ label, applyAll }, ...]
   values: {},          // { '水': {'HP':12,'STR':12,...}, ... }
-  perChar: [],         // [{ name, url, chatpal, excludedParams:Set, extraParams:[{label,value}] }, ...]
-  parsed: false        // 解析済みかどうか
+  perChar: [],         // [{ name, url, chatpal, excludedStatus:Set, excludedParams:Set }, ...]
+  parsed: false
 };
 
-/* HP/MP/SAN を共通statusの規定順とする */
+/* HP/MP/SAN を共通statusの規定 */
 const STATUS_LABELS = ['HP', 'MP', 'SAN'];
 
 /* DBはチャパレ側で扱うのでstatus/paramsには入れない */
@@ -43,14 +42,10 @@ function parseTSV(tsv) {
     throw new Error('行数が足りません。1行目にキャラ名、2行目以降にラベル+値を貼り付けてください。');
   }
 
-  // 1行目：キャラ名（先頭の空セルはスキップ）
   const headerCols = lines[0].split('\t');
   const charNames = [];
   let nameStartCol = 0;
-  // 先頭が空ならラベル列として扱う
-  if (headerCols[0].trim() === '') {
-    nameStartCol = 1;
-  }
+  if (headerCols[0].trim() === '') nameStartCol = 1;
   for (let i = nameStartCol; i < headerCols.length; i++) {
     const n = headerCols[i].trim();
     if (n !== '') charNames.push(n);
@@ -59,7 +54,6 @@ function parseTSV(tsv) {
     throw new Error('1行目からキャラ名が読み取れません。');
   }
 
-  // 2行目以降：ラベル + N人分の値
   const statusLabels = [];
   const paramLabels = [];
   const values = {};
@@ -69,7 +63,7 @@ function parseTSV(tsv) {
     const cols = lines[li].split('\t');
     const label = (cols[0] || '').trim();
     if (!label) continue;
-    if (SKIP_LABELS.includes(label.toUpperCase())) continue;  // DBはスキップ
+    if (SKIP_LABELS.includes(label.toUpperCase())) continue;
 
     const isStatus = STATUS_LABELS.includes(label.toUpperCase());
     if (isStatus) {
@@ -78,22 +72,24 @@ function parseTSV(tsv) {
       if (!paramLabels.includes(label)) paramLabels.push(label);
     }
 
-    // 値をキャラごとに取り込む
     charNames.forEach((n, ci) => {
       const v = cols[nameStartCol + ci];
       if (!isEmptyValue(v)) {
         const num = parseInt(String(v).trim(), 10);
         values[n][label] = isNaN(num) ? String(v).trim() : num;
+      } else {
+        // 空セル：そのキャラから除外する印として、解析後にexcludeに追加する
+        values[n]['__excluded__'] = values[n]['__excluded__'] || new Set();
+        values[n]['__excluded__'].add(label);
       }
     });
   }
 
-  // STATUS_LABELSの順序通り並べ替え（HP→MP→SAN）
   const orderedStatus = STATUS_LABELS.filter(l => statusLabels.includes(l));
 
   return {
     charNames,
-    commonStatus: orderedStatus,
+    commonStatus: orderedStatus.map(l => ({ label: l, applyAll: true })),
     commonParams: paramLabels.map(l => ({ label: l, applyAll: true })),
     values
   };
@@ -113,7 +109,6 @@ function doParseTSV() {
 
     const result = parseTSV(tsv);
 
-    // 人数チェック（警告のみ・処理は続行）
     const expectedCount = parseInt(document.getElementById('charCount').value, 10);
     if (result.charNames.length !== expectedCount) {
       msgEl.textContent = `⚠ 人数選択(${expectedCount}人)とTSVのキャラ数(${result.charNames.length}人)が違います。TSV準拠で進めます。`;
@@ -125,33 +120,46 @@ function doParseTSV() {
     state.commonStatus = result.commonStatus;
     state.commonParams = result.commonParams;
     state.values = result.values;
-    state.perChar = result.charNames.map(name => ({
-      name,
-      url: '',
-      chatpal: '',
-      excludedParams: new Set(),
-      extraParams: []
-    }));
+
+    // perCharを構築（excludedStatus/excludedParamsを初期化）
+    state.perChar = result.charNames.map(name => {
+      const excludedAll = state.values[name]['__excluded__'] || new Set();
+      const excludedStatus = new Set();
+      const excludedParams = new Set();
+      excludedAll.forEach(label => {
+        if (state.commonStatus.find(s => s.label === label)) excludedStatus.add(label);
+        else if (state.commonParams.find(p => p.label === label)) excludedParams.add(label);
+      });
+      return {
+        name,
+        url: '',
+        chatpal: '',
+        excludedStatus,
+        excludedParams
+      };
+    });
+    // クリーンアップ
+    Object.values(state.values).forEach(v => delete v['__excluded__']);
     state.parsed = true;
 
     // UI描画
-    renderCommonStatus();
-    renderCommonParams();
-    renderCharCards();
+    renderTable('status');
+    renderTable('params');
 
-    document.getElementById('commonBox').style.display = '';
+    document.getElementById('statusBox').style.display = '';
+    document.getElementById('paramsBox').style.display = '';
     document.getElementById('chatpalCommonBox').style.display = '';
-    document.getElementById('charsBox').style.display = '';
-
-    // セクションを開く
-    document.getElementById('commonBox').open = true;
+    document.getElementById('statusBox').open = true;
+    document.getElementById('paramsBox').open = true;
     document.getElementById('chatpalCommonBox').open = true;
-    document.getElementById('charsBox').open = true;
 
     if (!msgEl.textContent) {
       msgEl.textContent = `✓ 解析完了：${result.charNames.length}人 / status ${result.commonStatus.length}件 / params ${result.commonParams.length}件`;
       msgEl.className = 'small ok';
     }
+
+    // sticky見出し1行目の高さをCSS変数に反映（解析直後）
+    setTimeout(updateTheadHeights, 100);
   } catch (e) {
     msgEl.textContent = '解析エラー：' + (e && e.message ? e.message : String(e));
     msgEl.className = 'small err';
@@ -159,329 +167,306 @@ function doParseTSV() {
 }
 
 /* =========================================
-   共通status描画（並び替えのみ）
+   表の描画（statusとparams共通）
+   kind = 'status' | 'params'
 ========================================= */
-function renderCommonStatus() {
-  const tbody = document.querySelector('#commonStatusTable tbody');
-  tbody.innerHTML = '';
-  state.commonStatus.forEach(label => {
-    const tr = document.createElement('tr');
-    tr.draggable = true;
-    tr.dataset.label = label;
-    tr.innerHTML = `
-      <td class="drag" title="ドラッグで並び替え">↕</td>
-      <td>${label}</td>
+function renderTable(kind) {
+  const wrap = document.getElementById(kind === 'status' ? 'statusTableWrap' : 'paramsTableWrap');
+  const list = kind === 'status' ? state.commonStatus : state.commonParams;
+  const excludedKey = kind === 'status' ? 'excludedStatus' : 'excludedParams';
+
+  // テーブル組み立て
+  const table = document.createElement('table');
+  table.className = 'lap-grand-table';
+
+  // colgroup（列幅指定）
+  const colgroup = document.createElement('colgroup');
+  colgroup.innerHTML = `
+    <col class="lap-col-label">
+    <col class="lap-col-shared">
+  `;
+  state.charNames.forEach(() => {
+    colgroup.innerHTML += `
+      <col class="lap-col-val lap-charblock-start">
+      <col class="lap-col-del">
     `;
-    bindRowDragForOrder(tr, tbody, () => {
-      state.commonStatus = [...tbody.querySelectorAll('tr')].map(t => t.dataset.label);
-      renderCharCards();
+  });
+  table.appendChild(colgroup);
+
+  // thead 1行目（ラベル / 共有 / 各キャラ名・URL・チャパレ・コピー）
+  const thead = document.createElement('thead');
+  const tr1 = document.createElement('tr');
+  tr1.className = 'lap-thead-1';
+  tr1.innerHTML = `
+    <th rowspan="2">ラベル</th>
+    <th rowspan="2">共有<br>✓</th>
+  `;
+  state.charNames.forEach((origName, ci) => {
+    const pc = state.perChar[ci];
+    const th = document.createElement('th');
+    th.colSpan = 2;
+    th.className = 'lap-charblock-start';
+    th.innerHTML = `
+      <div class="lap-charhead">
+        <div class="lap-charhead-name">
+          <span class="lap-charhead-idx">${ci + 1}</span>
+          <input type="text" class="lap-charhead-nameinput" value="${escapeAttr(pc.name)}" data-role="name">
+        </div>
+        <input type="text" class="lap-charhead-url" placeholder="URL" value="${escapeAttr(pc.url)}" data-role="url">
+        <textarea class="lap-charhead-chatpal" placeholder="個人チャパレ" data-role="chatpal">${escapeHtml(pc.chatpal)}</textarea>
+        <button class="lap-charhead-copybtn" data-role="copy">📋 このキャラをコピー</button>
+      </div>
+    `;
+    th.querySelector('[data-role="name"]').oninput = e => {
+      pc.name = e.target.value;
+      // 他テーブルの同期
+      syncCharHeadAcrossTables(ci, 'name', e.target.value);
+    };
+    th.querySelector('[data-role="url"]').oninput = e => {
+      pc.url = e.target.value;
+      syncCharHeadAcrossTables(ci, 'url', e.target.value);
+    };
+    if (kind === 'status') {
+      th.querySelector('[data-role="chatpal"]').oninput = e => {
+        pc.chatpal = e.target.value;
+      };
+      th.querySelector('[data-role="copy"]').onclick = (e) => {
+        doCopyChar(ci, e.target);
+      };
+    }
+    tr1.appendChild(th);
+  });
+  thead.appendChild(tr1);
+
+  // thead 2行目（値 / 削除 のサブヘッダ）
+  const tr2 = document.createElement('tr');
+  tr2.className = 'lap-thead-2';
+  state.charNames.forEach(() => {
+    tr2.innerHTML += `<th class="lap-charblock-start">値</th><th>削除</th>`;
+  });
+  thead.appendChild(tr2);
+  table.appendChild(thead);
+
+  // tbody（ラベル行）
+  const tbody = document.createElement('tbody');
+  list.forEach((item, idx) => {
+    const tr = document.createElement('tr');
+    tr.dataset.label = item.label;
+    if (!item.applyAll) tr.classList.add('lap-row-disabled');
+
+    // ラベルセル（ドラッグ選択対象）
+    const tdLabel = document.createElement('td');
+    tdLabel.className = 'lap-cell-label';
+    tdLabel.textContent = item.label;
+    tdLabel.dataset.kind = kind;
+    tdLabel.dataset.label = item.label;
+    bindLabelDrag(tdLabel, kind);
+    tr.appendChild(tdLabel);
+
+    // 共有チェック
+    const tdShared = document.createElement('td');
+    tdShared.className = 'lap-cell-shared';
+    tdShared.innerHTML = `<input type="checkbox" ${item.applyAll ? 'checked' : ''}>`;
+    tdShared.querySelector('input').onchange = e => {
+      const target = (kind === 'status' ? state.commonStatus : state.commonParams).find(x => x.label === item.label);
+      if (target) target.applyAll = e.target.checked;
+      renderTable(kind);  // 再描画（行のdisable切替）
+      setTimeout(updateTheadHeights, 50);
+    };
+    tr.appendChild(tdShared);
+
+    // 各キャラの「値」「削除」セル
+    state.charNames.forEach((origName, ci) => {
+      const pc = state.perChar[ci];
+      const isExcluded = pc[excludedKey].has(item.label);
+      const isApplied = item.applyAll && !isExcluded;
+
+      const tdVal = document.createElement('td');
+      tdVal.className = 'lap-cell-val lap-charblock-start';
+      const v = state.values[origName][item.label];
+      const valDisplay = (v != null) ? v : '';
+      tdVal.innerHTML = `<input type="number" value="${valDisplay}" ${!item.applyAll ? 'disabled' : ''}>`;
+      tdVal.querySelector('input').oninput = e => {
+        const n = parseInt(e.target.value, 10);
+        state.values[origName][item.label] = isNaN(n) ? 0 : n;
+      };
+      tr.appendChild(tdVal);
+
+      const tdDel = document.createElement('td');
+      tdDel.className = 'lap-cell-del';
+      // 「削除するもの」にチェック → ON＝除外
+      tdDel.innerHTML = `<input type="checkbox" ${isExcluded ? 'checked' : ''} ${!item.applyAll ? 'disabled' : ''}>`;
+      tdDel.querySelector('input').onchange = e => {
+        if (e.target.checked) pc[excludedKey].add(item.label);
+        else pc[excludedKey].delete(item.label);
+      };
+      tr.appendChild(tdDel);
     });
+
     tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+
+  wrap.innerHTML = '';
+  wrap.appendChild(table);
+}
+
+/* キャラ名・URLを両テーブルで同期 */
+function syncCharHeadAcrossTables(ci, role, value) {
+  document.querySelectorAll('.lap-grand-table').forEach(tbl => {
+    const ths = tbl.querySelectorAll('thead .lap-thead-1 th');
+    // 最初の2つはrowspanの「ラベル」「共有」、その後がキャラ列
+    const charTh = ths[2 + ci];
+    if (!charTh) return;
+    const inp = charTh.querySelector(`[data-role="${role}"]`);
+    if (inp && inp.value !== value) inp.value = value;
   });
 }
 
 /* =========================================
-   共通params描画（並び替え・全員適用・削除・追加）
+   sticky見出しの高さをCSS変数に反映
+   （見出し1行目の高さを取得して、見出し2行目のtopに使う）
 ========================================= */
-function renderCommonParams() {
-  const tbody = document.querySelector('#commonParamsTable tbody');
-  tbody.innerHTML = '';
-  state.commonParams.forEach((p, i) => {
-    const tr = document.createElement('tr');
-    tr.draggable = true;
-    tr.dataset.label = p.label;
-    tr.innerHTML = `
-      <td class="drag" title="ドラッグで並び替え">↕</td>
-      <td>${escapeHtml(p.label)}</td>
-      <td class="apply-cell">
-        <input type="checkbox" ${p.applyAll ? 'checked' : ''} data-role="applyAll">
-      </td>
-      <td class="apply-cell">
-        <button class="lap-mini-btn" data-role="del">削除</button>
-      </td>
-    `;
-    // 全員適用切替
-    tr.querySelector('[data-role="applyAll"]').onchange = (e) => {
-      const idx = state.commonParams.findIndex(x => x.label === p.label);
-      if (idx >= 0) state.commonParams[idx].applyAll = e.target.checked;
-      renderCharCards();
-    };
-    // 削除
-    tr.querySelector('[data-role="del"]').onclick = () => {
-      if (!confirm(`共通paramsから「${p.label}」を削除しますか？\n（各キャラの値も失われます）`)) return;
-      state.commonParams = state.commonParams.filter(x => x.label !== p.label);
-      Object.values(state.values).forEach(v => delete v[p.label]);
-      renderCommonParams();
-      renderCharCards();
-    };
-    bindRowDragForOrder(tr, tbody, () => {
-      const newOrder = [...tbody.querySelectorAll('tr')].map(t => t.dataset.label);
-      state.commonParams = newOrder.map(l => state.commonParams.find(x => x.label === l));
-      renderCharCards();
-    });
-    tbody.appendChild(tr);
+function updateTheadHeights() {
+  document.querySelectorAll('.lap-grand-table').forEach(tbl => {
+    const tr1 = tbl.querySelector('thead .lap-thead-1');
+    if (!tr1) return;
+    const h = tr1.getBoundingClientRect().height;
+    tbl.style.setProperty('--lap-thead-1-h', h + 'px');
+  });
+}
+window.addEventListener('resize', updateTheadHeights);
+
+/* =========================================
+   ラベルセルのドラッグ複数選択（Excel風）
+========================================= */
+const dragState = {
+  active: false,
+  kind: null,         // 'status' | 'params'
+  startLabel: null,
+  selectedLabels: new Set()
+};
+
+function bindLabelDrag(td, kind) {
+  td.addEventListener('mousedown', e => {
+    e.preventDefault();
+    dragState.active = true;
+    dragState.kind = kind;
+    dragState.startLabel = td.dataset.label;
+    dragState.selectedLabels = new Set([td.dataset.label]);
+    updateRowSelection();
+  });
+  td.addEventListener('mouseenter', () => {
+    if (!dragState.active || dragState.kind !== kind) return;
+    // 始点〜現在位置までの行を選択
+    const list = (kind === 'status' ? state.commonStatus : state.commonParams).map(x => x.label);
+    const startIdx = list.indexOf(dragState.startLabel);
+    const curIdx = list.indexOf(td.dataset.label);
+    if (startIdx < 0 || curIdx < 0) return;
+    const [a, b] = startIdx <= curIdx ? [startIdx, curIdx] : [curIdx, startIdx];
+    dragState.selectedLabels = new Set(list.slice(a, b + 1));
+    updateRowSelection();
+  });
+}
+document.addEventListener('mouseup', () => {
+  dragState.active = false;
+});
+
+function updateRowSelection() {
+  const wrap = document.getElementById(dragState.kind === 'status' ? 'statusTableWrap' : 'paramsTableWrap');
+  if (!wrap) return;
+  wrap.querySelectorAll('tbody tr').forEach(tr => {
+    if (dragState.selectedLabels.has(tr.dataset.label)) tr.classList.add('lap-row-selected');
+    else tr.classList.remove('lap-row-selected');
   });
 }
 
-/* 共通paramsに新規追加 */
-function addCommonParam() {
-  const inp = document.getElementById('newParamLabel');
+/* 範囲外をクリックしたら選択解除 */
+document.addEventListener('click', e => {
+  if (e.target.closest('.lap-cell-label')) return;
+  if (e.target.closest('.lap-del-btn')) return;
+  // クリックでクリア
+  if (dragState.selectedLabels.size > 0 && !e.target.closest('.lap-grand-table')) {
+    dragState.selectedLabels = new Set();
+    document.querySelectorAll('.lap-row-selected').forEach(tr => tr.classList.remove('lap-row-selected'));
+  }
+});
+
+/* =========================================
+   選択行の一括削除
+========================================= */
+function deleteSelectedRows(kind) {
+  if (dragState.selectedLabels.size === 0) {
+    alert('削除する行をドラッグで選択してください。');
+    return;
+  }
+  const labels = [...dragState.selectedLabels];
+  if (!confirm(`${kind === 'status' ? 'status' : 'params'} から以下のラベルを削除しますか？\n\n${labels.join('\n')}`)) return;
+
+  const listKey = kind === 'status' ? 'commonStatus' : 'commonParams';
+  const excludedKey = kind === 'status' ? 'excludedStatus' : 'excludedParams';
+
+  state[listKey] = state[listKey].filter(x => !labels.includes(x.label));
+  // 値も削除
+  Object.values(state.values).forEach(v => labels.forEach(l => delete v[l]));
+  // 各キャラのexcludedからも削除
+  state.perChar.forEach(pc => labels.forEach(l => pc[excludedKey].delete(l)));
+
+  dragState.selectedLabels = new Set();
+  renderTable(kind);
+  setTimeout(updateTheadHeights, 50);
+}
+
+/* =========================================
+   行の追加（status / params）
+========================================= */
+function addCommonRow(kind) {
+  const inpId = kind === 'status' ? 'newStatusLabel' : 'newParamLabel';
+  const inp = document.getElementById(inpId);
   const label = inp.value.trim();
   if (!label) return;
-  if (state.commonParams.some(p => p.label === label)) {
+
+  const listKey = kind === 'status' ? 'commonStatus' : 'commonParams';
+  const otherKey = kind === 'status' ? 'commonParams' : 'commonStatus';
+
+  if (state[listKey].some(x => x.label === label)) {
     alert('同じラベルが既に存在します。');
     return;
   }
-  if (STATUS_LABELS.includes(label.toUpperCase()) || SKIP_LABELS.includes(label.toUpperCase())) {
-    alert(`「${label}」は予約ラベルです（HP/MP/SAN/DB）。共通paramsには追加できません。`);
+  if (state[otherKey].some(x => x.label === label)) {
+    alert(`「${label}」は${kind === 'status' ? 'params' : 'status'}側に存在します。`);
     return;
   }
-  state.commonParams.push({ label, applyAll: true });
-  // 値は未入力（各キャラのvalueは空のまま、カードで個別入力）
+  if (SKIP_LABELS.includes(label.toUpperCase())) {
+    alert(`「${label}」は予約ラベル（DBはチャパレ側で扱います）。`);
+    return;
+  }
+
+  state[listKey].push({ label, applyAll: true });
+  // 値は0で初期化
   state.charNames.forEach(n => {
     if (!(label in state.values[n])) state.values[n][label] = 0;
   });
+
   inp.value = '';
-  renderCommonParams();
-  renderCharCards();
-}
-
-/* =========================================
-   キャラカード描画
-========================================= */
-function renderCharCards() {
-  const wrap = document.getElementById('charCards');
-  wrap.innerHTML = '';
-
-  state.charNames.forEach((origName, ci) => {
-    const pc = state.perChar[ci];
-    const card = document.createElement('div');
-    card.className = 'lap-card';
-
-    // ヘッダ：番号 + 名前入力
-    const header = document.createElement('div');
-    header.className = 'lap-card-header';
-    header.innerHTML = `
-      <span class="lap-card-idx">${ci + 1}</span>
-      <input type="text" class="lap-card-name" value="${escapeAttr(pc.name)}" data-role="name">
-    `;
-    header.querySelector('[data-role="name"]').oninput = e => {
-      pc.name = e.target.value;
-    };
-    card.appendChild(header);
-
-    // URL欄
-    const urlRow = document.createElement('div');
-    urlRow.className = 'lap-card-url-row';
-    urlRow.innerHTML = `
-      <input type="text" class="lap-card-url" placeholder="いあきゃらURL（例: https://iachara.com/view/XXXXXXXX）" value="${escapeAttr(pc.url)}" data-role="url">
-    `;
-    urlRow.querySelector('[data-role="url"]').oninput = e => {
-      pc.url = e.target.value;
-    };
-    card.appendChild(urlRow);
-
-    // status編集
-    const statusBlock = document.createElement('div');
-    statusBlock.className = 'lap-card-block';
-    statusBlock.innerHTML = `<div class="lap-card-block-title">status（HP/MP/SAN）</div>`;
-    const sTable = document.createElement('table');
-    sTable.className = 'lap-card-table';
-    sTable.innerHTML = `
-      <thead>
-        <tr><th>ラベル</th><th style="width:5rem">値</th><th style="width:5rem">最大</th></tr>
-      </thead>
-      <tbody></tbody>
-    `;
-    const sBody = sTable.querySelector('tbody');
-    state.commonStatus.forEach(label => {
-      const cur = state.values[origName][label];
-      const initVal = (cur != null) ? cur : 0;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${label}</td>
-        <td><input type="number" data-role="val" value="${initVal}"></td>
-        <td><input type="number" data-role="max" value="${initVal}"></td>
-      `;
-      tr.querySelector('[data-role="val"]').oninput = e => {
-        state.values[origName][label] = parseInt(e.target.value, 10) || 0;
-      };
-      // maxは別管理：state.values[origName]['__max__'+label] にしまう
-      const maxKey = '__max__' + label;
-      if (state.values[origName][maxKey] == null) state.values[origName][maxKey] = initVal;
-      tr.querySelector('[data-role="max"]').value = state.values[origName][maxKey];
-      tr.querySelector('[data-role="max"]').oninput = e => {
-        state.values[origName][maxKey] = parseInt(e.target.value, 10) || 0;
-      };
-      sBody.appendChild(tr);
-    });
-    statusBlock.appendChild(sTable);
-    card.appendChild(statusBlock);
-
-    // params編集
-    const paramsBlock = document.createElement('div');
-    paramsBlock.className = 'lap-card-block';
-    paramsBlock.innerHTML = `<div class="lap-card-block-title">params（能力値・技能）</div>`;
-    const pTable = document.createElement('table');
-    pTable.className = 'lap-card-table';
-    pTable.innerHTML = `
-      <thead>
-        <tr>
-          <th>ラベル</th>
-          <th style="width:5rem">値</th>
-          <th class="lap-toggle-cell">適用</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    `;
-    const pBody = pTable.querySelector('tbody');
-
-    // 共通params
-    state.commonParams.forEach(p => {
-      const cur = state.values[origName][p.label];
-      const tr = document.createElement('tr');
-      const isExcluded = pc.excludedParams.has(p.label);
-      const isApplied = p.applyAll && !isExcluded;
-      if (!isApplied) tr.classList.add('lap-row-disabled');
-
-      tr.innerHTML = `
-        <td>${escapeHtml(p.label)}</td>
-        <td><input type="number" data-role="val" value="${cur != null ? cur : ''}" ${!isApplied ? 'disabled' : ''}></td>
-        <td class="lap-toggle-cell">
-          <input type="checkbox" data-role="apply" ${isApplied ? 'checked' : ''} ${!p.applyAll ? 'disabled' : ''}>
-        </td>
-      `;
-      tr.querySelector('[data-role="val"]').oninput = e => {
-        const n = parseInt(e.target.value, 10);
-        state.values[origName][p.label] = isNaN(n) ? 0 : n;
-      };
-      tr.querySelector('[data-role="apply"]').onchange = e => {
-        if (e.target.checked) pc.excludedParams.delete(p.label);
-        else pc.excludedParams.add(p.label);
-        renderCharCards();
-      };
-      pBody.appendChild(tr);
-    });
-
-    // 個別追加されたparams
-    pc.extraParams.forEach((ep, epi) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><input type="text" data-role="exLabel" value="${escapeAttr(ep.label)}"></td>
-        <td><input type="number" data-role="exVal" value="${ep.value}"></td>
-        <td class="lap-del-cell">
-          <button class="lap-mini-btn" data-role="exDel">×</button>
-        </td>
-      `;
-      tr.querySelector('[data-role="exLabel"]').oninput = e => { ep.label = e.target.value; };
-      tr.querySelector('[data-role="exVal"]').oninput = e => {
-        const n = parseInt(e.target.value, 10);
-        ep.value = isNaN(n) ? 0 : n;
-      };
-      tr.querySelector('[data-role="exDel"]').onclick = () => {
-        pc.extraParams.splice(epi, 1);
-        renderCharCards();
-      };
-      pBody.appendChild(tr);
-    });
-    paramsBlock.appendChild(pTable);
-
-    // 個別追加UI
-    const addRow = document.createElement('div');
-    addRow.className = 'lap-card-add-row';
-    addRow.innerHTML = `
-      <input type="text" placeholder="追加ラベル" data-role="addLabel">
-      <input type="number" placeholder="値" class="lap-add-val" data-role="addVal" value="0">
-      <button class="lap-card-add-btn" data-role="addBtn">＋</button>
-    `;
-    addRow.querySelector('[data-role="addBtn"]').onclick = () => {
-      const lbl = addRow.querySelector('[data-role="addLabel"]').value.trim();
-      const val = parseInt(addRow.querySelector('[data-role="addVal"]').value, 10) || 0;
-      if (!lbl) return;
-      pc.extraParams.push({ label: lbl, value: val });
-      renderCharCards();
-    };
-    paramsBlock.appendChild(addRow);
-    card.appendChild(paramsBlock);
-
-    // 個人チャパレ
-    const chatBlock = document.createElement('div');
-    chatBlock.className = 'lap-card-block';
-    chatBlock.innerHTML = `<div class="lap-card-block-title">個人チャットパレット（このキャラ専用）</div>`;
-    const chatTa = document.createElement('textarea');
-    chatTa.className = 'lap-card-chatpal';
-    chatTa.placeholder = '（任意）このキャラだけに追加するコマンド';
-    chatTa.value = pc.chatpal;
-    chatTa.oninput = e => { pc.chatpal = e.target.value; };
-    chatBlock.appendChild(chatTa);
-    card.appendChild(chatBlock);
-
-    // コピーボタン
-    const copyBtn = document.createElement('button');
-    copyBtn.className = 'lap-card-copy';
-    copyBtn.textContent = '📋 このキャラをコピー';
-    copyBtn.onclick = () => doCopyChar(ci, copyBtn);
-    card.appendChild(copyBtn);
-
-    wrap.appendChild(card);
-  });
-}
-
-/* =========================================
-   ドラッグ並び替え汎用
-========================================= */
-function bindRowDragForOrder(tr, tbody, onReorder) {
-  tr.addEventListener('dragstart', e => {
-    tr.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-  });
-  tr.addEventListener('dragend', () => {
-    tr.classList.remove('dragging');
-    if (onReorder) onReorder();
-  });
-  tbody.addEventListener('dragover', e => {
-    e.preventDefault();
-    const dragging = tbody.querySelector('tr.dragging');
-    if (!dragging) return;
-    const after = getDragAfterElement(tbody, e.clientY);
-    if (after == null) tbody.appendChild(dragging);
-    else tbody.insertBefore(dragging, after);
-  });
-}
-function getDragAfterElement(container, y) {
-  const els = [...container.querySelectorAll('tr:not(.dragging)')];
-  return els.reduce((closest, child) => {
-    const box = child.getBoundingClientRect();
-    const offset = y - box.top - box.height / 2;
-    if (offset < 0 && offset > closest.offset) return { offset, element: child };
-    else return closest;
-  }, { offset: Number.NEGATIVE_INFINITY }).element;
+  renderTable(kind);
+  setTimeout(updateTheadHeights, 50);
 }
 
 /* =========================================
    チャットパレット組み立て
 ========================================= */
-
-/* CCB<= 系を {BA} 〈〉 形式に変換（既存ロジック流用） */
 const RE_FIXED_LINE = /^(CCB<=)\s*(\d+)\s*【([^】]+)】\s*$/;
 const RE_FORM_LINE  = /^CCB<=\s*(\{[^}]+\}\s*\*\s*\d+)\s*【([^】]+)】\s*$/;
+
 function rewriteCCBLine(line) {
   const mf = line.match(RE_FIXED_LINE);
-  if (mf) {
-    const val   = mf[2].trim();
-    const label = mf[3].trim();
-    return `CCB<=${val}{BA} 　〈${label}〉`;
-  }
+  if (mf) return `CCB<=${mf[2].trim()}{BA} 　〈${mf[3].trim()}〉`;
   const mv = line.match(RE_FORM_LINE);
-  if (mv) {
-    const expr  = mv[1].trim();
-    const label = mv[2].trim().replace(/\s/g, '');
-    return `CCB<=${expr}{BA} 　〈${label}〉`;
-  }
+  if (mv) return `CCB<=${mv[1].trim()}{BA} 　〈${mv[2].trim().replace(/\s/g, '')}〉`;
   return line;
 }
 
-/* 共通チャパレ + 個人チャパレ → 最終commands */
 function buildCommands(perCharChatpal) {
   const commonRaw = document.getElementById('commonChatpal').value || '';
   const personalRaw = perCharChatpal || '';
@@ -489,7 +474,6 @@ function buildCommands(perCharChatpal) {
   const commonLines = commonRaw.split(/\r?\n/);
   const personalLines = personalRaw.split(/\r?\n/);
 
-  // 共通を1d100系とCCB系に分類
   const sanLines = [];
   const ccbLines = [];
   const otherLines = [];
@@ -505,13 +489,10 @@ function buildCommands(perCharChatpal) {
   out.push(':SAN-1');
   out.push(':SAN+1');
   sanLines.forEach(l => out.push(l));
-  if (ccbLines.length > 0 || otherLines.length > 0) {
-    out.push('✨よく使う✨');
-  }
+  if (ccbLines.length > 0 || otherLines.length > 0) out.push('✨よく使う✨');
   ccbLines.forEach(l => out.push(l));
   otherLines.forEach(l => out.push(l));
 
-  // 個人チャパレ（CCB系のみ変換、それ以外そのまま）
   if (personalRaw.trim()) {
     out.push('');
     personalLines.forEach(l => {
@@ -533,29 +514,26 @@ function buildCharData(ci) {
   const pc = state.perChar[ci];
   const v = state.values[origName];
 
-  // status配列
-  const status = state.commonStatus.map(label => {
-    const val = v[label] != null ? v[label] : 0;
-    const max = v['__max__' + label] != null ? v['__max__' + label] : val;
-    return { label, value: val, max };
+  // status配列：commonStatusの並び順、共有OFF or 個別除外は出さない
+  const status = [];
+  state.commonStatus.forEach(item => {
+    if (!item.applyAll) return;
+    if (pc.excludedStatus.has(item.label)) return;
+    const val = v[item.label] != null ? v[item.label] : 0;
+    status.push({ label: item.label, value: val, max: val });
   });
 
-  // params配列（共通の有効なもの + 個別追加）
+  // params配列
   const params = [];
-  state.commonParams.forEach(p => {
-    if (!p.applyAll) return;
-    if (pc.excludedParams.has(p.label)) return;
-    const val = v[p.label] != null ? v[p.label] : 0;
-    params.push({ label: p.label, value: String(val) });
-  });
-  pc.extraParams.forEach(ep => {
-    if (ep.label.trim()) params.push({ label: ep.label, value: String(ep.value) });
+  state.commonParams.forEach(item => {
+    if (!item.applyAll) return;
+    if (pc.excludedParams.has(item.label)) return;
+    const val = v[item.label] != null ? v[item.label] : 0;
+    params.push({ label: item.label, value: String(val) });
   });
 
-  // commands
   const commands = buildCommands(pc.chatpal);
 
-  // ココフォリアClipboard形式
   const data = {
     name: pc.name,
     initiative: 0,
@@ -579,7 +557,6 @@ async function doCopyChar(ci, btnEl) {
       ok = true;
     } catch (_) {}
     if (!ok) {
-      // フォールバック：一時textareaで execCommand
       const ta = document.createElement('textarea');
       ta.value = text;
       ta.style.position = 'fixed';
@@ -592,7 +569,7 @@ async function doCopyChar(ci, btnEl) {
 
     if (ok) {
       const orig = btnEl.textContent;
-      btnEl.textContent = '✓ コピー完了！ココフォリアでCtrl+V';
+      btnEl.textContent = '✓ コピー！Ctrl+Vで貼付';
       btnEl.classList.add('copied');
       setTimeout(() => {
         btnEl.textContent = orig;
@@ -611,10 +588,10 @@ async function doCopyChar(ci, btnEl) {
    ユーティリティ
 ========================================= */
 function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => (
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
     { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
   ));
 }
 function escapeAttr(s) {
-  return String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  return String(s == null ? '' : s).replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }
