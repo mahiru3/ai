@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<!--
+  21-chat/03-ia/002-many.html
+  いあきゃら → ココフォリア 一括変換ツール（複数キャラ対応・拡張版）
+  - 入力：スプレッドシートTSV貼り付け or いあきゃらJSONを1人ずつ追加
+  - status / params を別アコーディオンの横一列表で管理（キャラ名見出しsticky）
+  - ドラッグでラベル複数選択 → 一括削除、↑↓矢印で1行移動
+  - 共通paramsに「上限」機能（超過は「N-X」表記で出力）
+  - チャパレ編集：1)共通 / 2)個別フリー / 3)params転記レイアウト / 4)統合プレビュー
+  - 5)テキスト作成（ロールテーブル）
+  - LocalStorage保存・JSONエクスポート/インポート対応
+-->
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>いあきゃら → ココフォリア 一括変換</title>
+  <link rel="stylesheet" href="../../01-css/00-style.css">
+  <link rel="stylesheet" href="../../01-css/31-csv-01chara.css">
+  <link rel="stylesheet" href="../../01-css/21-chat-03-ia-002-many.css">
+</head>
+<body>
+
+<div class="sticky">
+  <div class="title">いあきゃら → ココフォリア 一括変換（6〜22人対応）</div>
+</div>
+
+<div class="box">
+
+  <div class="lap-guide">
+    1) <b>データ入力</b>：スプレッドシート貼り付け、または いあきゃらJSONを <b>「➕ 追加」</b> で1人ずつ積み上げ → <b>📋 表を解析</b><br>
+    2) status / params の並び順・ラベル削除・キャラごとの個別調整<br>
+    3) チャパレ編集：1)共通＋2)個別＋3)params転記レイアウト → 4) 統合プレビュー<br>
+    4) 各キャラの<b>「📋このキャラをコピー」</b>でココフォリアにペースト
+  </div>
+
+  <!-- ① データ入力 -->
+  <details class="lap-section" open>
+    <summary class="lap-summary lap-summary-1">① データ入力</summary>
+    <div class="lap-section-body">
+
+      <div class="row lap-mode-row">
+        <label class="lap-mode-radio">
+          <input type="radio" name="inputMode" value="tsv" checked onchange="onInputModeChange()">
+          <span>スプレッドシート貼り付け</span>
+        </label>
+        <label class="lap-mode-radio">
+          <input type="radio" name="inputMode" value="iachara" onchange="onInputModeChange()">
+          <span>いあきゃら読み込み</span>
+        </label>
+      </div>
+
+      <!-- TSVモード -->
+      <div id="modeTsvArea">
+        <div class="row">
+          <div style="flex:1;min-width:320px">
+            <label><b>スプレッドシート貼り付け（TSV：1行目=キャラ名、2行目以降=ラベル+値）</b></label>
+            <textarea id="tsvInput" class="lap-tsv" placeholder="	水	金	地	火	木	土	天	海&#10;HP	12	15	12	12	9	8	10	18&#10;MP	15	11	12	18	15	16	21	14&#10;SAN	75	55	60	60	45	40	50	90&#10;STR	12	5	12	21	7	18	7	11&#10;水泳	25	25	45	55	25	25	25	25"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- いあきゃらモード -->
+      <div id="modeIacharaArea" style="display:none">
+        <div class="lap-iachara-list-wrap">
+          <div class="small lap-iachara-list-header">
+            読み込み済み：<span id="iacharaCount">0</span>人
+          </div>
+          <div id="iacharaList" class="lap-iachara-list"></div>
+        </div>
+
+        <div class="row">
+          <div style="flex:1;min-width:320px">
+            <label><b>いあきゃらJSON（1人分を貼り付けて「➕ 追加」を押す）</b></label>
+            <textarea id="iacharaInput" class="lap-tsv" placeholder='{"kind":"character","data":{"name":"...","status":[...],"params":[...],"commands":"..."}}'></textarea>
+          </div>
+        </div>
+        <div class="row lap-buttons">
+          <button type="button" class="lap-add-btn" onclick="addIacharaJson()">➕ 追加</button>
+          <span id="iacharaMsg" class="small"></span>
+        </div>
+      </div>
+
+      <div class="row lap-buttons">
+        <button class="button-29" onclick="doParse()">📋 表を解析</button>
+        <span id="parseMsg" class="small"></span>
+      </div>
+
+      <div class="row lap-save-buttons">
+        <button type="button" class="lap-save-btn" onclick="doSaveLocal()" title="ブラウザに一時保存（1スロット）">💾 保存</button>
+        <button type="button" class="lap-save-btn" onclick="doRestoreLocal()" title="ブラウザに保存した状態を復元">🔄 復元</button>
+        <button type="button" class="lap-save-btn" onclick="doExportJson()" title="JSONファイルとしてダウンロード">📤 JSONエクスポート</button>
+        <label class="lap-save-btn lap-save-btn-import" title="JSONファイルから読み込み">
+          📥 JSONインポート
+          <input type="file" id="jsonImportInput" accept=".json,application/json" style="display:none" onchange="doImportJson(event)">
+        </label>
+        <span id="saveMsg" class="small"></span>
+      </div>
+
+    </div>
+  </details>
+
+  <!-- ② 共通status -->
+  <details class="lap-section" id="statusBox" style="display:none">
+    <summary class="lap-summary lap-summary-2">
+      <span class="lap-summary-title">② 共通status（HP / MP / SAN）</span>
+      <span class="lap-summary-actions" onclick="event.stopPropagation()">
+        <input type="text" id="newStatusLabel" placeholder="新しいstatusラベル名" class="lap-add-input" onclick="event.stopPropagation()">
+        <button type="button" class="lap-add-btn" onclick="event.stopPropagation();addCommonRow('status')">＋ statusに追加</button>
+        <button type="button" class="lap-del-btn" onclick="event.stopPropagation();deleteSelectedRows('status')">🗑 選択行を削除</button>
+      </span>
+    </summary>
+    <div class="lap-section-body lap-table-body">
+      <div class="lap-table-wrap" id="statusTableWrap"></div>
+    </div>
+  </details>
+
+  <!-- ③ 共通params -->
+  <details class="lap-section" id="paramsBox" style="display:none">
+    <summary class="lap-summary lap-summary-3">
+      <span class="lap-summary-title">③ 共通params（能力値・技能）</span>
+      <span class="lap-summary-actions" onclick="event.stopPropagation()">
+        <label class="lap-cap-label" onclick="event.stopPropagation()">上限：
+          <input type="number" id="paramsCap" placeholder="例:90" class="lap-cap-input" onclick="event.stopPropagation()" oninput="onCapChange()">
+        </label>
+        <input type="text" id="newParamLabel" placeholder="新しいparamsラベル名" class="lap-add-input" onclick="event.stopPropagation()">
+        <button type="button" class="lap-add-btn" onclick="event.stopPropagation();addCommonRow('params')">＋ paramsに追加</button>
+        <button type="button" class="lap-del-btn" onclick="event.stopPropagation();deleteSelectedRows('params')">🗑 選択行を削除</button>
+      </span>
+    </summary>
+    <div class="lap-section-body lap-table-body">
+      <div class="lap-table-wrap" id="paramsTableWrap"></div>
+    </div>
+  </details>
+
+  <!-- ④ チャパレ編集（4ブロック2カラム構成） -->
+  <details class="lap-section" id="chatpalEditBox" style="display:none">
+    <summary class="lap-summary lap-summary-4">④ チャパレ編集</summary>
+    <div class="lap-section-body">
+      <div class="lap-chatpal-grid">
+
+        <!-- 左カラム：1)2)3) -->
+        <div class="lap-chatpal-col-left">
+
+          <!-- 1) 共通 -->
+          <details class="lap-chatpal-sub" open>
+            <summary class="lap-chatpal-sub-title">1) 共通（全員に共通で使われる）</summary>
+            <div class="lap-chatpal-sub-body">
+              <div class="small lap-chatpal-help">
+                直接編集してください。<code>:SAN-</code> や <code>:HP-</code> は値抜きの形でも記入できます。
+              </div>
+              <textarea id="chatpal1Common" class="lap-chatpal-area"></textarea>
+            </div>
+          </details>
+
+          <!-- 2) 個別1（フリースペース） -->
+          <details class="lap-chatpal-sub" open>
+            <summary class="lap-chatpal-sub-title">2) 個別1（フリースペース・キャラごと）</summary>
+            <div class="lap-chatpal-sub-body">
+              <div class="lap-chatpal-charsel-row">
+                <label class="small">編集中：</label>
+                <select id="chatpal2CharSel" class="lap-chatpal-charsel"></select>
+              </div>
+              <textarea id="chatpal2Personal" class="lap-chatpal-area" placeholder="このキャラだけのコマンドを自由に記入"></textarea>
+            </div>
+          </details>
+
+          <!-- 3) 個別2（params転記+α） -->
+          <details class="lap-chatpal-sub" open>
+            <summary class="lap-chatpal-sub-title">3) 個別2（params転記＋並び替え・キャラごと）</summary>
+            <div class="lap-chatpal-sub-body">
+              <div class="lap-chatpal-charsel-row">
+                <label class="small">編集中：</label>
+                <select id="chatpal3CharSel" class="lap-chatpal-charsel"></select>
+                <button type="button" class="lap-chatpal-btn lap-chatpal-btn-import" onclick="doTranscribeParams()">📋 転記</button>
+                <button type="button" class="lap-chatpal-btn lap-chatpal-btn-apply-all" onclick="doApplyLayoutToAll()">📋 レイアウトを全員に適用</button>
+              </div>
+              <div class="small lap-chatpal-help">
+                「転記」で <code>:HP=値</code> <code>:MP=値</code> ＋ paramsを<code>CCB&lt;=値 〈ラベル〉</code>形式で生成。<br>
+                自由に並び替え・区切り行追加してから「レイアウトを全員に適用」で他キャラにも同じ構造をコピー。
+              </div>
+              <textarea id="chatpal3Layout" class="lap-chatpal-area" placeholder="「📋 転記」を押すとここにparamsが生成されます"></textarea>
+            </div>
+          </details>
+
+        </div>
+
+        <!-- 右カラム：4) 統合 + 5) テキスト作成 -->
+        <div class="lap-chatpal-col-right">
+          <details class="lap-chatpal-sub" open>
+            <summary class="lap-chatpal-sub-title">4) 統合チャパレ（プレビュー）</summary>
+            <div class="lap-chatpal-sub-body">
+              <div class="lap-chatpal-charsel-row">
+                <label class="small">プレビュー対象：</label>
+                <select id="chatpal4CharSel" class="lap-chatpal-charsel"></select>
+                <button type="button" class="lap-chatpal-btn lap-chatpal-btn-build" onclick="doBuildIntegrated()">🔄 統合</button>
+              </div>
+              <div class="small lap-chatpal-help">
+                「統合」を押すと、選択キャラの 1)+2)+3) を結合した最終チャパレが表示されます。<br>
+                これが「📋 このキャラをコピー」で出力される内容です。
+              </div>
+              <textarea id="chatpal4Integrated" class="lap-chatpal-area lap-chatpal-area-tall" placeholder="「🔄 統合」を押すと結合された最終チャパレが表示されます。直接編集も可能（キャラを切り替えるとクリアされます）"></textarea>
+            </div>
+          </details>
+
+          <!-- 5) テキスト作成（ロールテーブル等） -->
+          <details class="lap-chatpal-sub">
+            <summary class="lap-chatpal-sub-title">5) テキスト作成（ロールテーブル）</summary>
+            <div class="lap-chatpal-sub-body">
+
+              <!-- モード選択 -->
+              <div class="lap-tt-modes">
+                <span class="small">種類：</span>
+                <button type="button" class="lap-tt-mode-btn active" id="ttModeTable" onclick="setTTMode('table')">テーブル（項目入力）</button>
+                <button type="button" class="lap-tt-mode-btn" id="ttModeTablePaste" onclick="setTTMode('tablePaste')">テーブル（txt編集）</button>
+                <button type="button" class="lap-tt-mode-btn" id="ttModePlain" onclick="setTTMode('plain')">プレーンテキスト</button>
+              </div>
+
+              <!-- テーブルモード：項目入力 -->
+              <div id="ttTableForm">
+                <div class="lap-tt-line-row">
+                  <span class="lap-tt-line-num">1</span>
+                  <input type="text" class="lap-tt-line-input lap-tt-fixed-line" value="/roll-table" readonly>
+                </div>
+                <div class="lap-tt-line-row">
+                  <span class="lap-tt-line-num">2</span>
+                  <input type="text" class="lap-tt-line-input" id="ttTitleInput" placeholder="タイトル（任意・空欄で省略）" oninput="updateTTPreview()">
+                </div>
+                <div class="lap-tt-line-row">
+                  <span class="lap-tt-line-num">3</span>
+                  <div class="lap-tt-dice-row">
+                    <span class="lap-tt-dice-fixed">1D</span>
+                    <input type="number" class="lap-tt-dice-num" id="ttDiceFace" value="6" min="2" max="100" oninput="onTTDiceChange()">
+                    <span class="lap-tt-dice-hint" id="ttDiceHint">→ 6行</span>
+                  </div>
+                </div>
+                <div class="lap-tt-result-section">
+                  <div class="small lap-tt-result-header">結果行（番号は自動付与）</div>
+                  <div class="lap-tt-line-list" id="ttResultList"></div>
+                </div>
+              </div>
+
+              <!-- 貼り付けモード -->
+              <div id="ttTablePasteForm" style="display:none">
+                <div class="lap-tt-line-row">
+                  <span class="lap-tt-line-num">1</span>
+                  <input type="text" class="lap-tt-line-input lap-tt-fixed-line" value="/roll-table" readonly>
+                </div>
+                <div class="lap-tt-line-row">
+                  <span class="lap-tt-line-num">2</span>
+                  <input type="text" class="lap-tt-line-input" id="ttTitleInputP" placeholder="タイトル（任意・空欄で省略）" oninput="updateTTPreview()">
+                </div>
+                <div class="lap-tt-line-row">
+                  <span class="lap-tt-line-num">3</span>
+                  <div class="lap-tt-dice-row">
+                    <span class="lap-tt-dice-fixed">1D</span>
+                    <input type="number" class="lap-tt-dice-num" id="ttDiceFaceP" value="6" min="2" max="100" oninput="updateTTPreview()">
+                  </div>
+                </div>
+                <div class="lap-tt-result-section">
+                  <div class="small lap-tt-result-header">結果テキストを貼り付け（1行1項目・番号は自動付与）</div>
+                  <textarea id="ttPasteArea" class="lap-chatpal-area" placeholder="いっこ&#10;にこ&#10;さんこ&#10;よんこ&#10;ごこ&#10;ろっこ" oninput="updateTTPreview()"></textarea>
+                </div>
+              </div>
+
+              <!-- プレーンモード -->
+              <div id="ttPlainForm" style="display:none">
+                <div class="lap-tt-line-list" id="ttPlainList"></div>
+              </div>
+
+              <div class="lap-tt-preview-label small">プレビュー（結合テキスト）</div>
+              <textarea id="ttPreview" class="lap-chatpal-area" readonly placeholder="左の入力が自動でここに結合されます"></textarea>
+              <div class="row lap-tt-actions">
+                <button type="button" class="lap-chatpal-btn lap-chatpal-btn-build" onclick="doCopyTTPreview(this)">📋 プレビューをコピー</button>
+              </div>
+            </div>
+          </details>
+        </div>
+
+      </div>
+    </div>
+  </details>
+
+</div>
+
+<script src="../../03-js/21-chat-03-ia-002-many.js"></script>
+
+</body>
+</html>
