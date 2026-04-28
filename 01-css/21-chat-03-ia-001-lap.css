@@ -115,9 +115,8 @@
    横一列の大きな表
 ========================================= */
 .lap-table-wrap {
-  overflow-x: auto;
-  overflow-y: visible;
-  max-height: calc(100vh - 80px);
+  overflow: auto;
+  max-height: calc(100vh - 120px);
   border-bottom: 1px solid #ddd;
 }
 .lap-grand-table {
@@ -153,7 +152,7 @@
   border-left: 2px solid #b0d4e8;
 }
 
-/* ===== sticky見出し ===== */
+/* ===== sticky見出し（thead）===== */
 .lap-grand-table thead th {
   position: sticky;
   background: #f4f8fa;
@@ -173,6 +172,18 @@
   background: #f4f8fa;
   font-size: 11px;
   padding: 3px 6px;
+}
+
+/* 左固定の「ラベル」「共有」見出し（最前面：縦横スクロール両方で固定） */
+.lap-grand-table thead .lap-thead-1 th.lap-th-label-fixed,
+.lap-grand-table thead .lap-thead-1 th.lap-th-shared-fixed {
+  z-index: 5;  /* tbody側stickyより高い */
+}
+.lap-th-label-fixed {
+  left: 0 !important;
+}
+.lap-th-shared-fixed {
+  left: var(--lap-col-label-w, 8rem) !important;
 }
 
 /* キャラ名見出しセル（sticky 1行目） */
@@ -268,14 +279,28 @@
 .lap-grand-table tbody tr {
   transition: background .1s;
 }
-.lap-grand-table tbody tr.lap-row-selected {
-  background: #fff4d4;
-}
-.lap-grand-table tbody tr.lap-row-selected td {
-  background: #fff4d4;
+
+/* 全ての通常セルのデフォルト背景 */
+.lap-grand-table tbody td {
+  background: #fff;
 }
 
-/* ラベルセル */
+/* 交互ストライプ */
+.lap-grand-table tbody tr:nth-child(even) td {
+  background: #f6f9fc;
+}
+
+/* ホバーハイライト */
+.lap-grand-table tbody tr:hover td {
+  background: #eaf3fb !important;
+}
+
+/* 選択行ハイライト（最優先） */
+.lap-grand-table tbody tr.lap-row-selected td {
+  background: #fff4d4 !important;
+}
+
+/* ラベルセル（左固定） */
 .lap-cell-label {
   font-weight: 600;
   cursor: cell;
@@ -283,19 +308,45 @@
   position: sticky;
   left: 0;
   z-index: 2;
-  background: #fafafa !important;
+  /* ストライプを反映するため、デフォルトはセル背景の継承だが
+     stickyだと透けるので親tr背景を不透明にする必要がある */
+  background: inherit;
+  box-shadow: 1px 0 0 #e0e0e0;  /* 区切り線 */
+}
+/* tbody行の親背景を継承させるため、奇数偶数で固定セル背景を再指定 */
+.lap-grand-table tbody tr:nth-child(odd) .lap-cell-label {
+  background: #fafafa;
+}
+.lap-grand-table tbody tr:nth-child(even) .lap-cell-label {
+  background: #eef3f8;
+}
+.lap-grand-table tbody tr:hover .lap-cell-label {
+  background: #d8e8f5 !important;
 }
 .lap-row-selected .lap-cell-label {
-  background: #fff4d4 !important;
+  background: #ffeb9c !important;
 }
 
-/* 共有チェック */
+/* 共有チェック（ラベルの隣も左固定） */
 .lap-cell-shared {
   text-align: center;
-  background: #f9f9f9 !important;
+  position: sticky;
+  left: var(--lap-col-label-w, 8rem);
+  z-index: 2;
+  background: inherit;
+  box-shadow: 1px 0 0 #e0e0e0;
+}
+.lap-grand-table tbody tr:nth-child(odd) .lap-cell-shared {
+  background: #f4f4f4;
+}
+.lap-grand-table tbody tr:nth-child(even) .lap-cell-shared {
+  background: #e8eef4;
+}
+.lap-grand-table tbody tr:hover .lap-cell-shared {
+  background: #d2e2ef !important;
 }
 .lap-row-selected .lap-cell-shared {
-  background: #fff4d4 !important;
+  background: #ffe48c !important;
 }
 
 /* 値・削除セル */
