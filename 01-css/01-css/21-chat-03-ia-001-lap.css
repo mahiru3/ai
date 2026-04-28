@@ -1,0 +1,33 @@
+/* =========================================
+   01-css/21-chat-03-ia-001-lap.css
+   21-chat/03-ia/001-lap.html 専用：単独動作版いあきゃら変換ツール
+   既存の 31-csv-01chara.css に上乗せする差分スタイル
+========================================= */
+
+/* 使い方ガイド（旧navi.htmlの.guideを本体内表示用にアレンジ） */
+.lap-guide {
+  font-size: 12px;
+  color: #555;
+  line-height: 1.7;
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  border-left: 3px solid #80c8d1;
+  background: #f7fbfc;
+  border-radius: 0 6px 6px 0;
+}
+.lap-guide b {
+  color: #333;
+}
+
+/* 操作ボタン3つを横並び中央配置 */
+.lap-buttons {
+  justify-content: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+/* 単独動作版ではbutton-29の幅をやや小さめにして3つ並べやすく */
+.lap-buttons .button-29 {
+  max-width: 160px;
+  margin: 4px;
+}
