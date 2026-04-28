@@ -1057,6 +1057,61 @@
   gap: 3px;
 }
 
+/* ===== ラベル移動ハンドル「↕」 ===== */
+.lap-cell-label {
+  /* テキストとハンドルを横並びに */
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.lap-cell-label-handle {
+  flex: 0 0 1.4em;
+  height: 1.4em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #c0c0c0;
+  cursor: grab;
+  user-select: none;
+  border-radius: 3px;
+  background: transparent;
+  transition: all .12s;
+  font-weight: 600;
+}
+.lap-cell-label-handle:hover {
+  background: #2589d0;
+  color: #fff;
+  transform: scale(1.15);
+}
+.lap-cell-label-handle:active {
+  cursor: grabbing;
+  background: #f4a000;
+  color: #fff;
+}
+.lap-row-selected .lap-cell-label-handle {
+  color: #b87800;
+  background: rgba(244, 160, 0, 0.15);
+}
+.lap-row-selected .lap-cell-label-handle:hover {
+  background: #f4a000;
+  color: #fff;
+}
+.lap-cell-label-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 区切り行のラベルセル：ハンドルとinputを横並びに */
+.lap-cell-divider-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.lap-cell-divider-label .lap-divider-input {
+  flex: 1;
+}
+
 /* ===== メッセージ ===== */
 .ok { color: #0a7a20; font-weight: 600; }
 .err { color: #b00020; font-weight: 600; white-space: pre-wrap; }
