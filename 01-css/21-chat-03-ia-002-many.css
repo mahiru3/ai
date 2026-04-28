@@ -200,6 +200,10 @@
   flex-direction: column;
   gap: 4px;
 }
+.lap-charhead-compact {
+  /* ③params側：キャラ名のみのコンパクト表示 */
+  gap: 0;
+}
 .lap-charhead-name {
   display: flex;
   align-items: center;
@@ -962,6 +966,95 @@
 }
 .lap-iachara-del:hover {
   background: #fde8e8;
+}
+
+/* ===== 区切り行 ===== */
+.lap-row-divider td {
+  background: #fffbe6 !important;
+  border-top: 2px solid #f4a000 !important;
+  border-bottom: 2px solid #f4a000 !important;
+}
+.lap-row-divider:hover td {
+  background: #fff4d4 !important;
+}
+.lap-cell-divider-label {
+  font-weight: 600;
+  cursor: cell;
+  user-select: none;
+  padding: 4px 6px !important;
+}
+.lap-divider-input {
+  width: 100%;
+  padding: 3px 6px;
+  font-size: 12px;
+  border: 1px dashed #f4a000;
+  background: #fffbe6;
+  border-radius: 3px;
+  font-family: ui-monospace, Consolas, monospace;
+}
+.lap-divider-input:focus {
+  outline: none;
+  border-color: #d97f00;
+  background: #fff;
+}
+.lap-cell-divider-span {
+  text-align: center;
+  font-size: 11px;
+  color: #999;
+  font-style: italic;
+  background: #fffbe6 !important;
+}
+
+/* 区切り行追加ボタン */
+.lap-add-divider-btn {
+  border-color: #f4a000 !important;
+  color: #b87800 !important;
+}
+.lap-add-divider-btn:hover {
+  background: #fff4d4 !important;
+}
+
+/* ===== 5)テキスト作成内の「②テキスト変換」サブブロック ===== */
+.lap-tt-convert-block {
+  margin-top: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fafafa;
+}
+.lap-tt-convert-title {
+  cursor: pointer;
+  padding: 6px 10px;
+  font-weight: 700;
+  font-size: 12px;
+  list-style: none;
+  user-select: none;
+  background: #f0f4f8;
+  border-left: 3px solid #5a9bd9;
+}
+.lap-tt-convert-title::-webkit-details-marker { display: none; }
+.lap-tt-convert-title::before {
+  content: "▶";
+  display: inline-block;
+  margin-right: 6px;
+  font-size: 9px;
+  transition: transform .15s;
+}
+.lap-tt-convert-block[open] .lap-tt-convert-title::before { transform: rotate(90deg); }
+.lap-tt-convert-body {
+  padding: 8px 10px;
+}
+.lap-tt-convert-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+@media (max-width: 700px) {
+  .lap-tt-convert-cols { grid-template-columns: 1fr; }
+}
+.lap-tt-convert-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 /* ===== メッセージ ===== */
