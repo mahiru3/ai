@@ -494,12 +494,13 @@ function renderTable(kind) {
       tdLabel.className = 'lap-cell-label lap-cell-divider-label';
       tdLabel.dataset.kind = kind;
       tdLabel.dataset.label = item.label;
-      // テキスト編集可能な入力欄
-      tdLabel.innerHTML = `<input type="text" class="lap-divider-input" value="${escapeAttr(item.label)}" placeholder="区切り行のテキスト">`;
+      // ハンドル + テキスト編集入力欄
+      tdLabel.innerHTML = `
+        <span class="lap-cell-label-handle" title="ここを掴んで移動">↕</span><input type="text" class="lap-divider-input" value="${escapeAttr(item.label)}" placeholder="区切り行のテキスト">
+      `;
       const dividerInp = tdLabel.querySelector('input');
       dividerInp.oninput = e => {
         // ラベル更新（ID代わりに使っているのでcommonParams側も更新）
-        const oldLabel = item.label;
         const newLabel = e.target.value;
         item.label = newLabel;
         tr.dataset.label = newLabel;
@@ -508,6 +509,7 @@ function renderTable(kind) {
       // ドラッグ選択は input ではなく td 全体でも反応させたい：
       // input に focus している間は preventDefault しないので mousedown を td でハンドル
       bindLabelDrag(tdLabel, kind);
+      bindMoveHandle(tdLabel.querySelector('.lap-cell-label-handle'), kind, item.label);
       tr.appendChild(tdLabel);
 
       // ↑↓矢印セル
@@ -547,10 +549,14 @@ function renderTable(kind) {
     // ラベルセル（ドラッグ選択対象）
     const tdLabel = document.createElement('td');
     tdLabel.className = 'lap-cell-label';
-    tdLabel.textContent = item.label;
     tdLabel.dataset.kind = kind;
     tdLabel.dataset.label = item.label;
+    // ハンドル + ラベルテキスト
+    tdLabel.innerHTML = `
+      <span class="lap-cell-label-handle" title="ここを掴んで移動">↕</span><span class="lap-cell-label-text">${escapeHtml(item.label)}</span>
+    `;
     bindLabelDrag(tdLabel, kind);
+    bindMoveHandle(tdLabel.querySelector('.lap-cell-label-handle'), kind, item.label);
     tr.appendChild(tdLabel);
 
     // ↑↓矢印セル（1行ずつの移動）
@@ -742,6 +748,39 @@ const dragState = {
   moveDropTargetLabel: null,
   moveDropPosition: null  // 'before' | 'after'
 };
+
+/* ハンドル「↕」専用：mousedownで即座に移動モード開始
+   - 選択行が無ければ、その行だけ単独選択した上で移動モード開始
+   - 選択行に含まれていれば、選択行全体を移動
+*/
+function bindMoveHandle(handle, kind, label) {
+  if (!handle) return;
+  handle.addEventListener('mousedown', e => {
+    e.preventDefault();
+    e.stopPropagation();  // bindLabelDragへの伝播を止める
+    dragState.kind = kind;
+
+    // 既に複数選択中で、その中にこの行が含まれている → 選択全体を移動
+    if (dragState.selectedLabels.has(label) && dragState.selectedLabels.size > 0) {
+      // そのまま既存選択を移動対象とする
+    } else {
+      // この行だけを単独選択して移動対象とする
+      dragState.selectedLabels = new Set([label]);
+      updateRowSelection();
+    }
+
+    // 即座に移動モード開始
+    dragState.mode = 'moving';
+    dragState.startLabel = label;
+    dragState.moveDropTargetLabel = null;
+    dragState.moveDropPosition = null;
+    const wrap = document.getElementById(kind === 'status' ? 'statusTableWrap' : 'paramsTableWrap');
+    wrap.querySelectorAll('tbody tr').forEach(tr => {
+      if (dragState.selectedLabels.has(tr.dataset.label)) tr.classList.add('lap-row-moving');
+    });
+    document.body.style.cursor = 'grabbing';
+  });
+}
 
 function bindLabelDrag(td, kind) {
   td.addEventListener('mousedown', e => {
