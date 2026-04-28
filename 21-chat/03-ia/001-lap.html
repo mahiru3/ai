@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <!--
   21-chat/03-ia/001-lap.html
-  いあきゃら → ココフォリア 一括変換ツール（複数キャラ対応版）
+  いあきゃら → ココフォリア 一括変換ツール（横一列表形式版）
   - スプレッドシートのTSV貼り付けで6〜22人を一括変換
-  - 1行目=キャラ名、2行目以降=「ラベル + N人分の値」
-  - HP/MP/SAN = 共通status / DB = チャパレ側 / それ以外 = 共通params
-  - 各キャラごとにname・URL・個人チャパレを編集して個別コピー
+  - status / params をそれぞれ別アコーディオンの横一列表で管理
+  - 表の見出し行はsticky（キャラ名・URL・個人チャパレ・コピーボタン）
+  - ドラッグでラベル複数選択 → 一括削除
 -->
 <html lang="ja">
 <head>
@@ -18,21 +18,19 @@
 </head>
 <body>
 
-<!-- タイトル -->
 <div class="sticky">
   <div class="title">いあきゃら → ココフォリア 一括変換（6〜22人対応）</div>
 </div>
 
 <div class="box">
 
-  <!-- 使い方ガイド -->
   <div class="lap-guide">
     1) 人数を選択 → 2) スプレッドシートをコピーして<b>TSV貼り付け</b> → <b>📋 表を解析</b><br>
-    3) 共通status/paramsの並び順・キャラごとの個別調整 → 共通／個人チャパレ編集<br>
-    4) <b>各キャラの「📋このキャラをコピー」</b>でココフォリアにペースト
+    3) 共通status / 共通paramsをそれぞれ調整、不要ラベルはドラッグ選択で一括削除<br>
+    4) 各キャラの<b>「📋このキャラをコピー」</b>でココフォリアにペースト
   </div>
 
-  <!-- ① 人数選択 + TSV貼り付け -->
+  <!-- ① 表データ貼り付け -->
   <details class="lap-section" open>
     <summary class="lap-summary lap-summary-1">① 表データ貼り付け</summary>
     <div class="lap-section-body">
@@ -58,43 +56,29 @@
     </div>
   </details>
 
-  <!-- ② 共通設定エリア -->
-  <details class="lap-section" id="commonBox" style="display:none">
-    <summary class="lap-summary lap-summary-2">② 共通設定（status・params）</summary>
-    <div class="lap-section-body">
-
-      <div class="lap-common-block">
-        <div class="lap-block-title">共通 status（順番変更のみ／全員共通）</div>
-        <table class="lap-common-table" id="commonStatusTable">
-          <thead>
-            <tr>
-              <th style="width:2rem">↕</th>
-              <th>ラベル</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+  <!-- ② 共通status -->
+  <details class="lap-section" id="statusBox" style="display:none">
+    <summary class="lap-summary lap-summary-2">② 共通status（HP / MP / SAN）</summary>
+    <div class="lap-section-body lap-table-body">
+      <div class="lap-table-wrap" id="statusTableWrap"></div>
+      <div class="lap-table-actions">
+        <input type="text" id="newStatusLabel" placeholder="新しいstatusラベル名" class="lap-add-input">
+        <button class="lap-add-btn" onclick="addCommonRow('status')">＋ statusに追加</button>
+        <button class="lap-del-btn" onclick="deleteSelectedRows('status')">🗑 選択行を削除</button>
       </div>
+    </div>
+  </details>
 
-      <div class="lap-common-block">
-        <div class="lap-block-title">共通 params（順番変更・追加・全員適用切替）</div>
-        <table class="lap-common-table" id="commonParamsTable">
-          <thead>
-            <tr>
-              <th style="width:2rem">↕</th>
-              <th>ラベル</th>
-              <th style="width:9rem">全員適用</th>
-              <th style="width:5rem">削除</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-        <div class="row">
-          <input type="text" id="newParamLabel" placeholder="新しいラベル名" class="lap-add-input">
-          <button class="lap-add-btn" onclick="addCommonParam()">＋ 共通paramsに追加</button>
-        </div>
+  <!-- ③ 共通params -->
+  <details class="lap-section" id="paramsBox" style="display:none">
+    <summary class="lap-summary lap-summary-3">③ 共通params（能力値・技能）</summary>
+    <div class="lap-section-body lap-table-body">
+      <div class="lap-table-wrap" id="paramsTableWrap"></div>
+      <div class="lap-table-actions">
+        <input type="text" id="newParamLabel" placeholder="新しいparamsラベル名" class="lap-add-input">
+        <button class="lap-add-btn" onclick="addCommonRow('params')">＋ paramsに追加</button>
+        <button class="lap-del-btn" onclick="deleteSelectedRows('params')">🗑 選択行を削除</button>
       </div>
-
     </div>
   </details>
 
@@ -103,30 +87,15 @@
     <summary class="lap-summary lap-summary-4">④ 共通チャットパレット（全員に適用）</summary>
     <div class="lap-section-body">
       <div class="small lap-chatpal-help">
-        ここに書いた内容は全員のcommandsに反映されます。<br>
         <code>1d100&lt;=...</code> 系（例：正気度ロール）と <code>CCB&lt;=...</code> 系を書いてください。<br>
-        出力時に <code>:SAN-1 / :SAN+1</code> が冒頭に追加され、<code>✨よく使う✨</code> で区切られます。
+        出力時に <code>:SAN-1 / :SAN+1</code> が冒頭、<code>✨よく使う✨</code> で区切られ、<code>CCB&lt;=</code> 系は <code>{BA} 〈〉</code> 形式に変換されます。
       </div>
       <textarea id="commonChatpal" class="lap-chatpal" placeholder="1d100<={SAN} 【正気度ロール】&#10;CCB<=90 【アイデア】&#10;CCB<=75 【幸運】&#10;CCB<=90 【知識】"></textarea>
     </div>
   </details>
 
-  <!-- ③ キャラカード一覧 -->
-  <details class="lap-section" id="charsBox" style="display:none">
-    <summary class="lap-summary lap-summary-3">③ 各キャラ編集（名前・URL・status値・params値・個人チャパレ）</summary>
-    <div class="lap-section-body">
-      <div id="charCards" class="lap-cards"></div>
-    </div>
-  </details>
-
-  <!-- ⑤ 操作結果メッセージ -->
-  <div class="row" id="globalMsgRow" style="display:none">
-    <span id="globalMsg" class="small"></span>
-  </div>
-
 </div>
 
-<!-- ロジック本体 -->
 <script src="../../03-js/21-chat-03-ia-001-lap.js"></script>
 
 </body>
