@@ -161,7 +161,7 @@ function doParseTSV() {
     }
 
     // sticky見出し1行目の高さをCSS変数に反映（解析直後）
-    setTimeout(updateTheadHeights, 100);
+    scheduleTheadHeightUpdate();
   } catch (e) {
     msgEl.textContent = '解析エラー：' + (e && e.message ? e.message : String(e));
     msgEl.className = 'small err';
@@ -319,6 +319,7 @@ function renderTable(kind) {
 
   wrap.innerHTML = '';
   wrap.appendChild(table);
+  scheduleTheadHeightUpdate();
 }
 
 /* 個別「削除」チェック変更時に、その行の共有チェックの状態を更新 */
@@ -361,10 +362,23 @@ function updateTheadHeights() {
     const tr1 = tbl.querySelector('thead .lap-thead-1');
     if (!tr1) return;
     const h = tr1.getBoundingClientRect().height;
-    tbl.style.setProperty('--lap-thead-1-h', h + 'px');
+    if (h > 0) {
+      tbl.style.setProperty('--lap-thead-1-h', h + 'px');
+    }
   });
 }
 window.addEventListener('resize', updateTheadHeights);
+window.addEventListener('scroll', updateTheadHeights, true);
+
+/* renderTable直後にレイアウト確定後の高さで再計測する */
+function scheduleTheadHeightUpdate() {
+  // レイアウト確定 → 描画後に計測
+  requestAnimationFrame(() => {
+    updateTheadHeights();
+    // フォントロード等で更にずれる場合に備えて2フレーム後にも
+    requestAnimationFrame(updateTheadHeights);
+  });
+}
 
 /* =========================================
    ラベルセルのドラッグ複数選択（Excel風）+ ドラッグ移動
@@ -515,7 +529,7 @@ function executeMove(kind, targetLabel, position) {
   const newList = [...remaining.slice(0, targetIdx), ...movingItems, ...remaining.slice(targetIdx)];
   state[listKey] = newList;
   renderTable(kind);
-  setTimeout(updateTheadHeights, 50);
+  scheduleTheadHeightUpdate();
 }
 
 function updateRowSelection() {
@@ -586,7 +600,7 @@ function doUndo() {
   state.perChar = snap.perChar;
   renderTable('status');
   renderTable('params');
-  setTimeout(updateTheadHeights, 50);
+  scheduleTheadHeightUpdate();
   showToast(`元に戻しました（${snap.reason === 'delete' ? '削除' : '移動'}）`);
 }
 
@@ -640,7 +654,7 @@ function deleteSelectedRows(kind) {
 
   dragState.selectedLabels = new Set();
   renderTable(kind);
-  setTimeout(updateTheadHeights, 50);
+  scheduleTheadHeightUpdate();
   showToast(`${labels.length}件削除しました（Ctrl+Z で元に戻せます）`);
 }
 
@@ -677,7 +691,7 @@ function addCommonRow(kind) {
 
   inp.value = '';
   renderTable(kind);
-  setTimeout(updateTheadHeights, 50);
+  scheduleTheadHeightUpdate();
 }
 
 /* =========================================
