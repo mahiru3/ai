@@ -58,27 +58,31 @@
 
   <!-- ② 共通status -->
   <details class="lap-section" id="statusBox" style="display:none">
-    <summary class="lap-summary lap-summary-2">② 共通status（HP / MP / SAN）</summary>
+    <summary class="lap-summary lap-summary-2">
+      <span class="lap-summary-title">② 共通status（HP / MP / SAN）</span>
+      <span class="lap-summary-actions" onclick="event.stopPropagation()">
+        <input type="text" id="newStatusLabel" placeholder="新しいstatusラベル名" class="lap-add-input" onclick="event.stopPropagation()">
+        <button type="button" class="lap-add-btn" onclick="event.stopPropagation();addCommonRow('status')">＋ statusに追加</button>
+        <button type="button" class="lap-del-btn" onclick="event.stopPropagation();deleteSelectedRows('status')">🗑 選択行を削除</button>
+      </span>
+    </summary>
     <div class="lap-section-body lap-table-body">
       <div class="lap-table-wrap" id="statusTableWrap"></div>
-      <div class="lap-table-actions">
-        <input type="text" id="newStatusLabel" placeholder="新しいstatusラベル名" class="lap-add-input">
-        <button class="lap-add-btn" onclick="addCommonRow('status')">＋ statusに追加</button>
-        <button class="lap-del-btn" onclick="deleteSelectedRows('status')">🗑 選択行を削除</button>
-      </div>
     </div>
   </details>
 
   <!-- ③ 共通params -->
   <details class="lap-section" id="paramsBox" style="display:none">
-    <summary class="lap-summary lap-summary-3">③ 共通params（能力値・技能）</summary>
+    <summary class="lap-summary lap-summary-3">
+      <span class="lap-summary-title">③ 共通params（能力値・技能）</span>
+      <span class="lap-summary-actions" onclick="event.stopPropagation()">
+        <input type="text" id="newParamLabel" placeholder="新しいparamsラベル名" class="lap-add-input" onclick="event.stopPropagation()">
+        <button type="button" class="lap-add-btn" onclick="event.stopPropagation();addCommonRow('params')">＋ paramsに追加</button>
+        <button type="button" class="lap-del-btn" onclick="event.stopPropagation();deleteSelectedRows('params')">🗑 選択行を削除</button>
+      </span>
+    </summary>
     <div class="lap-section-body lap-table-body">
       <div class="lap-table-wrap" id="paramsTableWrap"></div>
-      <div class="lap-table-actions">
-        <input type="text" id="newParamLabel" placeholder="新しいparamsラベル名" class="lap-add-input">
-        <button class="lap-add-btn" onclick="addCommonRow('params')">＋ paramsに追加</button>
-        <button class="lap-del-btn" onclick="deleteSelectedRows('params')">🗑 選択行を削除</button>
-      </div>
     </div>
   </details>
 
