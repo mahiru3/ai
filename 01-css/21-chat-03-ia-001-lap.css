@@ -450,6 +450,124 @@
   font-size: 12px;
 }
 
+/* ===== ④チャパレ編集セクション ===== */
+.lap-chatpal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .lap-chatpal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lap-chatpal-col-left,
+.lap-chatpal-col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 内側のサブアコーディオン */
+.lap-chatpal-sub {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  overflow: hidden;
+}
+.lap-chatpal-sub-title {
+  cursor: pointer;
+  padding: 7px 12px;
+  font-weight: 700;
+  font-size: 13px;
+  list-style: none;
+  user-select: none;
+  background: #f6ecfa;
+  border-left: 4px solid #c97cd9;
+}
+.lap-chatpal-sub-title::-webkit-details-marker { display: none; }
+.lap-chatpal-sub-title::before {
+  content: "▶";
+  display: inline-block;
+  margin-right: 6px;
+  font-size: 9px;
+  transition: transform .15s;
+}
+.lap-chatpal-sub[open] .lap-chatpal-sub-title::before { transform: rotate(90deg); }
+
+.lap-chatpal-sub-body {
+  padding: 10px 12px;
+}
+
+/* キャラ選択行 */
+.lap-chatpal-charsel-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.lap-chatpal-charsel {
+  padding: 3px 6px;
+  font-size: 13px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-width: 100px;
+  background: #fff;
+}
+
+/* 編集テキストエリア */
+.lap-chatpal-area {
+  width: 100%;
+  height: 12em;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 6px 8px;
+  box-sizing: border-box;
+  line-height: 1.5;
+  resize: vertical;
+}
+.lap-chatpal-area-tall {
+  height: 28em;
+  background: #fafafa;
+}
+
+/* チャパレ編集用ボタン */
+.lap-chatpal-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid #999;
+  color: #333;
+}
+.lap-chatpal-btn-import {
+  border-color: #6dbd6d;
+  color: #2e7d32;
+}
+.lap-chatpal-btn-import:hover {
+  background: #ecf7ec;
+}
+.lap-chatpal-btn-apply-all {
+  border-color: #f4a000;
+  color: #b87800;
+}
+.lap-chatpal-btn-apply-all:hover {
+  background: #fff4d4;
+}
+.lap-chatpal-btn-build {
+  border-color: #2589d0;
+  color: #2589d0;
+}
+.lap-chatpal-btn-build:hover {
+  background: #e7f1fb;
+}
+
 /* ===== メッセージ ===== */
 .ok { color: #0a7a20; font-weight: 600; }
 .err { color: #b00020; font-weight: 600; white-space: pre-wrap; }
