@@ -125,6 +125,7 @@
         </label>
         <input type="text" id="newParamLabel" placeholder="新しいparamsラベル名" class="lap-add-input" onclick="event.stopPropagation()">
         <button type="button" class="lap-add-btn" onclick="event.stopPropagation();addCommonRow('params')">＋ paramsに追加</button>
+        <button type="button" class="lap-add-btn lap-add-divider-btn" onclick="event.stopPropagation();addDividerRow()">＋ 区切り行を追加</button>
         <button type="button" class="lap-del-btn" onclick="event.stopPropagation();deleteSelectedRows('params')">🗑 選択行を削除</button>
       </span>
     </summary>
@@ -272,7 +273,33 @@
               <textarea id="ttPreview" class="lap-chatpal-area" readonly placeholder="左の入力が自動でここに結合されます"></textarea>
               <div class="row lap-tt-actions">
                 <button type="button" class="lap-chatpal-btn lap-chatpal-btn-build" onclick="doCopyTTPreview(this)">📋 プレビューをコピー</button>
+                <button type="button" class="lap-chatpal-btn lap-chatpal-btn-build" onclick="doSendToConvert()">② 「」→〈〉変換へ送る ▼</button>
               </div>
+
+              <!-- 「」→〈〉変換 -->
+              <details class="lap-tt-convert-block" id="ttConvertBlock">
+                <summary class="lap-tt-convert-title">② テキスト変換（「」→〈〉）</summary>
+                <div class="lap-tt-convert-body">
+                  <div class="small lap-chatpal-help">
+                    先頭の <code>「</code> と末尾の <code>」</code> を除去、各行先頭の全角スペースを除去、改行を <code>\n</code> に変換します。
+                  </div>
+                  <div class="lap-tt-convert-cols">
+                    <div class="lap-tt-convert-col">
+                      <div class="small">入力（「」で囲まれたテキスト）</div>
+                      <textarea id="ttConvertInput" class="lap-chatpal-area" placeholder="「/roll-table&#10;1D6&#10;1:結果A&#10;...」" oninput="doConvertTT()"></textarea>
+                    </div>
+                    <div class="lap-tt-convert-col">
+                      <div class="small">変換結果（ここふぁりあに貼り付け可）</div>
+                      <textarea id="ttConvertOutput" class="lap-chatpal-area" readonly placeholder="ここに結果が表示されます"></textarea>
+                    </div>
+                  </div>
+                  <div class="row lap-tt-actions">
+                    <button type="button" class="lap-chatpal-btn lap-chatpal-btn-build" onclick="doConvertTT()">🔄 変換する</button>
+                    <button type="button" class="lap-chatpal-btn lap-chatpal-btn-build" onclick="doCopyTTConvert(this)">📋 コピー</button>
+                    <button type="button" class="lap-chatpal-btn" onclick="doClearTTConvert()">🗑 クリア</button>
+                  </div>
+                </div>
+              </details>
             </div>
           </details>
         </div>
