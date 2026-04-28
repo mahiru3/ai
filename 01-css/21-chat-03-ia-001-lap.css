@@ -670,6 +670,209 @@
   background: #e7f1fb;
 }
 
+/* ===== 保存・JSONエクスポート/インポートボタン ===== */
+.lap-save-buttons {
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.lap-save-btn {
+  padding: 5px 12px;
+  font-size: 12px;
+  background: #fff;
+  border: 1px solid #999;
+  color: #444;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background .15s;
+  display: inline-block;
+}
+.lap-save-btn:hover {
+  background: #f0f0f0;
+}
+.lap-save-btn-import {
+  position: relative;
+}
+.lap-save-btn-import input[type="file"] {
+  position: absolute;
+  inset: 0;
+}
+
+/* ===== ③共通paramsの上限入力 ===== */
+.lap-cap-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+}
+.lap-cap-input {
+  width: 4em;
+  padding: 3px 6px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: ui-monospace, Consolas, monospace;
+}
+
+/* 上限超過セルのハイライト（補助表示） */
+.lap-cell-val input.lap-val-over {
+  color: #b87800;
+  font-weight: 600;
+  background: #fffaeb;
+}
+
+/* ===== 5) テキスト作成（ロールテーブル） ===== */
+.lap-tt-modes {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.lap-tt-mode-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  background: #fff;
+  border: 1px solid #999;
+  color: #555;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.lap-tt-mode-btn:hover {
+  background: #f0f0f0;
+}
+.lap-tt-mode-btn.active {
+  background: #2589d0;
+  border-color: #2589d0;
+  color: #fff;
+}
+
+/* 行（番号 + input） */
+.lap-tt-line-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.lap-tt-line-num {
+  flex: 0 0 1.5em;
+  text-align: right;
+  font-size: 11px;
+  color: #888;
+  font-family: ui-monospace, Consolas, monospace;
+}
+.lap-tt-line-num.result-num {
+  flex: 0 0 2em;
+}
+.lap-tt-line-input {
+  flex: 1;
+  padding: 3px 6px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+.lap-tt-fixed-line {
+  background: #f0f0f0;
+  color: #555;
+  font-family: ui-monospace, Consolas, monospace;
+}
+
+/* ダイス専用UI */
+.lap-tt-dice-row {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+.lap-tt-dice-fixed {
+  padding: 3px 6px;
+  background: #f4f4f4;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-family: ui-monospace, Consolas, monospace;
+}
+.lap-tt-dice-num {
+  width: 4em;
+  padding: 3px 6px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+.lap-tt-dice-hint {
+  color: #888;
+  font-size: 11px;
+}
+
+/* 結果セクション */
+.lap-tt-result-section {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+.lap-tt-result-header {
+  margin-bottom: 4px;
+  color: #555;
+  font-weight: 600;
+}
+.lap-tt-line-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 30em;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* +/× ボタン */
+.lap-tt-line-add-btn,
+.lap-tt-line-del-btn {
+  flex: 0 0 1.6em;
+  height: 1.6em;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 3px;
+  cursor: pointer;
+  background: #fff;
+  line-height: 1;
+}
+.lap-tt-line-add-btn {
+  border: 1px solid #6dbd6d;
+  color: #2e7d32;
+}
+.lap-tt-line-add-btn:hover {
+  background: #ecf7ec;
+}
+.lap-tt-line-del-btn {
+  border: 1px solid #d97070;
+  color: #c14040;
+}
+.lap-tt-line-del-btn:hover {
+  background: #fde8e8;
+}
+.lap-tt-line-del-btn:disabled {
+  border-color: #ddd;
+  color: #ccc;
+  cursor: not-allowed;
+}
+.lap-tt-line-del-btn:disabled:hover {
+  background: #fff;
+}
+
+/* プレビュー */
+.lap-tt-preview-label {
+  margin: 8px 0 3px;
+  font-weight: 600;
+  color: #555;
+}
+.lap-tt-actions {
+  margin-top: 6px;
+  justify-content: flex-end;
+}
+
 /* ===== メッセージ ===== */
 .ok { color: #0a7a20; font-weight: 600; }
 .err { color: #b00020; font-weight: 600; white-space: pre-wrap; }
