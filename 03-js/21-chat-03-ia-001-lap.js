@@ -76,7 +76,12 @@ function parseTSV(tsv) {
       const v = cols[nameStartCol + ci];
       if (!isEmptyValue(v)) {
         const num = parseInt(String(v).trim(), 10);
-        values[n][label] = isNaN(num) ? String(v).trim() : num;
+        const value = isNaN(num) ? String(v).trim() : num;
+        values[n][label] = value;
+        // params側は「素の数値」もbase領域に保存（上限機能で参照）
+        if (!isStatus && typeof value === 'number') {
+          values[n]['__base__' + label] = value;
+        }
       } else {
         // 空セル：そのキャラから除外する印として、解析後にexcludeに追加する
         values[n]['__excluded__'] = values[n]['__excluded__'] || new Set();
@@ -313,11 +318,38 @@ function renderTable(kind) {
       tdVal.className = 'lap-cell-val lap-charblock-start';
       const v = state.values[origName][item.label];
       const valDisplay = (v != null) ? v : '';
-      tdVal.innerHTML = `<input type="number" value="${valDisplay}">`;
-      tdVal.querySelector('input').oninput = e => {
-        const n = parseInt(e.target.value, 10);
-        state.values[origName][item.label] = isNaN(n) ? 0 : n;
+      // params側はtype=textにして「105-15」のような上限処理結果も表示できるように
+      const inputType = (kind === 'params') ? 'text' : 'number';
+      tdVal.innerHTML = `<input type="${inputType}" value="${escapeAttr(valDisplay)}">`;
+      const valInput = tdVal.querySelector('input');
+      // 上限超過なら強調表示
+      if (kind === 'params' && typeof valDisplay === 'string' && /^(\d+)-(\d+)$/.test(valDisplay)) {
+        valInput.classList.add('lap-val-over');
+      }
+      valInput.oninput = e => {
+        if (kind === 'params') {
+          setParamValue(origName, item.label, e.target.value);
+          // 上限処理結果を反映するため、フォーカスを保ちつつ値の表示は変えない
+          // （ユーザーが再入力するため、即時の書き戻しはしない）
+        } else {
+          const n = parseInt(e.target.value, 10);
+          state.values[origName][item.label] = isNaN(n) ? 0 : n;
+        }
       };
+      // フォーカスを失ったら、上限処理結果で表示を更新（params側のみ）
+      if (kind === 'params') {
+        valInput.onblur = () => {
+          const cur = state.values[origName][item.label];
+          if (cur != null) {
+            valInput.value = cur;
+            if (typeof cur === 'string' && /^(\d+)-(\d+)$/.test(cur)) {
+              valInput.classList.add('lap-val-over');
+            } else {
+              valInput.classList.remove('lap-val-over');
+            }
+          }
+        };
+      }
       tr.appendChild(tdVal);
 
       const tdDel = document.createElement('td');
@@ -1084,6 +1116,463 @@ function doBuildIntegrated() {
   const text = buildCommandsForChar(ci);
   document.getElementById('chatpal4Integrated').value = text;
 }
+
+/* =========================================
+   ③共通paramsの「上限」機能
+   - 上限90と入力 → 値105のセルが「105-15」という文字列に書き換わる
+   - 出力時もそのまま「105-15」、CCB行も CCB<=105-15
+   - 値はstate.values内に文字列として保存
+========================================= */
+function getCapValue() {
+  const inp = document.getElementById('paramsCap');
+  if (!inp) return null;
+  const v = parseInt(inp.value, 10);
+  return isNaN(v) ? null : v;
+}
+
+/* 値を上限と比較して表示用文字列に変換 */
+function applyCapToValue(rawVal, cap) {
+  if (cap == null) return rawVal;
+  // 既に "X-Y" 形式なら一旦元値を取り出す
+  let baseNum = null;
+  if (typeof rawVal === 'string') {
+    const m = rawVal.match(/^(\d+)-(\d+)$/);
+    if (m) baseNum = parseInt(m[1], 10);
+    else if (/^\d+$/.test(rawVal)) baseNum = parseInt(rawVal, 10);
+    else return rawVal; // 文字列だが数値でも"X-Y"でもない → そのまま
+  } else if (typeof rawVal === 'number') {
+    baseNum = rawVal;
+  } else {
+    return rawVal;
+  }
+  if (baseNum == null) return rawVal;
+  if (baseNum > cap) {
+    return `${baseNum}-${baseNum - cap}`;
+  }
+  return baseNum;
+}
+
+/* 上限値変更時：paramsの全セルを再計算して書き換える */
+function onCapChange() {
+  const cap = getCapValue();
+  // values内のparams値を上限処理（元の数値を保持するため、別領域に「素の数値」を残す）
+  state.charNames.forEach(origName => {
+    state.commonParams.forEach(item => {
+      const key = item.label;
+      const baseKey = '__base__' + key;
+      // 初回：素の数値を別領域にバックアップ
+      if (state.values[origName][baseKey] == null) {
+        const cur = state.values[origName][key];
+        if (cur != null) state.values[origName][baseKey] = cur;
+      }
+      // バックアップから上限処理して上書き
+      const base = state.values[origName][baseKey];
+      if (base != null) {
+        state.values[origName][key] = applyCapToValue(base, cap);
+      }
+    });
+  });
+  // 表とチャパレを再描画
+  renderTable('params');
+  // 統合プレビューも更新（現在表示されているキャラ）
+  doBuildIntegrated();
+  scheduleTheadHeightUpdate();
+}
+
+/* params値が編集されたとき：上限処理込みで保存
+   この関数は renderTable 側の値編集 oninput から呼ばれる
+   （現状の oninput を更新する必要があるが、ここでは新規にラップ関数として用意）
+*/
+function setParamValue(origName, label, rawInput) {
+  const cap = getCapValue();
+  const baseKey = '__base__' + label;
+  // ユーザーが入力した値を解釈：数値？「X-Y」？
+  let baseNum = null;
+  const trimmed = String(rawInput).trim();
+  if (/^\d+$/.test(trimmed)) {
+    baseNum = parseInt(trimmed, 10);
+  } else if (/^(\d+)-(\d+)$/.test(trimmed)) {
+    baseNum = parseInt(trimmed.match(/^(\d+)-/)[1], 10);
+  }
+  if (baseNum != null) {
+    state.values[origName][baseKey] = baseNum;
+    state.values[origName][label] = applyCapToValue(baseNum, cap);
+  } else {
+    // 数値でない場合：そのまま保存
+    state.values[origName][label] = rawInput;
+    delete state.values[origName][baseKey];
+  }
+}
+
+/* =========================================
+   保存・復元（LocalStorage）
+========================================= */
+const SAVE_KEY = 'lap-001-state';
+
+/* state→serializable */
+function serializeState() {
+  return {
+    version: 1,
+    charNames: state.charNames,
+    commonStatus: state.commonStatus,
+    commonParams: state.commonParams,
+    values: state.values,
+    perChar: state.perChar.map(pc => ({
+      name: pc.name,
+      url: pc.url,
+      chatpal2: pc.chatpal2,
+      chatpal3: pc.chatpal3,
+      excludedStatus: [...pc.excludedStatus],
+      excludedParams: [...pc.excludedParams]
+    })),
+    chatpal1Common: document.getElementById('chatpal1Common') ? document.getElementById('chatpal1Common').value : '',
+    paramsCap: document.getElementById('paramsCap') ? document.getElementById('paramsCap').value : '',
+    tsvInput: document.getElementById('tsvInput') ? document.getElementById('tsvInput').value : '',
+    charCount: document.getElementById('charCount') ? document.getElementById('charCount').value : 8
+  };
+}
+
+/* serializable→state */
+function deserializeState(obj) {
+  if (!obj || typeof obj !== 'object') return false;
+  state.charNames = obj.charNames || [];
+  state.commonStatus = obj.commonStatus || [];
+  state.commonParams = obj.commonParams || [];
+  state.values = obj.values || {};
+  state.perChar = (obj.perChar || []).map(pc => ({
+    name: pc.name,
+    url: pc.url || '',
+    chatpal2: pc.chatpal2 || '',
+    chatpal3: pc.chatpal3 || '',
+    excludedStatus: new Set(pc.excludedStatus || []),
+    excludedParams: new Set(pc.excludedParams || [])
+  }));
+  state.parsed = state.charNames.length > 0;
+
+  // 入力欄の復元
+  if (document.getElementById('chatpal1Common')) document.getElementById('chatpal1Common').value = obj.chatpal1Common || '';
+  if (document.getElementById('paramsCap')) document.getElementById('paramsCap').value = obj.paramsCap || '';
+  if (document.getElementById('tsvInput') && obj.tsvInput != null) document.getElementById('tsvInput').value = obj.tsvInput;
+  if (document.getElementById('charCount') && obj.charCount != null) document.getElementById('charCount').value = obj.charCount;
+
+  if (state.parsed) {
+    renderTable('status');
+    renderTable('params');
+    initChatpalSection();
+    document.getElementById('statusBox').style.display = '';
+    document.getElementById('paramsBox').style.display = '';
+    document.getElementById('chatpalEditBox').style.display = '';
+    document.getElementById('statusBox').open = true;
+    document.getElementById('paramsBox').open = true;
+    document.getElementById('chatpalEditBox').open = true;
+    scheduleTheadHeightUpdate();
+  }
+  return true;
+}
+
+function doSaveLocal() {
+  try {
+    const data = serializeState();
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    setSaveMsg('✓ ブラウザに保存しました', false);
+  } catch (e) {
+    setSaveMsg('保存エラー: ' + (e && e.message ? e.message : String(e)), true);
+  }
+}
+
+function doRestoreLocal() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) {
+      setSaveMsg('保存された状態がありません', true);
+      return;
+    }
+    if (!confirm('現在の編集内容を破棄して、保存された状態に戻しますか？')) return;
+    const obj = JSON.parse(raw);
+    deserializeState(obj);
+    setSaveMsg('✓ 復元しました', false);
+  } catch (e) {
+    setSaveMsg('復元エラー: ' + (e && e.message ? e.message : String(e)), true);
+  }
+}
+
+function doExportJson() {
+  try {
+    const data = serializeState();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+    a.href = url;
+    a.download = `001-lap-${ts}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setSaveMsg('✓ JSONファイルをダウンロード', false);
+  } catch (e) {
+    setSaveMsg('エクスポートエラー: ' + (e && e.message ? e.message : String(e)), true);
+  }
+}
+
+function doImportJson(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const obj = JSON.parse(e.target.result);
+      if (!confirm(`「${file.name}」を読み込んで現在の編集内容を上書きしますか？`)) {
+        ev.target.value = '';
+        return;
+      }
+      deserializeState(obj);
+      setSaveMsg(`✓ ${file.name} を読み込みました`, false);
+    } catch (err) {
+      setSaveMsg('読み込みエラー: ' + (err && err.message ? err.message : String(err)), true);
+    }
+    ev.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function setSaveMsg(msg, isErr) {
+  const el = document.getElementById('saveMsg');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = isErr ? 'small err' : 'small ok';
+  setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 4000);
+}
+
+/* =========================================
+   5) テキスト作成（ロールテーブル）
+   - 21-chat/04-table/index.html の ① テキスト作成 を移植
+   - モード：table（項目入力）/ tablePaste（txt編集）/ plain（プレーンテキスト）
+   - 番号は自動付与、+/× で行追加削除
+========================================= */
+let _ttCurrentMode = 'table';
+let _ttResultRows = [];
+let _ttPlainRows = [];
+
+/* モード切替 */
+function setTTMode(mode) {
+  _ttCurrentMode = mode;
+  document.getElementById('ttModeTable').classList.toggle('active',      mode === 'table');
+  document.getElementById('ttModeTablePaste').classList.toggle('active', mode === 'tablePaste');
+  document.getElementById('ttModePlain').classList.toggle('active',      mode === 'plain');
+  document.getElementById('ttTableForm').style.display      = mode === 'table'      ? '' : 'none';
+  document.getElementById('ttTablePasteForm').style.display = mode === 'tablePaste' ? '' : 'none';
+  document.getElementById('ttPlainForm').style.display      = mode === 'plain'      ? '' : 'none';
+  if (mode === 'table') {
+    initTTResultRows();
+  } else if (mode === 'tablePaste') {
+    updateTTPreview();
+  } else {
+    if (_ttPlainRows.length === 0) _ttPlainRows = [''];
+    renderTTPlainList();
+  }
+}
+
+/* テーブルモード：ダイス変更 */
+function getTTDiceTotal() {
+  return Math.max(2, parseInt(document.getElementById('ttDiceFace').value, 10) || 6);
+}
+
+function onTTDiceChange() {
+  const face = getTTDiceTotal();
+  const hint = document.getElementById('ttDiceHint');
+  if (hint) hint.textContent = '→ ' + face + '行';
+  while (_ttResultRows.length < face) _ttResultRows.push('');
+  if (_ttResultRows.length > face) _ttResultRows = _ttResultRows.slice(0, face);
+  renderTTResultList();
+}
+
+function initTTResultRows() {
+  const face = getTTDiceTotal();
+  _ttResultRows = Array(face).fill('');
+  const hint = document.getElementById('ttDiceHint');
+  if (hint) hint.textContent = '→ ' + face + '行';
+  renderTTResultList();
+}
+
+/* 結果行レンダリング */
+function renderTTResultList() {
+  const list = document.getElementById('ttResultList');
+  if (!list) return;
+  list.innerHTML = '';
+
+  _ttResultRows.forEach((val, idx) => {
+    const row = document.createElement('div');
+    row.className = 'lap-tt-line-row';
+
+    const num = document.createElement('span');
+    num.className = 'lap-tt-line-num result-num';
+    num.textContent = (idx + 1) + ':';
+
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'lap-tt-line-input';
+    inp.value = val;
+    inp.placeholder = (idx + 1) + ' の結果を入力';
+    inp.addEventListener('input', () => {
+      _ttResultRows[idx] = inp.value;
+      updateTTPreview();
+    });
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'lap-tt-line-add-btn';
+    addBtn.textContent = '+';
+    addBtn.title = '下に行を追加';
+    addBtn.style.visibility = (idx === _ttResultRows.length - 1) ? 'visible' : 'hidden';
+    addBtn.addEventListener('click', () => {
+      _ttResultRows.splice(idx + 1, 0, '');
+      renderTTResultList();
+      const inputs = list.querySelectorAll('.lap-tt-line-input');
+      if (inputs[idx + 1]) inputs[idx + 1].focus();
+    });
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'lap-tt-line-del-btn';
+    delBtn.textContent = '×';
+    delBtn.title = '行を削除';
+    delBtn.disabled = _ttResultRows.length <= 1;
+    delBtn.addEventListener('click', () => {
+      _ttResultRows.splice(idx, 1);
+      renderTTResultList();
+    });
+
+    row.appendChild(num);
+    row.appendChild(inp);
+    row.appendChild(addBtn);
+    row.appendChild(delBtn);
+    list.appendChild(row);
+  });
+
+  updateTTPreview();
+}
+
+/* プレーンモード：行レンダリング */
+function renderTTPlainList() {
+  const list = document.getElementById('ttPlainList');
+  if (!list) return;
+  list.innerHTML = '';
+
+  _ttPlainRows.forEach((val, idx) => {
+    const row = document.createElement('div');
+    row.className = 'lap-tt-line-row';
+
+    const num = document.createElement('span');
+    num.className = 'lap-tt-line-num';
+    num.textContent = idx + 1;
+
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'lap-tt-line-input';
+    inp.value = val;
+    inp.addEventListener('input', () => {
+      _ttPlainRows[idx] = inp.value;
+      updateTTPreview();
+    });
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'lap-tt-line-add-btn';
+    addBtn.textContent = '+';
+    addBtn.title = '下に行を追加';
+    addBtn.style.visibility = (idx === _ttPlainRows.length - 1) ? 'visible' : 'hidden';
+    addBtn.addEventListener('click', () => {
+      _ttPlainRows.splice(idx + 1, 0, '');
+      renderTTPlainList();
+      const inputs = list.querySelectorAll('.lap-tt-line-input');
+      if (inputs[idx + 1]) inputs[idx + 1].focus();
+    });
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'lap-tt-line-del-btn';
+    delBtn.textContent = '×';
+    delBtn.title = '行を削除';
+    delBtn.disabled = _ttPlainRows.length <= 1;
+    delBtn.addEventListener('click', () => {
+      _ttPlainRows.splice(idx, 1);
+      renderTTPlainList();
+    });
+
+    row.appendChild(num);
+    row.appendChild(inp);
+    row.appendChild(addBtn);
+    row.appendChild(delBtn);
+    list.appendChild(row);
+  });
+
+  updateTTPreview();
+}
+
+/* プレビュー更新 */
+function updateTTPreview() {
+  const preview = document.getElementById('ttPreview');
+  if (!preview) return;
+  let lines = [];
+
+  if (_ttCurrentMode === 'table') {
+    lines.push('/roll-table');
+    const titleEl = document.getElementById('ttTitleInput');
+    const title = titleEl ? titleEl.value.trim() : '';
+    if (title) lines.push(title);
+    const face = getTTDiceTotal();
+    lines.push('1D' + face);
+    _ttResultRows.forEach((val, idx) => {
+      lines.push((idx + 1) + ':' + val);
+    });
+  } else if (_ttCurrentMode === 'tablePaste') {
+    lines.push('/roll-table');
+    const titleP = document.getElementById('ttTitleInputP').value.trim();
+    if (titleP) lines.push(titleP);
+    const faceP = Math.max(2, parseInt(document.getElementById('ttDiceFaceP').value, 10) || 6);
+    lines.push('1D' + faceP);
+    const raw = document.getElementById('ttPasteArea').value;
+    const items = raw.split('\n').map(l => l.trim()).filter(l => l !== '');
+    items.forEach((item, idx) => {
+      lines.push((idx + 1) + ':' + item);
+    });
+  } else {
+    lines = _ttPlainRows.map(v => v);
+  }
+
+  preview.value = lines.join('\n');
+}
+
+/* プレビューをコピー */
+async function doCopyTTPreview(btnEl) {
+  const text = document.getElementById('ttPreview').value;
+  if (!text.trim()) { alert('プレビューが空です'); return; }
+  let ok = false;
+  try { await navigator.clipboard.writeText(text); ok = true; } catch (_) {}
+  if (!ok) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try { ok = document.execCommand('copy'); } catch (_) {}
+    document.body.removeChild(ta);
+  }
+  if (ok) {
+    const orig = btnEl.textContent;
+    btnEl.textContent = '✓ コピーしました';
+    setTimeout(() => btnEl.textContent = orig, 1500);
+  } else {
+    alert('コピー失敗');
+  }
+}
+
+/* DOMロード後に項目入力の初期値を生成 */
+window.addEventListener('DOMContentLoaded', () => {
+  if (document.getElementById('ttResultList')) {
+    initTTResultRows();
+  }
+});
 
 
 /* =========================================
