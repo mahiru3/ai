@@ -429,16 +429,36 @@ function renderTable(kind) {
     const th = document.createElement('th');
     th.colSpan = 2;
     th.className = 'lap-charblock-start';
-    th.innerHTML = `
-      <div class="lap-charhead">
-        <div class="lap-charhead-name">
-          <span class="lap-charhead-idx">${ci + 1}</span>
-          <input type="text" class="lap-charhead-nameinput" value="${escapeAttr(pc.name)}" data-role="name">
+    if (kind === 'status') {
+      // ②共通status：キャラ名 + URL + コピーボタン
+      th.innerHTML = `
+        <div class="lap-charhead">
+          <div class="lap-charhead-name">
+            <span class="lap-charhead-idx">${ci + 1}</span>
+            <input type="text" class="lap-charhead-nameinput" value="${escapeAttr(pc.name)}" data-role="name">
+          </div>
+          <input type="text" class="lap-charhead-url" placeholder="URL" value="${escapeAttr(pc.url)}" data-role="url">
+          <button class="lap-charhead-copybtn" data-role="copy">📋 このキャラをコピー</button>
         </div>
-        <input type="text" class="lap-charhead-url" placeholder="URL" value="${escapeAttr(pc.url)}" data-role="url">
-        <button class="lap-charhead-copybtn" data-role="copy">📋 このキャラをコピー</button>
-      </div>
-    `;
+      `;
+      th.querySelector('[data-role="url"]').oninput = e => {
+        pc.url = e.target.value;
+        syncCharHeadAcrossTables(ci, 'url', e.target.value);
+      };
+      th.querySelector('[data-role="copy"]').onclick = (e) => {
+        doCopyChar(ci, e.target);
+      };
+    } else {
+      // ③共通params：キャラ名のみ（コンパクト）
+      th.innerHTML = `
+        <div class="lap-charhead lap-charhead-compact">
+          <div class="lap-charhead-name">
+            <span class="lap-charhead-idx">${ci + 1}</span>
+            <input type="text" class="lap-charhead-nameinput" value="${escapeAttr(pc.name)}" data-role="name">
+          </div>
+        </div>
+      `;
+    }
     th.querySelector('[data-role="name"]').oninput = e => {
       pc.name = e.target.value;
       // 他テーブルの同期
@@ -446,15 +466,6 @@ function renderTable(kind) {
       // チャパレ側のセレクトの選択肢ラベルも更新
       refreshCharSelectLabels();
     };
-    th.querySelector('[data-role="url"]').oninput = e => {
-      pc.url = e.target.value;
-      syncCharHeadAcrossTables(ci, 'url', e.target.value);
-    };
-    if (kind === 'status') {
-      th.querySelector('[data-role="copy"]').onclick = (e) => {
-        doCopyChar(ci, e.target);
-      };
-    }
     tr1.appendChild(th);
   });
   thead.appendChild(tr1);
@@ -471,6 +482,65 @@ function renderTable(kind) {
   // tbody（ラベル行）
   const tbody = document.createElement('tbody');
   list.forEach((item, idx) => {
+    // 区切り行（params側のみ）
+    if (item.isDivider) {
+      const tr = document.createElement('tr');
+      tr.dataset.label = item.label;
+      tr.dataset.divider = '1';
+      tr.className = 'lap-row-divider';
+
+      // ラベルセル（編集可能なテキスト、ドラッグ選択対応）
+      const tdLabel = document.createElement('td');
+      tdLabel.className = 'lap-cell-label lap-cell-divider-label';
+      tdLabel.dataset.kind = kind;
+      tdLabel.dataset.label = item.label;
+      // テキスト編集可能な入力欄
+      tdLabel.innerHTML = `<input type="text" class="lap-divider-input" value="${escapeAttr(item.label)}" placeholder="区切り行のテキスト">`;
+      const dividerInp = tdLabel.querySelector('input');
+      dividerInp.oninput = e => {
+        // ラベル更新（ID代わりに使っているのでcommonParams側も更新）
+        const oldLabel = item.label;
+        const newLabel = e.target.value;
+        item.label = newLabel;
+        tr.dataset.label = newLabel;
+        tdLabel.dataset.label = newLabel;
+      };
+      // ドラッグ選択は input ではなく td 全体でも反応させたい：
+      // input に focus している間は preventDefault しないので mousedown を td でハンドル
+      bindLabelDrag(tdLabel, kind);
+      tr.appendChild(tdLabel);
+
+      // ↑↓矢印セル
+      const tdArrows = document.createElement('td');
+      tdArrows.className = 'lap-cell-arrows';
+      const isFirst = idx === 0;
+      const isLast = idx === list.length - 1;
+      tdArrows.innerHTML = `
+        <button type="button" class="lap-arrow-btn lap-arrow-up" data-role="up" ${isFirst ? 'disabled' : ''} title="上へ">▲</button>
+        <button type="button" class="lap-arrow-btn lap-arrow-down" data-role="down" ${isLast ? 'disabled' : ''} title="下へ">▼</button>
+      `;
+      tdArrows.querySelector('[data-role="up"]').onclick = (e) => {
+        e.stopPropagation();
+        moveRowByOne(kind, item.label, -1);
+      };
+      tdArrows.querySelector('[data-role="down"]').onclick = (e) => {
+        e.stopPropagation();
+        moveRowByOne(kind, item.label, +1);
+      };
+      tr.appendChild(tdArrows);
+
+      // 残りはひとつの大きなセルでスパン（共有列＋全キャラ列）
+      const spanColCount = 1 + state.charNames.length * 2;  // 共有1 + (値1+削除1)*N
+      const tdSpan = document.createElement('td');
+      tdSpan.className = 'lap-cell-divider-span';
+      tdSpan.colSpan = spanColCount;
+      tdSpan.textContent = '— 区切り行（チャパレ転記時にこの位置にテキストが入ります）—';
+      tr.appendChild(tdSpan);
+
+      tbody.appendChild(tr);
+      return;
+    }
+
     const tr = document.createElement('tr');
     tr.dataset.label = item.label;
 
@@ -611,8 +681,8 @@ function updateSharedCheckbox(tr, kind, label) {
 function syncCharHeadAcrossTables(ci, role, value) {
   document.querySelectorAll('.lap-grand-table').forEach(tbl => {
     const ths = tbl.querySelectorAll('thead .lap-thead-1 th');
-    // 最初の2つはrowspanの「ラベル」「共有」、その後がキャラ列
-    const charTh = ths[2 + ci];
+    // 最初の3つはrowspanの「ラベル」「移動」「共有」、その後がキャラ列
+    const charTh = ths[3 + ci];
     if (!charTh) return;
     const inp = charTh.querySelector(`[data-role="${role}"]`);
     if (inp && inp.value !== value) inp.value = value;
@@ -990,6 +1060,19 @@ function addCommonRow(kind) {
   scheduleTheadHeightUpdate();
 }
 
+/* 区切り行をparams側に追加 */
+function addDividerRow() {
+  if (!state.parsed) {
+    alert('先に「📋 表を解析」を実行してください。');
+    return;
+  }
+  const text = prompt('区切り行のテキストを入力してください', '⋆͛💛⋆͛••┈┈ 学術系 ┈┈••⋆͛💛');
+  if (text == null) return;
+  state.commonParams.push({ label: text, isDivider: true });
+  renderTable('params');
+  scheduleTheadHeightUpdate();
+}
+
 /* =========================================
    チャットパレット組み立て
 ========================================= */
@@ -1047,9 +1130,10 @@ function buildCharData(ci) {
     status.push({ label: item.label, value: val, max });
   });
 
-  // params配列：同上
+  // params配列：同上（区切り行はスキップ）
   const params = [];
   state.commonParams.forEach(item => {
+    if (item.isDivider) return;
     if (pc.excludedParams.has(item.label)) return;
     const val = v[item.label] != null ? v[item.label] : 0;
     params.push({ label: item.label, value: String(val) });
@@ -1228,8 +1312,12 @@ function generateLayoutForChar(ci) {
     lines.push(`:initiative=${dexVal}　イニシアティブリセット`);
   }
 
-  // params を CCB<=値 〈ラベル〉 形式で
+  // params を CCB<=値 〈ラベル〉 形式で。区切り行はそのまま挿入
   state.commonParams.forEach(item => {
+    if (item.isDivider) {
+      lines.push(item.label);
+      return;
+    }
     if (pc.excludedParams.has(item.label)) return;
     const val = v[item.label] != null ? v[item.label] : 0;
     lines.push(`CCB<=${val}　〈${item.label}〉`);
@@ -1375,6 +1463,7 @@ function onCapChange() {
   // values内のparams値を上限処理（元の数値を保持するため、別領域に「素の数値」を残す）
   state.charNames.forEach(origName => {
     state.commonParams.forEach(item => {
+      if (item.isDivider) return;  // 区切り行はスキップ
       const key = item.label;
       const baseKey = '__base__' + key;
       // 初回：素の数値を別領域にバックアップ
@@ -1793,6 +1882,69 @@ async function doCopyTTPreview(btnEl) {
   } else {
     alert('コピー失敗');
   }
+}
+
+/* =========================================
+   ② テキスト変換（「」→〈〉）
+   - 21-chat/04-table の ② を移植
+   - 先頭の「、末尾の」を除去
+   - 各行先頭の全角スペースを除去
+   - 改行を \n に変換
+========================================= */
+
+/* プレビューを変換入力欄に送る */
+function doSendToConvert() {
+  const text = document.getElementById('ttPreview').value || '';
+  if (!text.trim()) { alert('プレビューが空です'); return; }
+  // 「」で囲んで送る（変換側で外すロジックなのであっても無くてもOK）
+  const wrapped = text.startsWith('「') ? text : `「${text}」`;
+  document.getElementById('ttConvertInput').value = wrapped;
+  document.getElementById('ttConvertBlock').open = true;
+  doConvertTT();
+}
+
+/* 変換実行 */
+function doConvertTT() {
+  const raw = document.getElementById('ttConvertInput').value;
+  const out = document.getElementById('ttConvertOutput');
+  if (!raw.trim()) {
+    out.value = '';
+    return;
+  }
+  let inner = raw;
+  if (inner.startsWith('「')) inner = inner.slice(1);
+  if (inner.endsWith('」')) inner = inner.slice(0, -1);
+  // 実際の改行 OR リテラル \n 両方に対応
+  const ls = inner.split(/\n|\\n/);
+  // 各行の先頭の全角スペースを除去して \n で結合
+  const result = ls.map(l => l.replace(/^\u3000/, '')).join('\\n');
+  out.value = result;
+}
+
+/* 変換結果コピー */
+async function doCopyTTConvert(btnEl) {
+  const text = document.getElementById('ttConvertOutput').value;
+  if (!text) { alert('まず変換してください'); return; }
+  let ok = false;
+  try { await navigator.clipboard.writeText(text); ok = true; } catch (_) {}
+  if (!ok) {
+    const ta = document.getElementById('ttConvertOutput');
+    ta.focus(); ta.select();
+    try { ok = document.execCommand('copy'); } catch (_) {}
+  }
+  if (ok) {
+    const orig = btnEl.textContent;
+    btnEl.textContent = '✓ コピー！';
+    setTimeout(() => btnEl.textContent = orig, 1500);
+  } else {
+    alert('コピー失敗');
+  }
+}
+
+/* 変換クリア */
+function doClearTTConvert() {
+  document.getElementById('ttConvertInput').value = '';
+  document.getElementById('ttConvertOutput').value = '';
 }
 
 /* DOMロード後に項目入力の初期値を生成 */
