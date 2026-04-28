@@ -185,6 +185,7 @@ function renderTable(kind) {
   const colgroup = document.createElement('colgroup');
   colgroup.innerHTML = `
     <col class="lap-col-label">
+    <col class="lap-col-arrows">
     <col class="lap-col-shared">
   `;
   state.charNames.forEach(() => {
@@ -195,12 +196,13 @@ function renderTable(kind) {
   });
   table.appendChild(colgroup);
 
-  // thead 1行目（ラベル / 共有 / 各キャラ名・URL・チャパレ・コピー）
+  // thead 1行目（ラベル / ↑↓ / 共有 / 各キャラ名・URL・コピー）
   const thead = document.createElement('thead');
   const tr1 = document.createElement('tr');
   tr1.className = 'lap-thead-1';
   tr1.innerHTML = `
     <th rowspan="2" class="lap-th-label-fixed">ラベル</th>
+    <th rowspan="2" class="lap-th-arrows-fixed">移動</th>
     <th rowspan="2" class="lap-th-shared-fixed">共有<br>✓</th>
   `;
   state.charNames.forEach((origName, ci) => {
@@ -262,6 +264,24 @@ function renderTable(kind) {
     bindLabelDrag(tdLabel, kind);
     tr.appendChild(tdLabel);
 
+    // ↑↓矢印セル（1行ずつの移動）
+    const tdArrows = document.createElement('td');
+    tdArrows.className = 'lap-cell-arrows';
+    const isFirst = idx === 0;
+    const isLast = idx === list.length - 1;
+    tdArrows.innerHTML = `
+      <button type="button" class="lap-arrow-btn lap-arrow-up" data-role="up" ${isFirst ? 'disabled' : ''} title="上へ">▲</button>
+      <button type="button" class="lap-arrow-btn lap-arrow-down" data-role="down" ${isLast ? 'disabled' : ''} title="下へ">▼</button>
+    `;
+    tdArrows.querySelector('[data-role="up"]').onclick = (e) => {
+      e.stopPropagation();
+      moveRowByOne(kind, item.label, -1);
+    };
+    tdArrows.querySelector('[data-role="down"]').onclick = (e) => {
+      e.stopPropagation();
+      moveRowByOne(kind, item.label, +1);
+    };
+    tr.appendChild(tdArrows);
     // 共有チェック：「全員のexcluded状態」を見て表示
     // 全員excluded → checked（全員から削除済み）
     // 全員not excluded → unchecked（誰からも削除されていない）
@@ -364,6 +384,17 @@ function updateTheadHeights() {
     const h = tr1.getBoundingClientRect().height;
     if (h > 0) {
       tbl.style.setProperty('--lap-thead-1-h', h + 'px');
+    }
+    // ラベル列・矢印列の実幅をCSS変数に反映（共有・矢印の sticky left 計算用）
+    const labelTh = tr1.querySelector('th.lap-th-label-fixed');
+    const arrowsTh = tr1.querySelector('th.lap-th-arrows-fixed');
+    if (labelTh) {
+      const w = labelTh.getBoundingClientRect().width;
+      if (w > 0) tbl.style.setProperty('--lap-col-label-w', w + 'px');
+    }
+    if (arrowsTh) {
+      const w = arrowsTh.getBoundingClientRect().width;
+      if (w > 0) tbl.style.setProperty('--lap-col-arrows-w', w + 'px');
     }
   });
 }
@@ -528,6 +559,25 @@ function executeMove(kind, targetLabel, position) {
   // 挿入
   const newList = [...remaining.slice(0, targetIdx), ...movingItems, ...remaining.slice(targetIdx)];
   state[listKey] = newList;
+  renderTable(kind);
+  scheduleTheadHeightUpdate();
+}
+
+/* 矢印ボタンによる1行ずつの移動 */
+function moveRowByOne(kind, label, delta) {
+  const listKey = kind === 'status' ? 'commonStatus' : 'commonParams';
+  const list = state[listKey];
+  const idx = list.findIndex(x => x.label === label);
+  if (idx < 0) return;
+  const newIdx = idx + delta;
+  if (newIdx < 0 || newIdx >= list.length) return;
+
+  pushUndoSnapshot('move');
+
+  // 入れ替え
+  const item = list[idx];
+  list.splice(idx, 1);
+  list.splice(newIdx, 0, item);
   renderTable(kind);
   scheduleTheadHeightUpdate();
 }
@@ -922,6 +972,13 @@ function generateLayoutForChar(ci) {
     lines.push(`:MP=${val}　MP全快`);
   }
 
+  // :initiative=DEX 行（DEXがparamsにあり、除外されていない場合のみ）
+  const dexItem = state.commonParams.find(p => p.label === 'DEX');
+  if (dexItem && !pc.excludedParams.has('DEX')) {
+    const dexVal = v['DEX'] != null ? v['DEX'] : 0;
+    lines.push(`:initiative=${dexVal}　イニシアティブリセット`);
+  }
+
   // params を CCB<=値 〈ラベル〉 形式で
   state.commonParams.forEach(item => {
     if (pc.excludedParams.has(item.label)) return;
@@ -964,10 +1021,12 @@ function doApplyLayoutToAll() {
 /* レイアウトテキストの値部分だけをキャラciの値に差し替えて返す
    - :HP=N　... → :HP=その人のHP値　...
    - :MP=N　... → 同上
+   - :initiative=N　... → :initiative=その人のDEX値　...
    - CCB<=N　〈ラベル〉 → そのラベルがそのキャラのparamsにある場合、その値で
    - その他の行（区切り、見出し）→ そのまま
 */
 const RE_HPMP_LINE = /^(:(?:HP|MP)=)(\d+)(.*)$/;
+const RE_INITIATIVE_LINE = /^(:initiative=)(\d+)(.*)$/;
 const RE_CCB_LABELED_LINE = /^(CCB<=)\s*(\d+)\s*([　 ]*)〈([^〉]+)〉(.*)$/;
 
 function transformLayoutForChar(layoutText, ci) {
@@ -980,10 +1039,21 @@ function transformLayoutForChar(layoutText, ci) {
     // :HP= / :MP=
     const mhp = line.match(RE_HPMP_LINE);
     if (mhp) {
-      const prefix = mhp[1];  // ":HP=" または ":MP="
+      const prefix = mhp[1];
       const labelKey = prefix.slice(1, -1);  // "HP" or "MP"
       const newVal = (v[labelKey] != null) ? v[labelKey] : 0;
       return `${prefix}${newVal}${mhp[3]}`;
+    }
+    // :initiative= (DEX値で更新)
+    const mini = line.match(RE_INITIATIVE_LINE);
+    if (mini) {
+      const dexItem = state.commonParams.find(p => p.label === 'DEX');
+      if (dexItem && !pc.excludedParams.has('DEX')) {
+        const dexVal = (v['DEX'] != null) ? v['DEX'] : 0;
+        return `${mini[1]}${dexVal}${mini[3]}`;
+      }
+      // DEXがない/除外 → 行を削除
+      return null;
     }
     // CCB<=N 〈ラベル〉...
     const mccb = line.match(RE_CCB_LABELED_LINE);
@@ -995,7 +1065,7 @@ function transformLayoutForChar(layoutText, ci) {
         const newVal = (v[label] != null) ? v[label] : 0;
         return `${mccb[1]}${newVal}${mccb[3] || '　'}〈${label}〉${mccb[5]}`;
       }
-      // ラベルがない/除外されている → その行をスキップ（空文字を返さず削除）
+      // ラベルがない/除外されている → その行をスキップ
       return null;
     }
     // それ以外（区切り線、見出し、フリーテキスト）はそのまま
