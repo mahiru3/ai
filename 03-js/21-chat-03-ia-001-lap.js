@@ -338,39 +338,156 @@ function updateTheadHeights() {
 window.addEventListener('resize', updateTheadHeights);
 
 /* =========================================
-   ラベルセルのドラッグ複数選択（Excel風）
+   ラベルセルのドラッグ複数選択（Excel風）+ ドラッグ移動
+   - mode: 'idle' | 'selecting' | 'moving'
+   - 既に選択された行のラベルセルでmousedown開始 → 移動モード
+   - そうでないラベルセルでmousedown開始 → 選択モード
 ========================================= */
 const dragState = {
-  active: false,
-  kind: null,         // 'status' | 'params'
+  mode: 'idle',
+  kind: null,            // 'status' | 'params'
   startLabel: null,
-  selectedLabels: new Set()
+  selectedLabels: new Set(),
+  // 移動モード用
+  moveDropTargetLabel: null,
+  moveDropPosition: null  // 'before' | 'after'
 };
 
 function bindLabelDrag(td, kind) {
   td.addEventListener('mousedown', e => {
     e.preventDefault();
-    dragState.active = true;
     dragState.kind = kind;
-    dragState.startLabel = td.dataset.label;
-    dragState.selectedLabels = new Set([td.dataset.label]);
-    updateRowSelection();
+    const label = td.dataset.label;
+
+    // 既に選択された行で開始？ → 移動モード
+    if (dragState.selectedLabels.has(label) && dragState.selectedLabels.size > 0) {
+      dragState.mode = 'moving';
+      dragState.startLabel = label;
+      dragState.moveDropTargetLabel = null;
+      dragState.moveDropPosition = null;
+      // 視覚：選択行を半透明＋黄色
+      const wrap = document.getElementById(kind === 'status' ? 'statusTableWrap' : 'paramsTableWrap');
+      wrap.querySelectorAll('tbody tr').forEach(tr => {
+        if (dragState.selectedLabels.has(tr.dataset.label)) tr.classList.add('lap-row-moving');
+      });
+      document.body.style.cursor = 'grabbing';
+    } else {
+      // 通常の範囲選択モード
+      dragState.mode = 'selecting';
+      dragState.startLabel = label;
+      dragState.selectedLabels = new Set([label]);
+      updateRowSelection();
+    }
   });
+
   td.addEventListener('mouseenter', () => {
-    if (!dragState.active || dragState.kind !== kind) return;
-    // 始点〜現在位置までの行を選択
-    const list = (kind === 'status' ? state.commonStatus : state.commonParams).map(x => x.label);
-    const startIdx = list.indexOf(dragState.startLabel);
-    const curIdx = list.indexOf(td.dataset.label);
-    if (startIdx < 0 || curIdx < 0) return;
-    const [a, b] = startIdx <= curIdx ? [startIdx, curIdx] : [curIdx, startIdx];
-    dragState.selectedLabels = new Set(list.slice(a, b + 1));
-    updateRowSelection();
+    if (dragState.kind !== kind) return;
+
+    if (dragState.mode === 'selecting') {
+      // 範囲選択：始点〜現在
+      const list = (kind === 'status' ? state.commonStatus : state.commonParams).map(x => x.label);
+      const startIdx = list.indexOf(dragState.startLabel);
+      const curIdx = list.indexOf(td.dataset.label);
+      if (startIdx < 0 || curIdx < 0) return;
+      const [a, b] = startIdx <= curIdx ? [startIdx, curIdx] : [curIdx, startIdx];
+      dragState.selectedLabels = new Set(list.slice(a, b + 1));
+      updateRowSelection();
+    } else if (dragState.mode === 'moving') {
+      // 移動：ドロップ位置インジケーター
+      const tr = td.closest('tr');
+      if (!tr) return;
+      const targetLabel = tr.dataset.label;
+      // 自分自身（選択中の行）にはドロップしない
+      if (dragState.selectedLabels.has(targetLabel)) {
+        clearDropIndicators();
+        dragState.moveDropTargetLabel = null;
+        return;
+      }
+      // 行の上半分なら before、下半分なら after
+      // mouseenterだけだとposition判定がしづらいので、mousemoveで決める
+      dragState.moveDropTargetLabel = targetLabel;
+      // デフォルト：before
+      showDropIndicator(kind, targetLabel, 'before');
+    }
+  });
+
+  // 移動時の上下判定はmousemoveで
+  td.addEventListener('mousemove', e => {
+    if (dragState.mode !== 'moving' || dragState.kind !== kind) return;
+    const tr = td.closest('tr');
+    if (!tr) return;
+    const targetLabel = tr.dataset.label;
+    if (dragState.selectedLabels.has(targetLabel)) {
+      clearDropIndicators();
+      dragState.moveDropTargetLabel = null;
+      return;
+    }
+    const rect = tr.getBoundingClientRect();
+    const isUpper = (e.clientY - rect.top) < rect.height / 2;
+    const pos = isUpper ? 'before' : 'after';
+    if (dragState.moveDropTargetLabel !== targetLabel || dragState.moveDropPosition !== pos) {
+      dragState.moveDropTargetLabel = targetLabel;
+      dragState.moveDropPosition = pos;
+      showDropIndicator(kind, targetLabel, pos);
+    }
   });
 }
+
+function showDropIndicator(kind, targetLabel, position) {
+  clearDropIndicators();
+  const wrap = document.getElementById(kind === 'status' ? 'statusTableWrap' : 'paramsTableWrap');
+  if (!wrap) return;
+  const tr = wrap.querySelector(`tbody tr[data-label="${cssEscape(targetLabel)}"]`);
+  if (!tr) return;
+  tr.classList.add(position === 'before' ? 'lap-row-drop-before' : 'lap-row-drop-after');
+}
+function clearDropIndicators() {
+  document.querySelectorAll('.lap-row-drop-before, .lap-row-drop-after').forEach(tr => {
+    tr.classList.remove('lap-row-drop-before', 'lap-row-drop-after');
+  });
+}
+
 document.addEventListener('mouseup', () => {
-  dragState.active = false;
+  if (dragState.mode === 'moving') {
+    // 移動を確定
+    if (dragState.moveDropTargetLabel) {
+      pushUndoSnapshot('move');
+      executeMove(dragState.kind, dragState.moveDropTargetLabel, dragState.moveDropPosition);
+    }
+    // 視覚クリーンアップ
+    document.querySelectorAll('.lap-row-moving').forEach(tr => tr.classList.remove('lap-row-moving'));
+    clearDropIndicators();
+    document.body.style.cursor = '';
+  }
+  dragState.mode = 'idle';
+  dragState.moveDropTargetLabel = null;
+  dragState.moveDropPosition = null;
 });
+
+/* CSS用文字列エスケープ */
+function cssEscape(s) {
+  if (window.CSS && CSS.escape) return CSS.escape(s);
+  return String(s).replace(/[^\w\u00A0-\uFFFF-]/g, '\\$&');
+}
+
+/* 移動を反映 */
+function executeMove(kind, targetLabel, position) {
+  const listKey = kind === 'status' ? 'commonStatus' : 'commonParams';
+  const list = state[listKey];
+  const movingLabels = [...dragState.selectedLabels];
+  // 移動対象を順番通りに取り出し
+  const movingItems = list.filter(x => movingLabels.includes(x.label));
+  const remaining = list.filter(x => !movingLabels.includes(x.label));
+  // ターゲットの位置を決定
+  let targetIdx = remaining.findIndex(x => x.label === targetLabel);
+  if (targetIdx < 0) return;
+  if (position === 'after') targetIdx++;
+  // 挿入
+  const newList = [...remaining.slice(0, targetIdx), ...movingItems, ...remaining.slice(targetIdx)];
+  state[listKey] = newList;
+  renderTable(kind);
+  setTimeout(updateTheadHeights, 50);
+}
 
 function updateRowSelection() {
   const wrap = document.getElementById(dragState.kind === 'status' ? 'statusTableWrap' : 'paramsTableWrap');
@@ -385,12 +502,90 @@ function updateRowSelection() {
 document.addEventListener('click', e => {
   if (e.target.closest('.lap-cell-label')) return;
   if (e.target.closest('.lap-del-btn')) return;
-  // クリックでクリア
   if (dragState.selectedLabels.size > 0 && !e.target.closest('.lap-grand-table')) {
     dragState.selectedLabels = new Set();
     document.querySelectorAll('.lap-row-selected').forEach(tr => tr.classList.remove('lap-row-selected'));
   }
 });
+
+/* =========================================
+   Undo機能（削除のみ対象）
+   - 削除前にスナップショットを保存
+   - Ctrl+Z で1段戻す
+   - 履歴は20件まで
+========================================= */
+const undoStack = [];
+const UNDO_LIMIT = 20;
+
+function pushUndoSnapshot(reason) {
+  // 削除と移動だけスナップショットを保存（移動も戻せると親切）
+  const snap = {
+    reason,
+    commonStatus: state.commonStatus.map(x => ({ ...x })),
+    commonParams: state.commonParams.map(x => ({ ...x })),
+    values: deepCloneValues(state.values),
+    perChar: state.perChar.map(pc => ({
+      name: pc.name,
+      url: pc.url,
+      chatpal: pc.chatpal,
+      excludedStatus: new Set(pc.excludedStatus),
+      excludedParams: new Set(pc.excludedParams)
+    }))
+  };
+  undoStack.push(snap);
+  if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+}
+
+function deepCloneValues(v) {
+  const out = {};
+  Object.keys(v).forEach(charName => {
+    out[charName] = { ...v[charName] };
+  });
+  return out;
+}
+
+function doUndo() {
+  if (undoStack.length === 0) {
+    showToast('元に戻せる操作はありません');
+    return;
+  }
+  const snap = undoStack.pop();
+  state.commonStatus = snap.commonStatus;
+  state.commonParams = snap.commonParams;
+  state.values = snap.values;
+  state.perChar = snap.perChar;
+  renderTable('status');
+  renderTable('params');
+  setTimeout(updateTheadHeights, 50);
+  showToast(`元に戻しました（${snap.reason === 'delete' ? '削除' : '移動'}）`);
+}
+
+/* Ctrl+Z でUndo */
+document.addEventListener('keydown', e => {
+  // テキスト入力中は通常のCtrl+Zを優先
+  const target = e.target;
+  if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+    e.preventDefault();
+    doUndo();
+  }
+});
+
+/* トースト通知 */
+let _toastEl = null;
+function showToast(msg) {
+  if (_toastEl) _toastEl.remove();
+  _toastEl = document.createElement('div');
+  _toastEl.className = 'lap-undo-toast';
+  _toastEl.textContent = msg;
+  document.body.appendChild(_toastEl);
+  setTimeout(() => {
+    if (_toastEl) {
+      _toastEl.classList.add('lap-toast-fadeout');
+      setTimeout(() => { if (_toastEl) { _toastEl.remove(); _toastEl = null; } }, 300);
+    }
+  }, 2500);
+}
 
 /* =========================================
    選択行の一括削除
@@ -401,20 +596,22 @@ function deleteSelectedRows(kind) {
     return;
   }
   const labels = [...dragState.selectedLabels];
-  if (!confirm(`${kind === 'status' ? 'status' : 'params'} から以下のラベルを削除しますか？\n\n${labels.join('\n')}`)) return;
+  if (!confirm(`${kind === 'status' ? 'status' : 'params'} から以下のラベルを削除しますか？\n\n${labels.join('\n')}\n\n（Ctrl+Z で元に戻せます）`)) return;
+
+  // Undo用スナップショット
+  pushUndoSnapshot('delete');
 
   const listKey = kind === 'status' ? 'commonStatus' : 'commonParams';
   const excludedKey = kind === 'status' ? 'excludedStatus' : 'excludedParams';
 
   state[listKey] = state[listKey].filter(x => !labels.includes(x.label));
-  // 値も削除
   Object.values(state.values).forEach(v => labels.forEach(l => delete v[l]));
-  // 各キャラのexcludedからも削除
   state.perChar.forEach(pc => labels.forEach(l => pc[excludedKey].delete(l)));
 
   dragState.selectedLabels = new Set();
   renderTable(kind);
   setTimeout(updateTheadHeights, 50);
+  showToast(`${labels.length}件削除しました（Ctrl+Z で元に戻せます）`);
 }
 
 /* =========================================
