@@ -12,8 +12,8 @@
 ========================================= */
 const state = {
   charNames: [],       // ['水','金',...]
-  commonStatus: [],    // [{ label, applyAll }, ...] (HP/MP/SAN以外の追加もアリ)
-  commonParams: [],    // [{ label, applyAll }, ...]
+  commonStatus: [],    // [{ label }, ...] (HP/MP/SAN以外の追加もアリ)
+  commonParams: [],    // [{ label }, ...]
   values: {},          // { '水': {'HP':12,'STR':12,...}, ... }
   perChar: [],         // [{ name, url, chatpal2, chatpal3, excludedStatus:Set, excludedParams:Set }, ...]
   parsed: false
@@ -89,8 +89,8 @@ function parseTSV(tsv) {
 
   return {
     charNames,
-    commonStatus: orderedStatus.map(l => ({ label: l, applyAll: true })),
-    commonParams: paramLabels.map(l => ({ label: l, applyAll: true })),
+    commonStatus: orderedStatus.map(l => ({ label: l })),
+    commonParams: paramLabels.map(l => ({ label: l })),
     values
   };
 }
@@ -200,8 +200,8 @@ function renderTable(kind) {
   const tr1 = document.createElement('tr');
   tr1.className = 'lap-thead-1';
   tr1.innerHTML = `
-    <th rowspan="2">ラベル</th>
-    <th rowspan="2">共有<br>✓</th>
+    <th rowspan="2" class="lap-th-label-fixed">ラベル</th>
+    <th rowspan="2" class="lap-th-shared-fixed">共有<br>✓</th>
   `;
   state.charNames.forEach((origName, ci) => {
     const pc = state.perChar[ci];
@@ -252,7 +252,6 @@ function renderTable(kind) {
   list.forEach((item, idx) => {
     const tr = document.createElement('tr');
     tr.dataset.label = item.label;
-    if (!item.applyAll) tr.classList.add('lap-row-disabled');
 
     // ラベルセル（ドラッグ選択対象）
     const tdLabel = document.createElement('td');
@@ -263,15 +262,25 @@ function renderTable(kind) {
     bindLabelDrag(tdLabel, kind);
     tr.appendChild(tdLabel);
 
-    // 共有チェック
+    // 共有チェック：「全員のexcluded状態」を見て表示
+    // 全員excluded → checked（全員から削除済み）
+    // 全員not excluded → unchecked（誰からも削除されていない）
+    // 混在 → indeterminate
+    const allExcluded = state.charNames.every((_, ci) => state.perChar[ci][excludedKey].has(item.label));
+    const noneExcluded = state.charNames.every((_, ci) => !state.perChar[ci][excludedKey].has(item.label));
     const tdShared = document.createElement('td');
     tdShared.className = 'lap-cell-shared';
-    tdShared.innerHTML = `<input type="checkbox" ${item.applyAll ? 'checked' : ''}>`;
-    tdShared.querySelector('input').onchange = e => {
-      const target = (kind === 'status' ? state.commonStatus : state.commonParams).find(x => x.label === item.label);
-      if (target) target.applyAll = e.target.checked;
-      renderTable(kind);  // 再描画（行のdisable切替）
-      setTimeout(updateTheadHeights, 50);
+    tdShared.innerHTML = `<input type="checkbox" ${allExcluded ? 'checked' : ''}>`;
+    const sharedCb = tdShared.querySelector('input');
+    if (!allExcluded && !noneExcluded) sharedCb.indeterminate = true;
+    sharedCb.onchange = e => {
+      // クリックされた瞬間：全員のexcludedをON or OFFに統一
+      if (e.target.checked) {
+        state.charNames.forEach((_, ci) => state.perChar[ci][excludedKey].add(item.label));
+      } else {
+        state.charNames.forEach((_, ci) => state.perChar[ci][excludedKey].delete(item.label));
+      }
+      renderTable(kind);  // 個別チェックも更新するため再描画
     };
     tr.appendChild(tdShared);
 
@@ -279,13 +288,12 @@ function renderTable(kind) {
     state.charNames.forEach((origName, ci) => {
       const pc = state.perChar[ci];
       const isExcluded = pc[excludedKey].has(item.label);
-      const isApplied = item.applyAll && !isExcluded;
 
       const tdVal = document.createElement('td');
       tdVal.className = 'lap-cell-val lap-charblock-start';
       const v = state.values[origName][item.label];
       const valDisplay = (v != null) ? v : '';
-      tdVal.innerHTML = `<input type="number" value="${valDisplay}" ${!item.applyAll ? 'disabled' : ''}>`;
+      tdVal.innerHTML = `<input type="number" value="${valDisplay}">`;
       tdVal.querySelector('input').oninput = e => {
         const n = parseInt(e.target.value, 10);
         state.values[origName][item.label] = isNaN(n) ? 0 : n;
@@ -295,10 +303,12 @@ function renderTable(kind) {
       const tdDel = document.createElement('td');
       tdDel.className = 'lap-cell-del';
       // 「削除するもの」にチェック → ON＝除外
-      tdDel.innerHTML = `<input type="checkbox" ${isExcluded ? 'checked' : ''} ${!item.applyAll ? 'disabled' : ''}>`;
+      tdDel.innerHTML = `<input type="checkbox" ${isExcluded ? 'checked' : ''}>`;
       tdDel.querySelector('input').onchange = e => {
         if (e.target.checked) pc[excludedKey].add(item.label);
         else pc[excludedKey].delete(item.label);
+        // 共有チェックの状態も更新する必要がある（全員/混在/誰も）
+        updateSharedCheckbox(tr, kind, item.label);
       };
       tr.appendChild(tdDel);
     });
@@ -309,6 +319,25 @@ function renderTable(kind) {
 
   wrap.innerHTML = '';
   wrap.appendChild(table);
+}
+
+/* 個別「削除」チェック変更時に、その行の共有チェックの状態を更新 */
+function updateSharedCheckbox(tr, kind, label) {
+  const excludedKey = kind === 'status' ? 'excludedStatus' : 'excludedParams';
+  const allExcluded = state.charNames.every((_, ci) => state.perChar[ci][excludedKey].has(label));
+  const noneExcluded = state.charNames.every((_, ci) => !state.perChar[ci][excludedKey].has(label));
+  const sharedCb = tr.querySelector('.lap-cell-shared input[type="checkbox"]');
+  if (!sharedCb) return;
+  if (allExcluded) {
+    sharedCb.checked = true;
+    sharedCb.indeterminate = false;
+  } else if (noneExcluded) {
+    sharedCb.checked = false;
+    sharedCb.indeterminate = false;
+  } else {
+    sharedCb.checked = false;
+    sharedCb.indeterminate = true;
+  }
 }
 
 /* キャラ名・URLを両テーブルで同期 */
@@ -640,7 +669,7 @@ function addCommonRow(kind) {
     return;
   }
 
-  state[listKey].push({ label, applyAll: true });
+  state[listKey].push({ label });
   // 値は0で初期化
   state.charNames.forEach(n => {
     if (!(label in state.values[n])) state.values[n][label] = 0;
@@ -698,19 +727,17 @@ function buildCharData(ci) {
   const pc = state.perChar[ci];
   const v = state.values[origName];
 
-  // status配列：commonStatusの並び順、共有OFF or 個別除外は出さない
+  // status配列：commonStatusの並び順、個別excluded以外は出力
   const status = [];
   state.commonStatus.forEach(item => {
-    if (!item.applyAll) return;
     if (pc.excludedStatus.has(item.label)) return;
     const val = v[item.label] != null ? v[item.label] : 0;
     status.push({ label: item.label, value: val, max: val });
   });
 
-  // params配列
+  // params配列：同上
   const params = [];
   state.commonParams.forEach(item => {
-    if (!item.applyAll) return;
     if (pc.excludedParams.has(item.label)) return;
     const val = v[item.label] != null ? v[item.label] : 0;
     params.push({ label: item.label, value: String(val) });
@@ -869,21 +896,20 @@ function generateLayoutForChar(ci) {
   const v = state.values[origName];
   const lines = [];
 
-  // :HP= / :MP= を共通statusの並び順で（ある分だけ）
+  // :HP= / :MP= を共通statusの並び順で（除外されていない分だけ）
   const hpItem = state.commonStatus.find(s => s.label === 'HP');
   const mpItem = state.commonStatus.find(s => s.label === 'MP');
-  if (hpItem && hpItem.applyAll && !pc.excludedStatus.has('HP')) {
+  if (hpItem && !pc.excludedStatus.has('HP')) {
     const val = v['HP'] != null ? v['HP'] : 0;
     lines.push(`:HP=${val}　HP全快`);
   }
-  if (mpItem && mpItem.applyAll && !pc.excludedStatus.has('MP')) {
+  if (mpItem && !pc.excludedStatus.has('MP')) {
     const val = v['MP'] != null ? v['MP'] : 0;
     lines.push(`:MP=${val}　MP全快`);
   }
 
   // params を CCB<=値 〈ラベル〉 形式で
   state.commonParams.forEach(item => {
-    if (!item.applyAll) return;
     if (pc.excludedParams.has(item.label)) return;
     const val = v[item.label] != null ? v[item.label] : 0;
     lines.push(`CCB<=${val}　〈${item.label}〉`);
@@ -951,7 +977,7 @@ function transformLayoutForChar(layoutText, ci) {
       const label = mccb[4].trim();
       // そのキャラがそのラベルを持っているか
       const inParams = state.commonParams.find(p => p.label === label);
-      if (inParams && inParams.applyAll && !pc.excludedParams.has(label)) {
+      if (inParams && !pc.excludedParams.has(label)) {
         const newVal = (v[label] != null) ? v[label] : 0;
         return `${mccb[1]}${newVal}${mccb[3] || '　'}〈${label}〉${mccb[5]}`;
       }
