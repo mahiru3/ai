@@ -86,15 +86,78 @@
     </div>
   </details>
 
-  <!-- ④ 共通チャパレ -->
-  <details class="lap-section" id="chatpalCommonBox" style="display:none">
-    <summary class="lap-summary lap-summary-4">④ 共通チャットパレット（全員に適用）</summary>
+  <!-- ④ チャパレ編集（4ブロック2カラム構成） -->
+  <details class="lap-section" id="chatpalEditBox" style="display:none">
+    <summary class="lap-summary lap-summary-4">④ チャパレ編集</summary>
     <div class="lap-section-body">
-      <div class="small lap-chatpal-help">
-        <code>1d100&lt;=...</code> 系（例：正気度ロール）と <code>CCB&lt;=...</code> 系を書いてください。<br>
-        出力時に <code>:SAN-1 / :SAN+1</code> が冒頭、<code>✨よく使う✨</code> で区切られ、<code>CCB&lt;=</code> 系は <code>{BA} 〈〉</code> 形式に変換されます。
+      <div class="lap-chatpal-grid">
+
+        <!-- 左カラム：1)2)3) -->
+        <div class="lap-chatpal-col-left">
+
+          <!-- 1) 共通 -->
+          <details class="lap-chatpal-sub" open>
+            <summary class="lap-chatpal-sub-title">1) 共通（全員に共通で使われる）</summary>
+            <div class="lap-chatpal-sub-body">
+              <div class="small lap-chatpal-help">
+                直接編集してください。<code>:SAN-</code> や <code>:HP-</code> は値抜きの形でも記入できます。
+              </div>
+              <textarea id="chatpal1Common" class="lap-chatpal-area"></textarea>
+            </div>
+          </details>
+
+          <!-- 2) 個別1（フリースペース） -->
+          <details class="lap-chatpal-sub" open>
+            <summary class="lap-chatpal-sub-title">2) 個別1（フリースペース・キャラごと）</summary>
+            <div class="lap-chatpal-sub-body">
+              <div class="lap-chatpal-charsel-row">
+                <label class="small">編集中：</label>
+                <select id="chatpal2CharSel" class="lap-chatpal-charsel"></select>
+              </div>
+              <textarea id="chatpal2Personal" class="lap-chatpal-area" placeholder="このキャラだけのコマンドを自由に記入"></textarea>
+            </div>
+          </details>
+
+          <!-- 3) 個別2（params転記+α） -->
+          <details class="lap-chatpal-sub" open>
+            <summary class="lap-chatpal-sub-title">3) 個別2（params転記＋並び替え・キャラごと）</summary>
+            <div class="lap-chatpal-sub-body">
+              <div class="lap-chatpal-charsel-row">
+                <label class="small">編集中：</label>
+                <select id="chatpal3CharSel" class="lap-chatpal-charsel"></select>
+                <button type="button" class="lap-chatpal-btn lap-chatpal-btn-import" onclick="doTranscribeParams()">📋 転記</button>
+                <button type="button" class="lap-chatpal-btn lap-chatpal-btn-apply-all" onclick="doApplyLayoutToAll()">📋 レイアウトを全員に適用</button>
+              </div>
+              <div class="small lap-chatpal-help">
+                「転記」で <code>:HP=値</code> <code>:MP=値</code> ＋ paramsを<code>CCB&lt;=値 〈ラベル〉</code>形式で生成。<br>
+                自由に並び替え・区切り行追加してから「レイアウトを全員に適用」で他キャラにも同じ構造をコピー。
+              </div>
+              <textarea id="chatpal3Layout" class="lap-chatpal-area" placeholder="「📋 転記」を押すとここにparamsが生成されます"></textarea>
+            </div>
+          </details>
+
+        </div>
+
+        <!-- 右カラム：4) 統合 -->
+        <div class="lap-chatpal-col-right">
+          <details class="lap-chatpal-sub" open>
+            <summary class="lap-chatpal-sub-title">4) 統合チャパレ（プレビュー）</summary>
+            <div class="lap-chatpal-sub-body">
+              <div class="lap-chatpal-charsel-row">
+                <label class="small">プレビュー対象：</label>
+                <select id="chatpal4CharSel" class="lap-chatpal-charsel"></select>
+                <button type="button" class="lap-chatpal-btn lap-chatpal-btn-build" onclick="doBuildIntegrated()">🔄 統合</button>
+              </div>
+              <div class="small lap-chatpal-help">
+                「統合」を押すと、選択キャラの 1)+2)+3) を結合した最終チャパレが表示されます。<br>
+                これが「📋 このキャラをコピー」で出力される内容です。
+              </div>
+              <textarea id="chatpal4Integrated" class="lap-chatpal-area lap-chatpal-area-tall" readonly placeholder="「🔄 統合」を押すと結合された最終チャパレが表示されます"></textarea>
+            </div>
+          </details>
+        </div>
+
       </div>
-      <textarea id="commonChatpal" class="lap-chatpal" placeholder="1d100<={SAN} 【正気度ロール】&#10;CCB<=90 【アイデア】&#10;CCB<=75 【幸運】&#10;CCB<=90 【知識】"></textarea>
     </div>
   </details>
 
