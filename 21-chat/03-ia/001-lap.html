@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <!--
   21-chat/03-ia/001-lap.html
-  いあきゃら → ココフォリア 変換ツール（単独動作版）
-  - フレーム構造（index+navi）を使わず、1つのHTMLで完結する
-  - JSONを貼り付け→解析→編集→実行→コピーの流れで駒データを生成
-  - 既存の 31-csv/01-chara/ と同じ変換ロジックを単独HTMLに統合したもの
+  いあきゃら → ココフォリア 一括変換ツール（複数キャラ対応版）
+  - スプレッドシートのTSV貼り付けで6〜22人を一括変換
+  - 1行目=キャラ名、2行目以降=「ラベル + N人分の値」
+  - HP/MP/SAN = 共通status / DB = チャパレ側 / それ以外 = 共通params
+  - 各キャラごとにname・URL・個人チャパレを編集して個別コピー
 -->
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>いあきゃら → ココフォリア（単独版）</title>
+  <title>いあきゃら → ココフォリア 一括変換</title>
   <link rel="stylesheet" href="../../01-css/00-style.css">
   <link rel="stylesheet" href="../../01-css/31-csv-01chara.css">
   <link rel="stylesheet" href="../../01-css/21-chat-03-ia-001-lap.css">
@@ -19,68 +20,113 @@
 
 <!-- タイトル -->
 <div class="sticky">
-  <div class="title">いあきゃら → ココフォリア 変換</div>
+  <div class="title">いあきゃら → ココフォリア 一括変換（6〜22人対応）</div>
 </div>
 
 <div class="box">
 
-  <!-- 使い方ガイド（旧navi.htmlの.guide相当を本体内に表示） -->
+  <!-- 使い方ガイド -->
   <div class="lap-guide">
-    1) いあきゃら貼り付け → <b>解析</b><br>
-    &nbsp;&nbsp;&nbsp;statusの並び替え/追加/削除/編集 &amp; name編集<br>
-    2) <b>▶ 実行</b> → 3) <b>📋 コピー</b>
+    1) 人数を選択 → 2) スプレッドシートをコピーして<b>TSV貼り付け</b> → <b>📋 表を解析</b><br>
+    3) 共通status/paramsの並び順・キャラごとの個別調整 → 共通／個人チャパレ編集<br>
+    4) <b>各キャラの「📋このキャラをコピー」</b>でココフォリアにペースト
   </div>
 
-  <!-- 入力・出力テキストエリア -->
-  <div class="row">
-    <div style="flex:1;min-width:320px">
-      <label><b>いあきゃら（貼り付け）</b></label>
-      <textarea id="input" placeholder="いあきゃらでコピーしたものを貼り付け"></textarea>
+  <!-- ① 人数選択 + TSV貼り付け -->
+  <details class="lap-section" open>
+    <summary class="lap-summary lap-summary-1">① 表データ貼り付け</summary>
+    <div class="lap-section-body">
+
+      <div class="row lap-count-row">
+        <label><b>人数：</b></label>
+        <input type="number" id="charCount" min="6" max="22" value="8" class="lap-count-input">
+        <span class="small">（6〜22人、デフォルト8人）</span>
+      </div>
+
+      <div class="row">
+        <div style="flex:1;min-width:320px">
+          <label><b>スプレッドシート貼り付け（TSV：1行目=キャラ名、2行目以降=ラベル+値）</b></label>
+          <textarea id="tsvInput" class="lap-tsv" placeholder="	水	金	地	火	木	土	天	海&#10;HP	12	15	12	12	9	8	10	18&#10;MP	15	11	12	18	15	16	21	14&#10;SAN	75	55	60	60	45	40	50	90&#10;STR	12	5	12	21	7	18	7	11&#10;水泳	25	25	45	55	25	25	25	25"></textarea>
+        </div>
+      </div>
+
+      <div class="row lap-buttons">
+        <button class="button-29" onclick="doParseTSV()">📋 表を解析</button>
+        <span id="parseMsg" class="small"></span>
+      </div>
+
     </div>
-    <div style="flex:1;min-width:320px">
-      <label><b>変換結果（ココフォリアに貼り付け可）</b></label>
-      <textarea id="output" placeholder="ここに結果が表示されます"></textarea>
+  </details>
+
+  <!-- ② 共通設定エリア -->
+  <details class="lap-section" id="commonBox" style="display:none">
+    <summary class="lap-summary lap-summary-2">② 共通設定（status・params）</summary>
+    <div class="lap-section-body">
+
+      <div class="lap-common-block">
+        <div class="lap-block-title">共通 status（順番変更のみ／全員共通）</div>
+        <table class="lap-common-table" id="commonStatusTable">
+          <thead>
+            <tr>
+              <th style="width:2rem">↕</th>
+              <th>ラベル</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="lap-common-block">
+        <div class="lap-block-title">共通 params（順番変更・追加・全員適用切替）</div>
+        <table class="lap-common-table" id="commonParamsTable">
+          <thead>
+            <tr>
+              <th style="width:2rem">↕</th>
+              <th>ラベル</th>
+              <th style="width:9rem">全員適用</th>
+              <th style="width:5rem">削除</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div class="row">
+          <input type="text" id="newParamLabel" placeholder="新しいラベル名" class="lap-add-input">
+          <button class="lap-add-btn" onclick="addCommonParam()">＋ 共通paramsに追加</button>
+        </div>
+      </div>
+
     </div>
-  </div>
+  </details>
 
-  <!-- 操作ボタン群（旧navi.htmlのボタンを本体に統合） -->
-  <div class="row lap-buttons">
-    <button class="button-29" onclick="doParse()">解析</button>
-    <button class="button-29" onclick="doRun()">▶ 実行</button>
-    <button class="button-29" onclick="doCopy()">📋 コピー</button>
-  </div>
-
-  <div class="row">
-    <span id="msg" class="small"></span>
-  </div>
-
-  <!-- キャラクター名 -->
-  <div id="metaBox" style="display:none">
-    <div class="name-heading">
-      <input id="nameInput" type="text" placeholder="キャラクター名">
+  <!-- ④ 共通チャパレ -->
+  <details class="lap-section" id="chatpalCommonBox" style="display:none">
+    <summary class="lap-summary lap-summary-4">④ 共通チャットパレット（全員に適用）</summary>
+    <div class="lap-section-body">
+      <div class="small lap-chatpal-help">
+        ここに書いた内容は全員のcommandsに反映されます。<br>
+        <code>1d100&lt;=...</code> 系（例：正気度ロール）と <code>CCB&lt;=...</code> 系を書いてください。<br>
+        出力時に <code>:SAN-1 / :SAN+1</code> が冒頭に追加され、<code>✨よく使う✨</code> で区切られます。
+      </div>
+      <textarea id="commonChatpal" class="lap-chatpal" placeholder="1d100<={SAN} 【正気度ロール】&#10;CCB<=90 【アイデア】&#10;CCB<=75 【幸運】&#10;CCB<=90 【知識】"></textarea>
     </div>
-  </div>
+  </details>
 
-  <!-- statusテーブル（並び替え・追加・削除・編集） -->
-  <div id="statusBox" class="small" style="display:none;margin-top:8px">
-    <table id="statusTable">
-      <thead>
-        <tr>
-          <th style="width:2rem">↕</th>
-          <th>ラベル</th>
-          <th style="width:8rem">値 (value)</th>
-          <th style="width:8rem">最大 (max)</th>
-          <th style="width:6rem">操作</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <button id="addRowBtn" style="margin-top:8px">＋ 行を追加</button>
+  <!-- ③ キャラカード一覧 -->
+  <details class="lap-section" id="charsBox" style="display:none">
+    <summary class="lap-summary lap-summary-3">③ 各キャラ編集（名前・URL・status値・params値・個人チャパレ）</summary>
+    <div class="lap-section-body">
+      <div id="charCards" class="lap-cards"></div>
+    </div>
+  </details>
+
+  <!-- ⑤ 操作結果メッセージ -->
+  <div class="row" id="globalMsgRow" style="display:none">
+    <span id="globalMsg" class="small"></span>
   </div>
 
 </div>
 
-<!-- 変換ロジック本体 -->
+<!-- ロジック本体 -->
 <script src="../../03-js/21-chat-03-ia-001-lap.js"></script>
 
 </body>
