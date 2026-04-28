@@ -15,7 +15,7 @@ const state = {
   commonStatus: [],    // [{ label, applyAll }, ...] (HP/MP/SAN以外の追加もアリ)
   commonParams: [],    // [{ label, applyAll }, ...]
   values: {},          // { '水': {'HP':12,'STR':12,...}, ... }
-  perChar: [],         // [{ name, url, chatpal, excludedStatus:Set, excludedParams:Set }, ...]
+  perChar: [],         // [{ name, url, chatpal2, chatpal3, excludedStatus:Set, excludedParams:Set }, ...]
   parsed: false
 };
 
@@ -133,7 +133,8 @@ function doParseTSV() {
       return {
         name,
         url: '',
-        chatpal: '',
+        chatpal2: '',     // 個別1（フリースペース）
+        chatpal3: '',     // 個別2（params転記レイアウト）
         excludedStatus,
         excludedParams
       };
@@ -145,13 +146,14 @@ function doParseTSV() {
     // UI描画
     renderTable('status');
     renderTable('params');
+    initChatpalSection();
 
     document.getElementById('statusBox').style.display = '';
     document.getElementById('paramsBox').style.display = '';
-    document.getElementById('chatpalCommonBox').style.display = '';
+    document.getElementById('chatpalEditBox').style.display = '';
     document.getElementById('statusBox').open = true;
     document.getElementById('paramsBox').open = true;
-    document.getElementById('chatpalCommonBox').open = true;
+    document.getElementById('chatpalEditBox').open = true;
 
     if (!msgEl.textContent) {
       msgEl.textContent = `✓ 解析完了：${result.charNames.length}人 / status ${result.commonStatus.length}件 / params ${result.commonParams.length}件`;
@@ -213,7 +215,6 @@ function renderTable(kind) {
           <input type="text" class="lap-charhead-nameinput" value="${escapeAttr(pc.name)}" data-role="name">
         </div>
         <input type="text" class="lap-charhead-url" placeholder="URL" value="${escapeAttr(pc.url)}" data-role="url">
-        <textarea class="lap-charhead-chatpal" placeholder="個人チャパレ" data-role="chatpal">${escapeHtml(pc.chatpal)}</textarea>
         <button class="lap-charhead-copybtn" data-role="copy">📋 このキャラをコピー</button>
       </div>
     `;
@@ -221,15 +222,14 @@ function renderTable(kind) {
       pc.name = e.target.value;
       // 他テーブルの同期
       syncCharHeadAcrossTables(ci, 'name', e.target.value);
+      // チャパレ側のセレクトの選択肢ラベルも更新
+      refreshCharSelectLabels();
     };
     th.querySelector('[data-role="url"]').oninput = e => {
       pc.url = e.target.value;
       syncCharHeadAcrossTables(ci, 'url', e.target.value);
     };
     if (kind === 'status') {
-      th.querySelector('[data-role="chatpal"]').oninput = e => {
-        pc.chatpal = e.target.value;
-      };
       th.querySelector('[data-role="copy"]').onclick = (e) => {
         doCopyChar(ci, e.target);
       };
@@ -527,7 +527,8 @@ function pushUndoSnapshot(reason) {
     perChar: state.perChar.map(pc => ({
       name: pc.name,
       url: pc.url,
-      chatpal: pc.chatpal,
+      chatpal2: pc.chatpal2,
+      chatpal3: pc.chatpal3,
       excludedStatus: new Set(pc.excludedStatus),
       excludedParams: new Set(pc.excludedParams)
     }))
@@ -653,53 +654,39 @@ function addCommonRow(kind) {
 /* =========================================
    チャットパレット組み立て
 ========================================= */
-const RE_FIXED_LINE = /^(CCB<=)\s*(\d+)\s*【([^】]+)】\s*$/;
-const RE_FORM_LINE  = /^CCB<=\s*(\{[^}]+\}\s*\*\s*\d+)\s*【([^】]+)】\s*$/;
 
-function rewriteCCBLine(line) {
-  const mf = line.match(RE_FIXED_LINE);
-  if (mf) return `CCB<=${mf[2].trim()}{BA} 　〈${mf[3].trim()}〉`;
-  const mv = line.match(RE_FORM_LINE);
-  if (mv) return `CCB<=${mv[1].trim()}{BA} 　〈${mv[2].trim().replace(/\s/g, '')}〉`;
+/* CCB行の書き換え：「【】を〈〉に変換」のみ。{BA}は付けない（個別2では既に整形済み） */
+const RE_CCB_BRACKETS = /^(CCB<=\s*[^【]+)【([^】]+)】(\s*)$/;
+function convertCCBBrackets(line) {
+  const m = line.match(RE_CCB_BRACKETS);
+  if (m) {
+    return `${m[1].replace(/\s+$/, '')} 〈${m[2].trim()}〉${m[3]}`;
+  }
   return line;
 }
 
-function buildCommands(perCharChatpal) {
-  const commonRaw = document.getElementById('commonChatpal').value || '';
-  const personalRaw = perCharChatpal || '';
-
-  const commonLines = commonRaw.split(/\r?\n/);
-  const personalLines = personalRaw.split(/\r?\n/);
-
-  const sanLines = [];
-  const ccbLines = [];
-  const otherLines = [];
-  commonLines.forEach(l => {
-    const t = l.trim();
-    if (!t) return;
-    if (/^1d100/i.test(t)) sanLines.push(l);
-    else if (/^CCB<=/i.test(t)) ccbLines.push(rewriteCCBLine(l));
-    else otherLines.push(l);
-  });
-
+/* 1)+2)+3) を結合して最終チャパレを生成
+   - 1) 共通：そのまま使う（ユーザーが直接編集している前提）
+   - 2) 個別1（フリースペース）：そのまま追記
+   - 3) 個別2（params転記レイアウト）：そのまま追記（既に整形済み）
+*/
+function buildCommandsForChar(ci) {
+  const pc = state.perChar[ci];
   const out = [];
-  out.push(':SAN-1');
-  out.push(':SAN+1');
-  sanLines.forEach(l => out.push(l));
-  if (ccbLines.length > 0 || otherLines.length > 0) out.push('✨よく使う✨');
-  ccbLines.forEach(l => out.push(l));
-  otherLines.forEach(l => out.push(l));
 
-  if (personalRaw.trim()) {
-    out.push('');
-    personalLines.forEach(l => {
-      const t = l.trim();
-      if (!t) { out.push(''); return; }
-      if (/^CCB<=/i.test(t)) out.push(rewriteCCBLine(l));
-      else out.push(l);
-    });
+  const part1 = (document.getElementById('chatpal1Common').value || '').trimEnd();
+  const part2 = (pc.chatpal2 || '').trimEnd();
+  const part3 = (pc.chatpal3 || '').trimEnd();
+
+  if (part1) out.push(part1);
+  if (part2) {
+    if (out.length > 0) out.push('');
+    out.push(part2);
   }
-
+  if (part3) {
+    if (out.length > 0) out.push('');
+    out.push(part3);
+  }
   return out.join('\n');
 }
 
@@ -729,7 +716,7 @@ function buildCharData(ci) {
     params.push({ label: item.label, value: String(val) });
   });
 
-  const commands = buildCommands(pc.chatpal);
+  const commands = buildCommandsForChar(ci);
 
   const data = {
     name: pc.name,
@@ -780,6 +767,214 @@ async function doCopyChar(ci, btnEl) {
     alert('コピーエラー: ' + (e && e.message ? e.message : String(e)));
   }
 }
+
+/* =========================================
+   ④ チャパレ編集セクション
+   - 1) 共通：全員共通のチャパレ（textareaを直接編集）
+   - 2) 個別1：キャラごとフリースペース
+   - 3) 個別2：キャラごとのparams転記レイアウト
+   - 4) 統合：1)+2)+3)の最終結合プレビュー
+========================================= */
+
+/* 1) 共通のデフォルト値 */
+const DEFAULT_CHATPAL_1 = `1d100<={SAN}　🕯️正気度ロール🕯️
+:SAN-
+:HP-`;
+
+/* チャパレ編集セクションの初期化（解析時に呼ばれる） */
+function initChatpalSection() {
+  // 1) 共通のデフォルト値（未入力なら）
+  const ta1 = document.getElementById('chatpal1Common');
+  if (!ta1.value.trim()) ta1.value = DEFAULT_CHATPAL_1;
+
+  // セレクト初期化
+  refreshCharSelectLabels();
+
+  // 2)3)4)のセレクト変更時にtextareaを切り替え
+  const sel2 = document.getElementById('chatpal2CharSel');
+  const sel3 = document.getElementById('chatpal3CharSel');
+  const sel4 = document.getElementById('chatpal4CharSel');
+  sel2.onchange = () => loadChatpal2(parseInt(sel2.value, 10));
+  sel3.onchange = () => loadChatpal3(parseInt(sel3.value, 10));
+  sel4.onchange = () => doBuildIntegrated();
+
+  // 2)3)textareaの編集を保存
+  document.getElementById('chatpal2Personal').oninput = e => {
+    const ci = parseInt(sel2.value, 10);
+    if (!isNaN(ci) && state.perChar[ci]) state.perChar[ci].chatpal2 = e.target.value;
+  };
+  document.getElementById('chatpal3Layout').oninput = e => {
+    const ci = parseInt(sel3.value, 10);
+    if (!isNaN(ci) && state.perChar[ci]) state.perChar[ci].chatpal3 = e.target.value;
+  };
+
+  // 初回ロード（1人目）
+  loadChatpal2(0);
+  loadChatpal3(0);
+}
+
+/* セレクトのoptionラベルを更新（キャラ名変更時に呼ばれる） */
+function refreshCharSelectLabels() {
+  ['chatpal2CharSel', 'chatpal3CharSel', 'chatpal4CharSel'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const prevValue = sel.value;
+    sel.innerHTML = '';
+    state.charNames.forEach((origName, ci) => {
+      const op = document.createElement('option');
+      op.value = ci;
+      op.textContent = `${ci + 1}. ${state.perChar[ci].name}`;
+      sel.appendChild(op);
+    });
+    if (prevValue !== '' && state.charNames[parseInt(prevValue, 10)]) {
+      sel.value = prevValue;
+    }
+  });
+}
+
+/* 2)個別1のロード */
+function loadChatpal2(ci) {
+  if (isNaN(ci) || !state.perChar[ci]) return;
+  document.getElementById('chatpal2Personal').value = state.perChar[ci].chatpal2 || '';
+}
+
+/* 3)個別2のロード */
+function loadChatpal3(ci) {
+  if (isNaN(ci) || !state.perChar[ci]) return;
+  document.getElementById('chatpal3Layout').value = state.perChar[ci].chatpal3 || '';
+}
+
+/* =========================================
+   3) 「📋 転記」ボタン
+   - 選択キャラのstatus.HP/MP値とparamsから3)テキストを生成
+   - :HP=N　HP全快 / :MP=N　MP全快 / CCB<=N 〈ラベル〉…
+========================================= */
+function doTranscribeParams() {
+  const sel = document.getElementById('chatpal3CharSel');
+  const ci = parseInt(sel.value, 10);
+  if (isNaN(ci) || !state.perChar[ci]) {
+    alert('キャラを選択してください。');
+    return;
+  }
+  const text = generateLayoutForChar(ci);
+  state.perChar[ci].chatpal3 = text;
+  document.getElementById('chatpal3Layout').value = text;
+  showToast(`${state.perChar[ci].name} に転記しました`);
+}
+
+/* キャラciの「素のレイアウト」を生成 */
+function generateLayoutForChar(ci) {
+  const origName = state.charNames[ci];
+  const pc = state.perChar[ci];
+  const v = state.values[origName];
+  const lines = [];
+
+  // :HP= / :MP= を共通statusの並び順で（ある分だけ）
+  const hpItem = state.commonStatus.find(s => s.label === 'HP');
+  const mpItem = state.commonStatus.find(s => s.label === 'MP');
+  if (hpItem && hpItem.applyAll && !pc.excludedStatus.has('HP')) {
+    const val = v['HP'] != null ? v['HP'] : 0;
+    lines.push(`:HP=${val}　HP全快`);
+  }
+  if (mpItem && mpItem.applyAll && !pc.excludedStatus.has('MP')) {
+    const val = v['MP'] != null ? v['MP'] : 0;
+    lines.push(`:MP=${val}　MP全快`);
+  }
+
+  // params を CCB<=値 〈ラベル〉 形式で
+  state.commonParams.forEach(item => {
+    if (!item.applyAll) return;
+    if (pc.excludedParams.has(item.label)) return;
+    const val = v[item.label] != null ? v[item.label] : 0;
+    lines.push(`CCB<=${val}　〈${item.label}〉`);
+  });
+
+  return lines.join('\n');
+}
+
+/* =========================================
+   3) 「📋 レイアウトを全員に適用」ボタン
+   - 現在のキャラ(=セレクト)の3)テキストを「テンプレート」として使い
+   - 各キャラ用に値を差し替えて全員のchatpal3を上書き
+========================================= */
+function doApplyLayoutToAll() {
+  const sel = document.getElementById('chatpal3CharSel');
+  const baseCi = parseInt(sel.value, 10);
+  if (isNaN(baseCi) || !state.perChar[baseCi]) {
+    alert('元になるキャラを選択してください。');
+    return;
+  }
+  const baseText = state.perChar[baseCi].chatpal3 || '';
+  if (!baseText.trim()) {
+    alert('現在のキャラの3)が空です。先に「📋 転記」して整形してから押してください。');
+    return;
+  }
+  if (!confirm(`現在の「${state.perChar[baseCi].name}」のレイアウトを全員(${state.charNames.length}人)に適用します。\n各キャラのCCB値・:HP=・:MP=はその人の値で更新されます。\n（他のキャラの3)テキストは上書きされます。Ctrl+Z で元に戻せます）`)) return;
+
+  pushUndoSnapshot('apply-layout');
+
+  state.charNames.forEach((origName, ci) => {
+    state.perChar[ci].chatpal3 = transformLayoutForChar(baseText, ci);
+  });
+  // 現在表示中のキャラを再ロード
+  loadChatpal3(baseCi);
+  showToast(`全${state.charNames.length}人にレイアウトを適用しました（Ctrl+Z で戻せます）`);
+}
+
+/* レイアウトテキストの値部分だけをキャラciの値に差し替えて返す
+   - :HP=N　... → :HP=その人のHP値　...
+   - :MP=N　... → 同上
+   - CCB<=N　〈ラベル〉 → そのラベルがそのキャラのparamsにある場合、その値で
+   - その他の行（区切り、見出し）→ そのまま
+*/
+const RE_HPMP_LINE = /^(:(?:HP|MP)=)(\d+)(.*)$/;
+const RE_CCB_LABELED_LINE = /^(CCB<=)\s*(\d+)\s*([　 ]*)〈([^〉]+)〉(.*)$/;
+
+function transformLayoutForChar(layoutText, ci) {
+  const origName = state.charNames[ci];
+  const pc = state.perChar[ci];
+  const v = state.values[origName];
+  const lines = layoutText.split(/\r?\n/);
+
+  return lines.map(line => {
+    // :HP= / :MP=
+    const mhp = line.match(RE_HPMP_LINE);
+    if (mhp) {
+      const prefix = mhp[1];  // ":HP=" または ":MP="
+      const labelKey = prefix.slice(1, -1);  // "HP" or "MP"
+      const newVal = (v[labelKey] != null) ? v[labelKey] : 0;
+      return `${prefix}${newVal}${mhp[3]}`;
+    }
+    // CCB<=N 〈ラベル〉...
+    const mccb = line.match(RE_CCB_LABELED_LINE);
+    if (mccb) {
+      const label = mccb[4].trim();
+      // そのキャラがそのラベルを持っているか
+      const inParams = state.commonParams.find(p => p.label === label);
+      if (inParams && inParams.applyAll && !pc.excludedParams.has(label)) {
+        const newVal = (v[label] != null) ? v[label] : 0;
+        return `${mccb[1]}${newVal}${mccb[3] || '　'}〈${label}〉${mccb[5]}`;
+      }
+      // ラベルがない/除外されている → その行をスキップ（空文字を返さず削除）
+      return null;
+    }
+    // それ以外（区切り線、見出し、フリーテキスト）はそのまま
+    return line;
+  }).filter(l => l !== null).join('\n');
+}
+
+/* =========================================
+   4) 「🔄 統合」ボタン
+   - 選択キャラの 1)+2)+3) を結合してプレビューに表示
+========================================= */
+function doBuildIntegrated() {
+  const sel = document.getElementById('chatpal4CharSel');
+  const ci = parseInt(sel.value, 10);
+  if (isNaN(ci) || !state.perChar[ci]) return;
+  const text = buildCommandsForChar(ci);
+  document.getElementById('chatpal4Integrated').value = text;
+}
+
 
 /* =========================================
    ユーティリティ
