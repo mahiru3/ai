@@ -6,7 +6,6 @@
   - status / params をそれぞれ別アコーディオンの横一列表で管理
   - 表の見出し行はsticky（キャラ名・URL・個人チャパレ・コピーボタン）
   - ドラッグでラベル複数選択 → 一括削除
-  - いいかんじにできてる　ここでセーブ
 -->
 <html lang="ja">
 <head>
@@ -54,6 +53,17 @@
         <span id="parseMsg" class="small"></span>
       </div>
 
+      <div class="row lap-save-buttons">
+        <button type="button" class="lap-save-btn" onclick="doSaveLocal()" title="ブラウザに一時保存（1スロット）">💾 保存</button>
+        <button type="button" class="lap-save-btn" onclick="doRestoreLocal()" title="ブラウザに保存した状態を復元">🔄 復元</button>
+        <button type="button" class="lap-save-btn" onclick="doExportJson()" title="JSONファイルとしてダウンロード">📤 JSONエクスポート</button>
+        <label class="lap-save-btn lap-save-btn-import" title="JSONファイルから読み込み">
+          📥 JSONインポート
+          <input type="file" id="jsonImportInput" accept=".json,application/json" style="display:none" onchange="doImportJson(event)">
+        </label>
+        <span id="saveMsg" class="small"></span>
+      </div>
+
     </div>
   </details>
 
@@ -77,6 +87,9 @@
     <summary class="lap-summary lap-summary-3">
       <span class="lap-summary-title">③ 共通params（能力値・技能）</span>
       <span class="lap-summary-actions" onclick="event.stopPropagation()">
+        <label class="lap-cap-label" onclick="event.stopPropagation()">上限：
+          <input type="number" id="paramsCap" placeholder="例:90" class="lap-cap-input" onclick="event.stopPropagation()" oninput="onCapChange()">
+        </label>
         <input type="text" id="newParamLabel" placeholder="新しいparamsラベル名" class="lap-add-input" onclick="event.stopPropagation()">
         <button type="button" class="lap-add-btn" onclick="event.stopPropagation();addCommonRow('params')">＋ paramsに追加</button>
         <button type="button" class="lap-del-btn" onclick="event.stopPropagation();deleteSelectedRows('params')">🗑 選択行を削除</button>
@@ -139,7 +152,7 @@
 
         </div>
 
-        <!-- 右カラム：4) 統合 -->
+        <!-- 右カラム：4) 統合 + 5) テキスト作成 -->
         <div class="lap-chatpal-col-right">
           <details class="lap-chatpal-sub" open>
             <summary class="lap-chatpal-sub-title">4) 統合チャパレ（プレビュー）</summary>
@@ -153,7 +166,80 @@
                 「統合」を押すと、選択キャラの 1)+2)+3) を結合した最終チャパレが表示されます。<br>
                 これが「📋 このキャラをコピー」で出力される内容です。
               </div>
-              <textarea id="chatpal4Integrated" class="lap-chatpal-area lap-chatpal-area-tall" readonly placeholder="「🔄 統合」を押すと結合された最終チャパレが表示されます"></textarea>
+              <textarea id="chatpal4Integrated" class="lap-chatpal-area lap-chatpal-area-tall" placeholder="「🔄 統合」を押すと結合された最終チャパレが表示されます。直接編集も可能（キャラを切り替えるとクリアされます）"></textarea>
+            </div>
+          </details>
+
+          <!-- 5) テキスト作成（ロールテーブル等） -->
+          <details class="lap-chatpal-sub">
+            <summary class="lap-chatpal-sub-title">5) テキスト作成（ロールテーブル）</summary>
+            <div class="lap-chatpal-sub-body">
+
+              <!-- モード選択 -->
+              <div class="lap-tt-modes">
+                <span class="small">種類：</span>
+                <button type="button" class="lap-tt-mode-btn active" id="ttModeTable" onclick="setTTMode('table')">テーブル（項目入力）</button>
+                <button type="button" class="lap-tt-mode-btn" id="ttModeTablePaste" onclick="setTTMode('tablePaste')">テーブル（txt編集）</button>
+                <button type="button" class="lap-tt-mode-btn" id="ttModePlain" onclick="setTTMode('plain')">プレーンテキスト</button>
+              </div>
+
+              <!-- テーブルモード：項目入力 -->
+              <div id="ttTableForm">
+                <div class="lap-tt-line-row">
+                  <span class="lap-tt-line-num">1</span>
+                  <input type="text" class="lap-tt-line-input lap-tt-fixed-line" value="/roll-table" readonly>
+                </div>
+                <div class="lap-tt-line-row">
+                  <span class="lap-tt-line-num">2</span>
+                  <input type="text" class="lap-tt-line-input" id="ttTitleInput" placeholder="タイトル（任意・空欄で省略）" oninput="updateTTPreview()">
+                </div>
+                <div class="lap-tt-line-row">
+                  <span class="lap-tt-line-num">3</span>
+                  <div class="lap-tt-dice-row">
+                    <span class="lap-tt-dice-fixed">1D</span>
+                    <input type="number" class="lap-tt-dice-num" id="ttDiceFace" value="6" min="2" max="100" oninput="onTTDiceChange()">
+                    <span class="lap-tt-dice-hint" id="ttDiceHint">→ 6行</span>
+                  </div>
+                </div>
+                <div class="lap-tt-result-section">
+                  <div class="small lap-tt-result-header">結果行（番号は自動付与）</div>
+                  <div class="lap-tt-line-list" id="ttResultList"></div>
+                </div>
+              </div>
+
+              <!-- 貼り付けモード -->
+              <div id="ttTablePasteForm" style="display:none">
+                <div class="lap-tt-line-row">
+                  <span class="lap-tt-line-num">1</span>
+                  <input type="text" class="lap-tt-line-input lap-tt-fixed-line" value="/roll-table" readonly>
+                </div>
+                <div class="lap-tt-line-row">
+                  <span class="lap-tt-line-num">2</span>
+                  <input type="text" class="lap-tt-line-input" id="ttTitleInputP" placeholder="タイトル（任意・空欄で省略）" oninput="updateTTPreview()">
+                </div>
+                <div class="lap-tt-line-row">
+                  <span class="lap-tt-line-num">3</span>
+                  <div class="lap-tt-dice-row">
+                    <span class="lap-tt-dice-fixed">1D</span>
+                    <input type="number" class="lap-tt-dice-num" id="ttDiceFaceP" value="6" min="2" max="100" oninput="updateTTPreview()">
+                  </div>
+                </div>
+                <div class="lap-tt-result-section">
+                  <div class="small lap-tt-result-header">結果テキストを貼り付け（1行1項目・番号は自動付与）</div>
+                  <textarea id="ttPasteArea" class="lap-chatpal-area" placeholder="いっこ&#10;にこ&#10;さんこ&#10;よんこ&#10;ごこ&#10;ろっこ" oninput="updateTTPreview()"></textarea>
+                </div>
+              </div>
+
+              <!-- プレーンモード -->
+              <div id="ttPlainForm" style="display:none">
+                <div class="lap-tt-line-list" id="ttPlainList"></div>
+              </div>
+
+              <div class="lap-tt-preview-label small">プレビュー（結合テキスト）</div>
+              <textarea id="ttPreview" class="lap-chatpal-area" readonly placeholder="左の入力が自動でここに結合されます"></textarea>
+              <div class="row lap-tt-actions">
+                <button type="button" class="lap-chatpal-btn lap-chatpal-btn-build" onclick="doCopyTTPreview(this)">📋 プレビューをコピー</button>
+              </div>
             </div>
           </details>
         </div>
