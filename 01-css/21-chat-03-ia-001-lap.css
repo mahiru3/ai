@@ -1,7 +1,6 @@
 /* =========================================
    01-css/21-chat-03-ia-001-lap.css
-   21-chat/03-ia/001-lap.html 専用：複数キャラ一括変換版
-   既存の 31-csv-01chara.css に上乗せする差分スタイル
+   21-chat/03-ia/001-lap.html 専用：横一列表形式・sticky見出し版
 ========================================= */
 
 /* ===== 使い方ガイド ===== */
@@ -54,6 +53,9 @@
 .lap-section-body {
   padding: 12px 14px;
 }
+.lap-table-body {
+  padding: 0;
+}
 
 /* ===== 人数選択行 ===== */
 .lap-count-row {
@@ -76,7 +78,7 @@
   white-space: pre;
 }
 
-/* ===== ボタン群（中央寄せ） ===== */
+/* ===== ボタン群 ===== */
 .lap-buttons {
   justify-content: center;
   gap: 10px;
@@ -84,39 +86,247 @@
   align-items: center;
 }
 
-/* ===== 共通設定ブロック ===== */
-.lap-common-block {
-  margin-bottom: 18px;
+/* =========================================
+   横一列の大きな表
+========================================= */
+.lap-table-wrap {
+  overflow-x: auto;
+  overflow-y: visible;
+  max-height: calc(100vh - 80px);
+  border-bottom: 1px solid #ddd;
 }
-.lap-block-title {
-  font-weight: 700;
-  font-size: 13px;
-  margin-bottom: 6px;
-  color: #333;
-  padding-left: 4px;
-  border-left: 3px solid #80c8d1;
+.lap-grand-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+  table-layout: fixed;
+  width: max-content;
+  min-width: 100%;
 }
-.lap-common-table {
-  width: 100%;
-  margin-bottom: 8px;
-}
-.lap-common-table input[type="text"] {
-  width: 100%;
+
+/* 全セル共通 */
+.lap-grand-table th,
+.lap-grand-table td {
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
   padding: 4px 6px;
-  font-size: 13px;
-  font-family: system-ui, sans-serif;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  vertical-align: middle;
+  background: #fff;
+  box-sizing: border-box;
 }
-.lap-common-table .apply-cell {
+
+/* 列幅 */
+.lap-col-label    { width: 8rem; }
+.lap-col-shared   { width: 4rem; text-align: center; }
+.lap-col-charname { width: 14rem; min-width: 14rem; }
+.lap-col-val      { width: 4.5rem; }
+.lap-col-del      { width: 3rem; text-align: center; }
+
+/* キャラごとの2列をまとめるグループ感（細い区切り線） */
+.lap-grand-table .lap-col-charname,
+.lap-grand-table .lap-charblock-start {
+  border-left: 2px solid #b0d4e8;
+}
+
+/* ===== sticky見出し ===== */
+.lap-grand-table thead th {
+  position: sticky;
+  background: #f4f8fa;
+  font-weight: 700;
+  z-index: 3;
+}
+/* 見出し1行目（キャラ名・URL・チャパレ・コピー）：複数段の高さを担う */
+.lap-grand-table thead .lap-thead-1 th {
+  top: 0;
+  background: #eaf2f6;
+  vertical-align: top;
+  padding: 6px 8px;
+}
+/* 見出し2行目（値・削除サブヘッダ） */
+.lap-grand-table thead .lap-thead-2 th {
+  top: var(--lap-thead-1-h, 130px);
+  background: #f4f8fa;
+  font-size: 11px;
+  padding: 3px 6px;
+}
+
+/* キャラ名見出しセル（sticky 1行目） */
+.lap-charhead {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.lap-charhead-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.lap-charhead-idx {
+  background: #80c8d1;
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.lap-charhead-nameinput {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 2px 5px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fff;
+  min-width: 0;
+}
+.lap-charhead-url {
+  width: 100%;
+  font-size: 10px;
+  font-family: ui-monospace, Consolas, monospace;
+  padding: 2px 5px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+.lap-charhead-chatpal {
+  width: 100%;
+  height: 4em;
+  font-size: 10px;
+  font-family: ui-monospace, Consolas, monospace;
+  padding: 3px 5px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.lap-charhead-copybtn {
+  width: 100%;
+  padding: 3px;
+  background: #fff;
+  border: 1px solid #2589d0;
+  color: #2589d0;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background .15s, color .15s;
+}
+.lap-charhead-copybtn:hover {
+  background: #2589d0;
+  color: #fff;
+}
+.lap-charhead-copybtn.copied {
+  background: #4caf50;
+  border-color: #4caf50;
+  color: #fff;
+}
+
+/* paramsセクションでは個人チャパレ・コピーボタンを表示しない（②で操作） */
+#paramsTableWrap .lap-charhead-chatpal,
+#paramsTableWrap .lap-charhead-copybtn {
+  display: none;
+}
+
+/* キャラ名セルの2行目（値・削除サブヘッダ）の中身 */
+.lap-subhead {
+  display: flex;
+  width: 100%;
+}
+.lap-subhead > div {
+  flex: 1;
   text-align: center;
+  padding: 0 2px;
+}
+
+/* ===== ボディ行（ラベル + 値・削除のペア） ===== */
+.lap-grand-table tbody tr {
+  transition: background .1s;
+}
+.lap-grand-table tbody tr.lap-row-selected {
+  background: #fff4d4;
+}
+.lap-grand-table tbody tr.lap-row-selected td {
+  background: #fff4d4;
+}
+
+/* ラベルセル */
+.lap-cell-label {
+  font-weight: 600;
+  cursor: cell;
+  user-select: none;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #fafafa !important;
+}
+.lap-row-selected .lap-cell-label {
+  background: #fff4d4 !important;
+}
+
+/* 共有チェック */
+.lap-cell-shared {
+  text-align: center;
+  background: #f9f9f9 !important;
+}
+.lap-row-selected .lap-cell-shared {
+  background: #fff4d4 !important;
+}
+
+/* 値・削除セル */
+.lap-cell-val input,
+.lap-cell-del input {
+  margin: 0;
+}
+.lap-cell-val input[type="number"] {
+  width: 100%;
+  padding: 2px 4px;
+  font-size: 12px;
+  font-family: ui-monospace, Consolas, monospace;
+  border: 1px solid transparent;
+  background: #fff;
+  text-align: right;
+  box-sizing: border-box;
+  -moz-appearance: textfield;
+}
+.lap-cell-val input[type="number"]::-webkit-outer-spin-button,
+.lap-cell-val input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.lap-cell-val input[type="number"]:focus {
+  outline: none;
+  border-color: #80c8d1;
+  background: #fffef0;
+}
+.lap-cell-val input[type="number"]:disabled {
+  background: #f0f0f0;
+  color: #aaa;
+}
+.lap-cell-del {
+  text-align: center;
+}
+
+/* 共通OFF時：行全体を薄く */
+.lap-row-disabled td {
+  opacity: 0.5;
+}
+
+/* ===== アクション行（追加・削除ボタン）===== */
+.lap-table-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 14px;
+  border-top: 1px solid #eee;
+  background: #fafafa;
+  flex-wrap: wrap;
 }
 .lap-add-input {
   flex: 0 0 200px;
-  width: auto !important;
   padding: 5px 8px;
-  font-family: system-ui, sans-serif !important;
-  font-size: 13px !important;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
@@ -128,10 +338,22 @@
   color: #2e7d32;
   border-radius: 5px;
   cursor: pointer;
-  transition: background .15s;
 }
 .lap-add-btn:hover {
   background: #ecf7ec;
+}
+.lap-del-btn {
+  padding: 6px 12px;
+  font-size: 13px;
+  background: #fff;
+  border: 1px solid #d97070;
+  color: #c14040;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: auto;
+}
+.lap-del-btn:hover {
+  background: #fde8e8;
 }
 
 /* ===== チャットパレットエリア ===== */
@@ -152,191 +374,6 @@
   font-size: 12px;
 }
 
-/* ===== キャラクターカード ===== */
-.lap-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-  gap: 14px;
-}
-.lap-card {
-  border: 1px solid #b0d4e8;
-  border-radius: 8px;
-  padding: 12px;
-  background: #fafdff;
-}
-.lap-card-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #80c8d1;
-}
-.lap-card-idx {
-  background: #80c8d1;
-  color: #fff;
-  font-weight: 700;
-  font-size: 12px;
-  padding: 3px 8px;
-  border-radius: 4px;
-  white-space: nowrap;
-}
-.lap-card-name {
-  flex: 1;
-  font-size: 15px;
-  font-weight: 700;
-  padding: 4px 6px;
-  border: none;
-  border-bottom: 2px dashed #b0d8e0;
-  background: transparent;
-  min-width: 0;
-}
-.lap-card-name:focus {
-  outline: none;
-  border-bottom-color: #80c8d1;
-  background: rgba(255,255,255,0.5);
-}
-
-/* URL欄 */
-.lap-card-url-row {
-  margin-bottom: 10px;
-}
-.lap-card-url {
-  width: 100%;
-  padding: 4px 6px;
-  font-size: 12px;
-  font-family: ui-monospace, Consolas, monospace;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-/* カード内のサブブロック */
-.lap-card-block {
-  margin-bottom: 10px;
-}
-.lap-card-block-title {
-  font-size: 11px;
-  font-weight: 700;
-  color: #555;
-  margin-bottom: 4px;
-}
-
-/* status / params テーブル（カード内） */
-.lap-card-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.lap-card-table th,
-.lap-card-table td {
-  border: 1px solid #e0e0e0;
-  padding: 3px 5px;
-  font-size: 12px;
-}
-.lap-card-table th {
-  background: #f4f8fa;
-  font-weight: 600;
-  text-align: left;
-}
-.lap-card-table input[type="text"],
-.lap-card-table input[type="number"] {
-  width: 100%;
-  border: none;
-  background: transparent;
-  font-size: 12px;
-  font-family: ui-monospace, Consolas, monospace;
-  padding: 2px 4px;
-}
-.lap-card-table input:focus {
-  outline: 1px solid #80c8d1;
-  background: #fff;
-}
-.lap-card-table .lap-row-disabled {
-  opacity: 0.4;
-  background: #f5f5f5;
-}
-.lap-card-table .lap-toggle-cell {
-  text-align: center;
-  width: 2.5rem;
-}
-.lap-card-table .lap-del-cell {
-  text-align: center;
-  width: 2rem;
-}
-.lap-card-table .lap-mini-btn {
-  background: #fff;
-  border: 1px solid #d97070;
-  color: #c14040;
-  padding: 1px 6px;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 11px;
-}
-.lap-card-table .lap-mini-btn:hover {
-  background: #fde8e8;
-}
-
-/* キャラ別パラメータ追加 */
-.lap-card-add-row {
-  display: flex;
-  gap: 4px;
-  margin-top: 4px;
-}
-.lap-card-add-row input {
-  flex: 1;
-  padding: 3px 5px;
-  font-size: 11px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-}
-.lap-card-add-row input.lap-add-val {
-  flex: 0 0 50px;
-}
-.lap-card-add-btn {
-  padding: 2px 8px;
-  font-size: 11px;
-  background: #fff;
-  border: 1px solid #6dbd6d;
-  color: #2e7d32;
-  border-radius: 3px;
-  cursor: pointer;
-}
-
-/* 個人チャパレ */
-.lap-card-chatpal {
-  width: 100%;
-  height: 5em;
-  font-size: 11px;
-  font-family: ui-monospace, Consolas, monospace;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 4px 6px;
-}
-
-/* コピーボタン */
-.lap-card-copy {
-  display: block;
-  width: 100%;
-  margin-top: 8px;
-  padding: 6px;
-  background: #fff;
-  border: 1px solid #2589d0;
-  color: #2589d0;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  transition: background .15s, color .15s;
-}
-.lap-card-copy:hover {
-  background: #2589d0;
-  color: #fff;
-}
-.lap-card-copy.copied {
-  background: #4caf50;
-  border-color: #4caf50;
-  color: #fff;
-}
-
-/* メッセージ */
+/* ===== メッセージ ===== */
 .ok { color: #0a7a20; font-weight: 600; }
 .err { color: #b00020; font-weight: 600; white-space: pre-wrap; }
