@@ -15,7 +15,6 @@
   --mismatch: #f5a623;
   --border: #3a3a3a;
   --hover: #2f3a4a;
-  /* リサイズ可能な幅（JSで上書き） */
   --list-width: 420px;
 }
 
@@ -47,7 +46,6 @@ header h1 {
   font-weight: 600;
 }
 
-/* ---- ヘッダーボタン群 ---- */
 .header-actions {
   display: flex;
   gap: 6px;
@@ -68,8 +66,11 @@ header h1 {
 .btn-primary { background: var(--accent); color: #000; border-color: var(--accent); }
 .btn-primary:hover { background: #4a90e2; }
 .btn-danger:hover { background: #5a2020; color: #ffb0b0; }
+.btn-small {
+  padding: 4px 8px;
+  font-size: 11px;
+}
 
-/* ---- コントロールバー ---- */
 .controls {
   padding: 10px 20px;
   background: var(--panel2);
@@ -102,7 +103,6 @@ header h1 {
   color: var(--muted);
 }
 
-/* ---- タブ ---- */
 .tabs {
   display: flex;
   gap: 2px;
@@ -125,7 +125,6 @@ header h1 {
   border-bottom-color: var(--accent);
 }
 
-/* ---- メインレイアウト ---- */
 main {
   display: grid;
   grid-template-columns: var(--list-width) 6px 1fr;
@@ -141,7 +140,6 @@ main {
   padding: 20px;
 }
 
-/* ---- リサイザー ---- */
 .resizer {
   background: var(--border);
   cursor: col-resize;
@@ -149,9 +147,7 @@ main {
   transition: background 0.15s;
 }
 .resizer:hover,
-.resizer.dragging {
-  background: var(--accent);
-}
+.resizer.dragging { background: var(--accent); }
 .resizer::before {
   content: "";
   position: absolute;
@@ -165,23 +161,11 @@ main {
   border-radius: 2px;
 }
 .resizer:hover::before,
-.resizer.dragging::before {
-  opacity: 1;
-  background: #000;
-}
-/* ドラッグ中は全画面カーソル */
-body.resizing {
-  cursor: col-resize;
-  user-select: none;
-}
-body.resizing * {
-  pointer-events: none;
-}
-body.resizing .resizer {
-  pointer-events: auto;
-}
+.resizer.dragging::before { opacity: 1; background: #000; }
+body.resizing { cursor: col-resize; user-select: none; }
+body.resizing * { pointer-events: none; }
+body.resizing .resizer { pointer-events: auto; }
 
-/* ---- 職業リスト行 ---- */
 .job-row {
   padding: 8px 14px;
   border-bottom: 1px solid var(--border);
@@ -204,7 +188,6 @@ body.resizing .resizer {
   font-size: 11px;
 }
 
-/* ---- ステータスアイコン ---- */
 .status-icon {
   display: inline-block;
   width: 18px;
@@ -215,7 +198,6 @@ body.resizing .resizer {
 .status-verified { color: var(--verified); }
 .status-mismatch { color: var(--mismatch); }
 
-/* ---- 技能リスト行 ---- */
 .skill-row {
   padding: 6px 14px;
   border-bottom: 1px solid var(--border);
@@ -225,13 +207,20 @@ body.resizing .resizer {
 }
 .skill-row:hover { background: var(--hover); }
 .skill-row.selected { background: #2a4060; }
-.skill-row .cat {
-  color: var(--muted);
-  font-size: 11px;
-}
+.skill-row .cat { color: var(--muted); font-size: 11px; }
 
-/* ---- 詳細ペイン ---- */
-.job-detail h2 { font-size: 18px; margin-top: 0; }
+.job-detail h2 {
+  font-size: 18px;
+  margin-top: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.job-detail h2 .job-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
 .job-detail h3 {
   font-size: 14px;
   color: var(--accent);
@@ -250,6 +239,8 @@ body.resizing .resizer {
   margin-right: 6px;
   color: var(--muted);
 }
+.badge-clone { background: #3a4a2a; color: #c8e0a0; border-color: #5a7a3a; }
+.badge-new { background: #2a4060; color: #a8c4e0; border-color: #3a6090; }
 
 .skill-chip {
   display: inline-block;
@@ -306,7 +297,6 @@ details > summary {
   color: var(--muted);
 }
 
-/* ---- 逆引き ---- */
 .reverse-search-hint {
   padding: 10px 14px;
   background: #1f2a3a;
@@ -327,7 +317,6 @@ details > summary {
 }
 .filter-chip:hover { background: #4a90e2; }
 
-/* ---- カテゴリ見出し（リスト内） ---- */
 .category-header {
   padding: 8px 14px;
   background: #1f1f1f;
@@ -336,7 +325,6 @@ details > summary {
   font-weight: bold;
 }
 
-/* ---- フッター ---- */
 footer {
   padding: 6px 20px;
   background: var(--panel);
@@ -356,49 +344,14 @@ code {
   font-size: 12px;
 }
 
-/* ---- 詳細ペインの補助要素 ---- */
-.description {
-  color: var(--muted);
-  margin-top: 12px;
-}
-.verified-note-display {
-  color: var(--mismatch);
-  font-size: 12px;
-  margin-top: 8px;
-}
-.empty-inline {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.raw-toggle {
-  margin-top: 20px;
-}
-
-.badge-accent {
-  background: #2a4060;
-}
-
-.clickable {
-  cursor: pointer;
-}
-
-/* 技能詳細: 専門分野付きで持つ職業 */
-.specialty-row {
-  margin: 6px 0;
-}
-
-/* 逆引き結果 */
-.selected-skills {
-  margin-bottom: 14px;
-}
-.result-count {
-  color: var(--muted);
-  font-size: 12px;
-  margin-bottom: 8px;
-}
-
-/* 技能リストのID表示（インライン用） */
+.description { color: var(--muted); margin-top: 12px; }
+.empty-inline { color: var(--muted); font-size: 12px; }
+.raw-toggle { margin-top: 20px; }
+.badge-accent { background: #2a4060; }
+.clickable { cursor: pointer; }
+.specialty-row { margin: 6px 0; }
+.selected-skills { margin-bottom: 14px; }
+.result-count { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
 .skill-chip-id-inline {
   color: #666;
   font-family: "SFMono-Regular", Consolas, monospace;
@@ -406,9 +359,7 @@ code {
   margin-left: 4px;
 }
 
-/* ============================================================
-   検証・編集フォーム
-   ============================================================ */
+/* 検証フォーム */
 .verify-form {
   background: #1f2a3a;
   border: 1px solid #3a5070;
@@ -427,9 +378,7 @@ code {
   padding: 0;
   color: #a8c4e0;
 }
-.verify-form.notes-form h3 {
-  color: #d8c888;
-}
+.verify-form.notes-form h3 { color: #d8c888; }
 .verify-form .form-row {
   margin: 8px 0;
   display: flex;
@@ -484,15 +433,6 @@ code {
 }
 .save-indicator.show { opacity: 1; }
 
-.formula-hint {
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 4px;
-  display: block;
-}
-
-/* ローカル変更マーク */
 .modified-mark {
   display: inline-block;
   width: 6px;
@@ -522,9 +462,39 @@ code {
 }
 .modal-box h3 { margin-top: 0; color: var(--fg); }
 .modal-box p { color: var(--muted); font-size: 13px; }
+.modal-box .form-row {
+  margin: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.modal-box label {
+  font-size: 12px;
+  color: var(--muted);
+}
+.modal-box select,
+.modal-box input[type="text"] {
+  background: #111;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+}
 .modal-box .actions {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
   margin-top: 16px;
+}
+.modal-box .preview {
+  background: #111;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 11px;
+  color: #aec6dc;
+  margin-top: 4px;
 }
