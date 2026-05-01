@@ -17,7 +17,7 @@
   </div>
 </header>
 
-<div class="controls" id="controls">
+<div class="controls">
   <input type="text" id="search" placeholder="検索 (職業名・ID・番号・技能名)">
   <label>source:
     <select id="sourceFilter">
@@ -46,7 +46,7 @@
 
 <main>
   <div class="list-pane" id="listPane"><div class="empty">読込中...</div></div>
-  <div class="resizer" id="resizer" title="ドラッグで幅変更／ダブルクリックで初期値に戻す"></div>
+  <div class="resizer" id="resizer" title="ドラッグで幅変更／ダブルクリックで初期値"></div>
   <div class="detail-pane" id="detailPane"><div class="empty">左のリストから項目を選択してください</div></div>
 </main>
 
@@ -59,8 +59,9 @@
 // =============================================================
 // ストレージキー
 // =============================================================
-const STORAGE_KEY = "viewer_verification_v1";   // 検証データ
-const UI_STORAGE_KEY = "viewer_ui_v1";          // UI設定（フレーム幅など）
+const STORAGE_KEY = "viewer_verification_v1";   // 検証データ（既存職業の差分）
+const NEW_JOBS_KEY = "viewer_new_jobs_v1";      // 新規追加された職業（複製で作られたもの）
+const UI_STORAGE_KEY = "viewer_ui_v1";
 const DEFAULT_LIST_WIDTH = 420;
 
 // =============================================================
@@ -77,20 +78,20 @@ let reverseSelectedSkills = new Set();
 
 const skillsMap = new Map();
 
-// ローカル変更: {jobId: {verified, verified_note, verified_at, verified_source, special_notes, skill_points_formula, skill_points_note}}
+// 既存職業の編集差分
 let localChanges = {};
+// 新規追加職業（複製で作成されたもの）
+let newJobs = [];
 
-// 編集可能フィールド
 const EDITABLE_FIELDS = [
   "verified", "verified_note", "verified_at", "verified_source",
   "special_notes", "skill_points_formula", "skill_points_note"
 ];
 
-// 保存インジケータ
 let saveTimer = null;
 
 // =============================================================
-// UI設定（ローカルストレージ）
+// UI設定
 // =============================================================
 function loadUI() {
   try {
@@ -112,39 +113,41 @@ function saveUI(ui) {
 }
 
 // =============================================================
-// ローカル検証データ操作
+// ローカルデータ操作
 // =============================================================
 function loadLocal() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      localChanges = JSON.parse(raw);
-    }
-  } catch (e) {
-    console.error("ローカルデータ読込失敗", e);
-    localChanges = {};
-  }
+    if (raw) localChanges = JSON.parse(raw);
+  } catch (e) { console.error(e); localChanges = {}; }
+
+  try {
+    const raw = localStorage.getItem(NEW_JOBS_KEY);
+    if (raw) newJobs = JSON.parse(raw);
+  } catch (e) { console.error(e); newJobs = []; }
 }
 
 function saveLocal() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(localChanges));
+    localStorage.setItem(NEW_JOBS_KEY, JSON.stringify(newJobs));
     updateLocalSaveStatus();
     flashSaveIndicator();
-  } catch (e) {
-    console.error("ローカル保存失敗", e);
-  }
+  } catch (e) { console.error(e); }
 }
 
 function clearLocal() {
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(NEW_JOBS_KEY);
   localChanges = {};
+  newJobs = [];
   updateLocalSaveStatus();
 }
 
 function updateLocalSaveStatus() {
-  const count = Object.keys(localChanges).length;
-  document.getElementById("localSaveStatus").textContent = `ローカル変更: ${count}件`;
+  const count = Object.keys(localChanges).length + newJobs.length;
+  const newPart = newJobs.length > 0 ? `（追加: ${newJobs.length}件）` : '';
+  document.getElementById("localSaveStatus").textContent = `ローカル変更: ${count}件${newPart}`;
 }
 
 function flashSaveIndicator() {
@@ -155,8 +158,21 @@ function flashSaveIndicator() {
   saveTimer = setTimeout(() => el.classList.remove("show"), 1200);
 }
 
+// 全職業（既存 + 新規）を取得
+function getAllJobs() {
+  return [...jobsData.jobs, ...newJobs];
+}
+
 // 職業の現在の値を取得（ローカル優先）
 function getJobCurrent(job) {
+  // 新規追加職業はそのまま
+  if (job._isNew) {
+    const result = { modified: true };
+    EDITABLE_FIELDS.forEach(f => {
+      result[f] = job[f] !== undefined ? job[f] : defaultFieldValue(f);
+    });
+    return result;
+  }
   const local = localChanges[job.id] || {};
   const result = { modified: Object.keys(local).length > 0 };
   EDITABLE_FIELDS.forEach(f => {
@@ -178,16 +194,23 @@ function defaultFieldValue(field) {
   }
 }
 
-// 職業の編集内容を保存
+// 編集内容を保存
 function updateJobField(jobId, field, value) {
-  const job = jobsData.jobs.find(j => j.id === jobId);
+  const allJobs = getAllJobs();
+  const job = allJobs.find(j => j.id === jobId);
   if (!job) return;
-  if (!localChanges[jobId]) localChanges[jobId] = {};
 
+  // 新規追加職業の場合は直接書き換え
+  if (job._isNew) {
+    job[field] = value;
+    saveLocal();
+    return;
+  }
+
+  if (!localChanges[jobId]) localChanges[jobId] = {};
   const origValue = job[field] !== undefined ? job[field] : defaultFieldValue(field);
 
   if (value === origValue || (value === "" && (origValue === null || origValue === undefined))) {
-    // 元データと同じなら差分削除
     delete localChanges[jobId][field];
     if (Object.keys(localChanges[jobId]).length === 0) {
       delete localChanges[jobId];
@@ -196,6 +219,74 @@ function updateJobField(jobId, field, value) {
     localChanges[jobId][field] = value;
   }
   saveLocal();
+}
+
+// =============================================================
+// 複製機能
+// =============================================================
+function cloneJob(originalId, newSource) {
+  const orig = getAllJobs().find(j => j.id === originalId);
+  if (!orig) return null;
+
+  // 新IDを生成: 元IDから既存sourceを削って新sourceを付与
+  const baseId = orig.id.replace(/_(基本|2010|2015|2020|houserule).*$/, "")
+                        .replace(/_basic$/, "")
+                        .replace(/_2010$/, "")
+                        .replace(/_2015$/, "")
+                        .replace(/_2020$/, "")
+                        .replace(/_houserule$/, "");
+  // sourceを英字IDに変換
+  const sourceIdMap = {"基本": "basic", "2010": "2010", "2015": "2015", "2020": "2020", "houserule": "houserule"};
+  const sourceId = sourceIdMap[newSource] || newSource.toLowerCase().replace(/[^a-z0-9]/g, "_");
+
+  let newId = `${baseId}_${sourceId}`;
+  // 衝突チェック
+  let counter = 2;
+  const allIds = new Set(getAllJobs().map(j => j.id));
+  while (allIds.has(newId)) {
+    newId = `${baseId}_${sourceId}_${counter}`;
+    counter++;
+  }
+
+  // 新番号: 既存最大+1
+  const maxNum = Math.max(...getAllJobs().map(j => parseInt(j.number || "0")));
+  const newNumber = String(maxNum + 1).padStart(3, "0");
+
+  // 新規ジョブを作成（fixed_skillsとchoice_groupsはdeep copy）
+  const newJob = {
+    id: newId,
+    number: newNumber,
+    name: orig.name,
+    display_name: `${newNumber}. ${orig.name}（${newSource}）`,
+    edition: orig.edition || "6",
+    source: newSource,
+    description: orig.description || "",
+    skill_points_formula: orig.skill_points_formula || "EDU*20",
+    fixed_skills: [...orig.fixed_skills],
+    choice_groups: orig.choice_groups.map(g => ({...g, candidates: [...g.candidates]})),
+    verified: "pending",
+    verified_note: `${orig.number}. ${orig.name}（${orig.source}）から複製`,
+    verified_at: new Date().toISOString().slice(0,19).replace("T"," "),
+    verified_source: null,
+    special_notes: "",
+    skill_points_note: "",
+    based_on: orig.id,   // 派生元を記録
+    _isNew: true         // 新規追加フラグ
+  };
+
+  newJobs.push(newJob);
+  saveLocal();
+  return newJob;
+}
+
+function deleteNewJob(jobId) {
+  const idx = newJobs.findIndex(j => j.id === jobId);
+  if (idx >= 0) {
+    newJobs.splice(idx, 1);
+    saveLocal();
+    return true;
+  }
+  return false;
 }
 
 // =============================================================
@@ -240,22 +331,23 @@ async function init() {
     renderList();
   } catch (e) {
     document.getElementById("listPane").innerHTML =
-      `<div class="empty">データ読込エラー: ${e.message}<br><br>このビューワーは <code>./data/jobs.json</code>, <code>./data/skills.json</code>, <code>./data/specialties.json</code> を参照します。ローカルで開く場合はhttpサーバ経由で開いてください。</div>`;
+      `<div class="empty">データ読込エラー: ${e.message}<br><br>ローカルで開く場合はhttpサーバ経由で開いてください。</div>`;
     console.error(e);
   }
 }
 
 function updateStats() {
-  const jobs = jobsData.jobs;
+  const all = getAllJobs();
   const byVerified = {pending:0, verified:0, mismatch:0};
-  jobs.forEach(j => {
+  all.forEach(j => {
     const v = getJobCurrent(j);
     byVerified[v.verified]++;
   });
+  const newPart = newJobs.length > 0 ? ` <span class="badge-new" style="padding:0 6px;border-radius:8px;font-size:10px;">新規 +${newJobs.length}</span>` : '';
   document.getElementById("stats").innerHTML =
     `<span class="status-pending">?${byVerified.pending}</span> ` +
     `<span class="status-verified">✓${byVerified.verified}</span> ` +
-    `<span class="status-mismatch">⚠${byVerified.mismatch}</span> / ${jobs.length}件`;
+    `<span class="status-mismatch">⚠${byVerified.mismatch}</span> / ${all.length}件${newPart}`;
 }
 
 // =============================================================
@@ -263,13 +355,11 @@ function updateStats() {
 // =============================================================
 function setupResizer() {
   const resizer = document.getElementById("resizer");
-  const main = document.querySelector("main");
   let startX, startWidth;
 
   function onMouseMove(e) {
     const delta = e.clientX - startX;
     let newWidth = startWidth + delta;
-    // 制限: 200px〜全幅-200px
     newWidth = Math.max(200, Math.min(window.innerWidth - 200, newWidth));
     document.documentElement.style.setProperty("--list-width", newWidth + "px");
   }
@@ -278,7 +368,6 @@ function setupResizer() {
     document.removeEventListener("mouseup", onMouseUp);
     document.body.classList.remove("resizing");
     resizer.classList.remove("dragging");
-    // 保存
     const widthStr = getComputedStyle(document.documentElement).getPropertyValue("--list-width").trim();
     const width = parseInt(widthStr);
     if (width) saveUI({listWidth: width});
@@ -295,7 +384,6 @@ function setupResizer() {
     e.preventDefault();
   });
 
-  // ダブルクリックで初期値に戻す
   resizer.addEventListener("dblclick", () => {
     document.documentElement.style.setProperty("--list-width", DEFAULT_LIST_WIDTH + "px");
     saveUI({listWidth: DEFAULT_LIST_WIDTH});
@@ -317,9 +405,6 @@ document.querySelectorAll(".tab").forEach(tab => {
   });
 });
 
-// =============================================================
-// 検索・フィルタ
-// =============================================================
 document.getElementById("search").addEventListener("input", renderList);
 document.getElementById("sourceFilter").addEventListener("change", renderList);
 document.getElementById("verifiedFilter").addEventListener("change", renderList);
@@ -335,7 +420,7 @@ document.getElementById("importFile").addEventListener("change", importJobs);
 document.getElementById("resetBtn").addEventListener("click", () => {
   showModal({
     title: "ローカル変更をリセット",
-    body: `ローカルストレージに保存されている編集データ（${Object.keys(localChanges).length}件）を削除します。<br>この操作は取り消せません。よろしいですか？`,
+    body: `ローカルストレージに保存されている編集データ（差分${Object.keys(localChanges).length}件、新規追加${newJobs.length}件）を削除します。<br>この操作は取り消せません。よろしいですか？`,
     okLabel: "リセットする",
     okClass: "btn-danger",
     onOk: () => {
@@ -348,16 +433,26 @@ document.getElementById("resetBtn").addEventListener("click", () => {
 });
 
 function exportJobs() {
-  const merged = {
+  // 既存職業をマージ
+  const merged = jobsData.jobs.map(j => {
+    const v = getJobCurrent(j);
+    const result = { ...j };
+    EDITABLE_FIELDS.forEach(f => { result[f] = v[f]; });
+    return result;
+  });
+  // 新規追加（_isNewフラグ削除）
+  const cleanNew = newJobs.map(j => {
+    const copy = {...j};
+    delete copy._isNew;
+    return copy;
+  });
+
+  const output = {
     ...jobsData,
-    jobs: jobsData.jobs.map(j => {
-      const v = getJobCurrent(j);
-      const result = { ...j };
-      EDITABLE_FIELDS.forEach(f => { result[f] = v[f]; });
-      return result;
-    })
+    jobs: [...merged, ...cleanNew]
   };
-  const json = JSON.stringify(merged, null, 2);
+
+  const json = JSON.stringify(output, null, 2);
   const blob = new Blob([json], {type: "application/json"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -384,10 +479,24 @@ function importJobs(e) {
         alert("jobs.json形式のファイルではありません");
         return;
       }
-      let count = 0;
+      let diffCount = 0;
+      let newCount = 0;
+      const origIds = new Set(jobsData.jobs.map(j => j.id));
+
       data.jobs.forEach(imported => {
+        if (!origIds.has(imported.id)) {
+          // 元データに無いID → 新規追加職業
+          const exists = newJobs.find(n => n.id === imported.id);
+          if (exists) {
+            // 既に取り込み済みなら上書き
+            Object.assign(exists, imported, {_isNew: true});
+          } else {
+            newJobs.push({...imported, _isNew: true});
+            newCount++;
+          }
+          return;
+        }
         const origJob = jobsData.jobs.find(j => j.id === imported.id);
-        if (!origJob) return;
         const diff = {};
         EDITABLE_FIELDS.forEach(f => {
           const importedVal = imported[f] !== undefined ? imported[f] : defaultFieldValue(f);
@@ -398,14 +507,14 @@ function importJobs(e) {
         });
         if (Object.keys(diff).length > 0) {
           localChanges[imported.id] = diff;
-          count++;
+          diffCount++;
         }
       });
       saveLocal();
       updateStats();
       renderList();
       renderDetail();
-      alert(`${count}件の編集データを読み込みました`);
+      alert(`差分${diffCount}件、新規追加${newCount}件を読み込みました`);
     } catch (err) {
       alert("読込エラー: " + err.message);
     }
@@ -417,28 +526,126 @@ function importJobs(e) {
 // =============================================================
 // モーダル
 // =============================================================
-function showModal({title, body, okLabel = "OK", okClass = "btn-primary", onOk}) {
+function showModal({title, bodyHtml, onOk, okLabel = "OK", okClass = "btn-primary", showCancel = true}) {
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay";
   overlay.innerHTML = `
     <div class="modal-box">
       <h3>${title}</h3>
-      <p>${body}</p>
+      ${bodyHtml}
       <div class="actions">
-        <button class="btn" data-action="cancel">キャンセル</button>
+        ${showCancel ? '<button class="btn" data-action="cancel">キャンセル</button>' : ''}
         <button class="btn ${okClass}" data-action="ok">${okLabel}</button>
       </div>
     </div>
   `;
   document.body.appendChild(overlay);
+  function close() { overlay.remove(); }
   overlay.addEventListener("click", ev => {
     if (ev.target === overlay || ev.target.dataset.action === "cancel") {
-      overlay.remove();
+      close();
     } else if (ev.target.dataset.action === "ok") {
-      overlay.remove();
-      if (onOk) onOk();
+      const result = onOk ? onOk(overlay) : true;
+      if (result !== false) close();
     }
   });
+  return overlay;
+}
+
+// 互換用: 古いモーダル呼び出し
+function showSimpleModal(opts) {
+  return showModal({
+    ...opts,
+    bodyHtml: `<p>${opts.body || ''}</p>`,
+    onOk: opts.onOk
+  });
+}
+// 既存のshowModalインターフェース互換
+const _showModalOrig = showModal;
+window.showModalCompat = function(opts) {
+  if (opts.body && !opts.bodyHtml) {
+    return showSimpleModal(opts);
+  }
+  return _showModalOrig(opts);
+};
+
+// 複製ダイアログ
+function showCloneDialog(originalId) {
+  const orig = getAllJobs().find(j => j.id === originalId);
+  if (!orig) return;
+
+  const bodyHtml = `
+    <p>「<b>${orig.number}. ${orig.name}（${orig.source}）</b>」を別sourceとして複製します。</p>
+    <div class="form-row">
+      <label for="clone-source">複製先のsource</label>
+      <select id="clone-source">
+        <option value="2010">2010</option>
+        <option value="2015" selected>2015</option>
+        <option value="2020">2020</option>
+        <option value="基本">基本</option>
+        <option value="houserule">houserule</option>
+        <option value="__custom">その他（自由入力）</option>
+      </select>
+    </div>
+    <div class="form-row" id="clone-custom-row" style="display:none;">
+      <label for="clone-custom">source名</label>
+      <input type="text" id="clone-custom" placeholder="例: 2026, oneshot等">
+    </div>
+    <div class="form-row">
+      <label>プレビュー</label>
+      <div class="preview" id="clone-preview"></div>
+    </div>
+  `;
+
+  const overlay = showModal({
+    title: "📋 職業を複製",
+    bodyHtml: bodyHtml,
+    okLabel: "複製する",
+    onOk: (overlay) => {
+      const sel = overlay.querySelector("#clone-source").value;
+      const custom = overlay.querySelector("#clone-custom").value;
+      const newSource = sel === "__custom" ? (custom.trim() || "custom") : sel;
+
+      // 同じsourceで複製しようとしたら警告
+      if (newSource === orig.source) {
+        if (!confirm(`元と同じsource「${newSource}」で複製します。よろしいですか？`)) {
+          return false;
+        }
+      }
+      const newJob = cloneJob(originalId, newSource);
+      if (newJob) {
+        updateStats();
+        renderList();
+        selectedJobId = newJob.id;
+        renderJobDetail(newJob.id);
+        // 該当行までスクロール
+        setTimeout(() => {
+          const el = document.querySelector(`.job-row[data-id="${newJob.id}"]`);
+          if (el) el.scrollIntoView({block:"center"});
+        }, 50);
+      }
+      return true;
+    }
+  });
+
+  // プレビューと自由入力の連動
+  const sourceSelect = overlay.querySelector("#clone-source");
+  const customInput = overlay.querySelector("#clone-custom");
+  const customRow = overlay.querySelector("#clone-custom-row");
+  const preview = overlay.querySelector("#clone-preview");
+
+  function updatePreview() {
+    const sel = sourceSelect.value;
+    const customVal = customInput.value;
+    customRow.style.display = sel === "__custom" ? "flex" : "none";
+    const newSource = sel === "__custom" ? (customVal.trim() || "custom") : sel;
+    const maxNum = Math.max(...getAllJobs().map(j => parseInt(j.number || "0")));
+    const newNumber = String(maxNum + 1).padStart(3, "0");
+    preview.textContent = `${newNumber}. ${orig.name}（${newSource}）`;
+  }
+  sourceSelect.addEventListener("change", updatePreview);
+  customInput.addEventListener("input", updatePreview);
+  updatePreview();
 }
 
 // =============================================================
@@ -451,7 +658,8 @@ function renderList() {
   const verifiedF = document.getElementById("verifiedFilter").value;
 
   if (currentMode === "jobs") {
-    const filtered = jobsData.jobs.filter(j => {
+    const all = getAllJobs();
+    const filtered = all.filter(j => {
       const v = getJobCurrent(j);
       if (sourceF && j.source !== sourceF) return false;
       if (verifiedF && v.verified !== verifiedF) return false;
@@ -465,11 +673,12 @@ function renderList() {
       const v = getJobCurrent(j);
       const icon = {pending:"?", verified:"✓", mismatch:"⚠"}[v.verified];
       const modifiedMark = v.modified ? '<span class="modified-mark" title="ローカル変更あり"></span>' : '';
+      const newBadge = j._isNew ? ' <span class="badge-new" style="padding:0 4px;border-radius:6px;font-size:9px;">NEW</span>' : '';
       return `
         <div class="job-row ${j.id === selectedJobId ? 'selected' : ''}" data-id="${j.id}">
           <span class="status-icon status-${v.verified}">${icon}</span>
           <span class="num">${j.number}</span>
-          <span class="name">${j.name}${modifiedMark}<br><small>${j.id} · ${j.source}</small></span>
+          <span class="name">${j.name}${modifiedMark}${newBadge}<br><small>${j.id} · ${j.source}</small></span>
         </div>
       `;
     }).join("") || `<div class="empty">該当なし</div>`;
@@ -565,7 +774,7 @@ function renderDetail() {
 }
 
 function renderJobDetail(id) {
-  const j = jobsData.jobs.find(x => x.id === id);
+  const j = getAllJobs().find(x => x.id === id);
   if (!j) return;
   const v = getJobCurrent(j);
   const statusIcon = {pending:"?", verified:"✓", mismatch:"⚠"}[v.verified];
@@ -583,34 +792,46 @@ function renderJobDetail(id) {
 
   const lastSaved = v.verified_at ? `最終更新: ${v.verified_at}` : "未更新";
 
+  // 新規追加職業の場合は「削除」ボタンを表示、それ以外は表示しない
+  const deleteBtn = j._isNew ? `<button class="btn btn-small btn-danger" id="deleteCloneBtn" title="この複製を削除">🗑 削除</button>` : '';
+  const basedOnInfo = j.based_on ? `<span class="badge badge-clone">複製元: ${j.based_on}</span>` : '';
+
   document.getElementById("detailPane").innerHTML = `
     <div class="job-detail">
-      <h2><span class="status-icon status-${v.verified}">${statusIcon}</span> ${j.number}. ${j.name}</h2>
+      <h2>
+        <span class="status-icon status-${v.verified}">${statusIcon}</span>
+        ${j.number}. ${j.name}
+        <div class="job-actions">
+          <button class="btn btn-small" id="cloneBtn" title="この職業を別sourceとして複製">📋 複製</button>
+          ${deleteBtn}
+        </div>
+      </h2>
       <div>
         <span class="badge">ID: ${j.id}</span>
         <span class="badge">source: ${j.source}</span>
         <span class="badge">edition: ${j.edition}</span>
-        ${v.modified ? '<span class="badge badge-accent">ローカル変更あり</span>' : ''}
+        ${j._isNew ? '<span class="badge badge-new">新規追加</span>' : ''}
+        ${basedOnInfo}
+        ${v.modified && !j._isNew ? '<span class="badge badge-accent">ローカル変更あり</span>' : ''}
       </div>
       ${j.description ? `<p class="description">${j.description}</p>` : ""}
 
-      <!-- 検証フォーム -->
       <div class="verify-form">
         <h3>🔍 検証ステータス</h3>
         <div class="form-row">
           <label class="field-label">ステータス</label>
           <div class="radio-group">
             <label><input type="radio" name="verify-status" value="pending" ${v.verified === "pending" ? "checked" : ""}>
-              <span class="status-pending">? 未検証 (pending)</span></label>
+              <span class="status-pending">? 未検証</span></label>
             <label><input type="radio" name="verify-status" value="verified" ${v.verified === "verified" ? "checked" : ""}>
-              <span class="status-verified">✓ 検証済み (verified)</span></label>
+              <span class="status-verified">✓ 検証済み</span></label>
             <label><input type="radio" name="verify-status" value="mismatch" ${v.verified === "mismatch" ? "checked" : ""}>
-              <span class="status-mismatch">⚠ 不一致 (mismatch)</span></label>
+              <span class="status-mismatch">⚠ 不一致</span></label>
           </div>
         </div>
         <div class="form-row">
           <label class="field-label" for="verify-source">参照元</label>
-          <input type="text" id="verify-source" value="${escapeAttr(v.verified_source || "")}" placeholder="例: えいよん卓Wiki、ルルブp.62、KP判断">
+          <input type="text" id="verify-source" value="${escapeAttr(v.verified_source || "")}" placeholder="例: えいよん卓Wiki、ルルブp.62">
         </div>
         <div class="form-row">
           <label class="field-label" for="verify-note">備考</label>
@@ -622,12 +843,11 @@ function renderJobDetail(id) {
         </div>
       </div>
 
-      <!-- 職業情報フォーム（特記・ポイント式・ポイント注釈） -->
       <div class="verify-form notes-form">
         <h3>📋 職業情報（編集可）</h3>
         <div class="form-row">
           <label class="field-label" for="points-formula">職業Pt算出</label>
-          <input type="text" id="points-formula" value="${escapeAttr(v.skill_points_formula || "EDU*20")}" placeholder="例: EDU*20, (STR+EDU)*10">
+          <input type="text" id="points-formula" value="${escapeAttr(v.skill_points_formula || "EDU*20")}" placeholder="例: EDU*20, EDU*10+DEX*10">
         </div>
         <div class="form-row">
           <label class="field-label" for="points-note">Pt補足</label>
@@ -646,7 +866,7 @@ function renderJobDetail(id) {
       ${choiceHtml || '<span class="empty-inline">なし</span>'}
 
       <details class="raw-toggle">
-        <summary>raw JSON (現在の状態)</summary>
+        <summary>raw JSON</summary>
         <pre class="raw-json">${escapeHtml(JSON.stringify(getMergedJob(j), null, 2))}</pre>
       </details>
     </div>
@@ -663,14 +883,12 @@ function renderJobDetail(id) {
       updateH2Icon(status);
     });
   });
-  // 参照元・備考
   document.getElementById("verify-source").addEventListener("input", (e) => {
     updateJobField(j.id, "verified_source", e.target.value || null);
   });
   document.getElementById("verify-note").addEventListener("input", (e) => {
     updateJobField(j.id, "verified_note", e.target.value);
   });
-  // 職業情報フォーム
   document.getElementById("points-formula").addEventListener("input", (e) => {
     updateJobField(j.id, "skill_points_formula", e.target.value);
   });
@@ -680,6 +898,31 @@ function renderJobDetail(id) {
   document.getElementById("special-notes").addEventListener("input", (e) => {
     updateJobField(j.id, "special_notes", e.target.value);
   });
+
+  // 複製ボタン
+  document.getElementById("cloneBtn").addEventListener("click", () => {
+    showCloneDialog(j.id);
+  });
+
+  // 削除ボタン（新規職業のみ）
+  if (j._isNew) {
+    document.getElementById("deleteCloneBtn").addEventListener("click", () => {
+      showModal({
+        title: "複製した職業を削除",
+        bodyHtml: `<p><b>${j.number}. ${j.name}（${j.source}）</b> を削除します。<br>この操作は取り消せません。よろしいですか？</p>`,
+        okLabel: "削除する",
+        okClass: "btn-danger",
+        onOk: () => {
+          if (deleteNewJob(j.id)) {
+            selectedJobId = null;
+            updateStats();
+            renderList();
+            document.getElementById("detailPane").innerHTML = `<div class="empty">削除しました。左のリストから項目を選択してください</div>`;
+          }
+        }
+      });
+    });
+  }
 }
 
 function refreshRowIcon(jobId, status) {
@@ -694,7 +937,6 @@ function refreshRowIcon(jobId, status) {
     const mark = document.createElement("span");
     mark.className = "modified-mark";
     mark.title = "ローカル変更あり";
-    // nameの最初のテキスト(職業名)の直後に入れる
     const br = nameEl.querySelector("br");
     if (br) nameEl.insertBefore(mark, br);
     else nameEl.appendChild(mark);
@@ -712,6 +954,7 @@ function getMergedJob(j) {
   const v = getJobCurrent(j);
   const merged = { ...j };
   EDITABLE_FIELDS.forEach(f => { merged[f] = v[f]; });
+  delete merged._isNew;
   return merged;
 }
 
@@ -721,13 +964,13 @@ function renderSkillDetail(id) {
   const cat = skillsData.categories.find(c => c.id === s.category);
   const sub = cat && cat.subcategories.find(sc => sc.id === s.subcategory);
 
-  const relatedJobs = jobsData.jobs.filter(j => {
-    return j.fixed_skills.includes(id) ||
-           j.choice_groups.some(g => g.candidates.includes(id));
-  });
+  const allJobs = getAllJobs();
+  const relatedJobs = allJobs.filter(j =>
+    j.fixed_skills.includes(id) || j.choice_groups.some(g => g.candidates.includes(id))
+  );
 
   const specialtyJobs = {};
-  jobsData.jobs.forEach(j => {
+  allJobs.forEach(j => {
     const allSkills = [...j.fixed_skills, ...j.choice_groups.flatMap(g => g.candidates)];
     allSkills.forEach(sk => {
       if (sk.startsWith(id + ":")) {
@@ -797,7 +1040,7 @@ function renderReverseDetail() {
     return;
   }
 
-  const matches = jobsData.jobs.filter(j => {
+  const matches = getAllJobs().filter(j => {
     const allSkills = new Set([
       ...j.fixed_skills,
       ...j.choice_groups.flatMap(g => g.candidates)
