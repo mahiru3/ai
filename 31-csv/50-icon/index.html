@@ -1,599 +1,554 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>アイコンSVGジェネレーター</title>
+  <title>アイコンSVGジェネレーター①</title>
   <link rel="stylesheet" href="../../01-css/00-style.css" />
-  <link rel="stylesheet" href="../../01-css/31-csv/50-icon.css" />
+  <link rel="stylesheet" href="../../01-css/31-csv-50-icon.css" />
 </head>
 <body>
-<div class="icon-page-wrap">
+<div class="page-wrap icon-page">
 
   <h1 class="page-title">✅ アイコンSVGジェネレーター</h1>
-  <p class="page-subtitle">文字・色・サイズを変更するとリアルタイムでプレビューします。SVG / PNG / APNG をページ内で生成します。</p>
+  <p class="page-subtitle">左パネルで調整 → リアルタイムプレビュー。SVG / PNG / APNG をダウンロードできます。</p>
 
-  <div class="icon-layout">
-
-    <!-- ①② 入力・設定 -->
-    <section class="icon-panel icon-controls" aria-label="アイコン設定">
-      <h2 class="panel-title">① 文字入力・② 色/サイズ変更</h2>
-
-      <details class="icon-acc" open>
-        <summary>文字</summary>
-        <div class="icon-acc-body">
-          <label class="ctrl-row wide">
-            <span class="ctrl-label">表示文字</span>
-            <input type="text" id="iconText" value="成功" maxlength="8" />
-          </label>
-          <div class="ctrl-row">
-            <span class="ctrl-label">文字サイズ</span>
-            <input type="range" id="fontSize" min="14" max="48" step="1" value="30" />
-            <input type="number" id="fontSizeN" min="14" max="48" step="1" value="30" class="num-input" />
-          </div>
-          <div class="ctrl-row">
-            <span class="ctrl-label">文字太さ</span>
-            <select id="fontWeight">
-              <option value="500">500</option>
-              <option value="700" selected>700</option>
-              <option value="900">900</option>
-            </select>
-          </div>
-          <div class="ctrl-row">
-            <span class="ctrl-label">文字色</span>
-            <input type="color" id="textColor" value="#25633f" />
-            <input type="text" id="textColorN" value="#25633f" maxlength="7" class="hex-input" />
-          </div>
-          <div class="ctrl-row">
-            <span class="ctrl-label">文字Y位置</span>
-            <input type="range" id="textY" min="-18" max="18" step="1" value="2" />
-            <input type="number" id="textYN" min="-18" max="18" step="1" value="2" class="num-input" />
+  <!-- ① プレビュー -->
+  <details class="accordion-008 acc-color-1" id="acc-preview" open>
+    <summary>① プレビュー</summary>
+    <div class="accordion-body">
+      <div class="preview-hint visible" id="previewHint">⏸ 調整モード中 — 左パネルの「▶ プレビュー開始」でアニメーション確認</div>
+      <div class="preview-area">
+        <div class="icon-preview-stage">
+          <div class="svg-preview-wrap" id="previewWrap">
+            <div class="preview-empty">左パネルで設定してください</div>
           </div>
         </div>
-      </details>
+        <div class="preview-meta" id="previewMeta">120 × 120 / SVG</div>
+      </div>
+    </div>
+  </details>
 
-      <details class="icon-acc" open>
-        <summary>アイコン本体</summary>
-        <div class="icon-acc-body">
-          <div class="ctrl-row">
-            <span class="ctrl-label">サイズ</span>
-            <input type="range" id="iconSize" min="80" max="512" step="4" value="120" />
-            <input type="number" id="iconSizeN" min="80" max="512" step="4" value="120" class="num-input" />
-          </div>
-          <div class="ctrl-row">
-            <span class="ctrl-label">角丸</span>
-            <input type="range" id="cornerRadius" min="0" max="44" step="1" value="24" />
-            <input type="number" id="cornerRadiusN" min="0" max="44" step="1" value="24" class="num-input" />
-          </div>
-          <div class="ctrl-row">
-            <span class="ctrl-label">ベース色</span>
-            <input type="color" id="baseColor" value="#e8edf2" />
-            <input type="text" id="baseColorN" value="#e8edf2" maxlength="7" class="hex-input" />
-          </div>
-          <div class="ctrl-row">
-            <span class="ctrl-label">明るい影</span>
-            <input type="color" id="lightShadow" value="#ffffff" />
-            <input type="text" id="lightShadowN" value="#ffffff" maxlength="7" class="hex-input" />
-          </div>
-          <div class="ctrl-row">
-            <span class="ctrl-label">暗い影</span>
-            <input type="color" id="darkShadow" value="#b8c2cc" />
-            <input type="text" id="darkShadowN" value="#b8c2cc" maxlength="7" class="hex-input" />
-          </div>
-          <div class="ctrl-row">
-            <span class="ctrl-label">影の強さ</span>
-            <input type="range" id="shadowOffset" min="0" max="12" step="1" value="4" />
-            <input type="number" id="shadowOffsetN" min="0" max="12" step="1" value="4" class="num-input" />
-          </div>
-          <div class="ctrl-row">
-            <span class="ctrl-label">影ぼかし</span>
-            <input type="range" id="shadowBlur" min="0" max="18" step="1" value="8" />
-            <input type="number" id="shadowBlurN" min="0" max="18" step="1" value="8" class="num-input" />
-          </div>
-        </div>
-      </details>
+  <!-- ② SVGコード -->
+  <details class="accordion-008 acc-color-2" id="acc-code">
+    <summary>② SVGコード・SVGダウンロード</summary>
+    <div class="accordion-body">
+      <div class="menu-btn-row">
+        <button class="menu-btn primary" id="btnCopy">📋 SVGコードをコピー</button>
+        <button class="menu-btn dl" id="btnSVG">💾 .svgダウンロード</button>
+      </div>
+      <div class="status-msg" id="codeStatus"></div>
+      <pre class="code-output" id="codeOutput">← 左パネルで設定するとここに反映されます</pre>
+    </div>
+  </details>
 
-      <details class="icon-acc" open>
-        <summary>丸リング・アニメーション</summary>
-        <div class="icon-acc-body">
-          <div class="ctrl-row">
-            <span class="ctrl-label">リング色</span>
-            <input type="color" id="ringColor" value="#58c987" />
-            <input type="text" id="ringColorN" value="#58c987" maxlength="7" class="hex-input" />
-          </div>
-          <div class="ctrl-row">
-            <span class="ctrl-label">リング半径</span>
-            <input type="range" id="ringRadius" min="22" max="55" step="1" value="43" />
-            <input type="number" id="ringRadiusN" min="22" max="55" step="1" value="43" class="num-input" />
-          </div>
-          <div class="ctrl-row">
-            <span class="ctrl-label">リング太さ</span>
-            <input type="range" id="ringWidth" min="2" max="14" step="1" value="7" />
-            <input type="number" id="ringWidthN" min="2" max="14" step="1" value="7" class="num-input" />
-          </div>
-          <div class="ctrl-row">
-            <span class="ctrl-label">円弧の長さ</span>
-            <input type="range" id="arcLength" min="90" max="340" step="5" value="285" />
-            <input type="number" id="arcLengthN" min="90" max="340" step="5" value="285" class="num-input" />
-          </div>
-          <div class="ctrl-row">
-            <span class="ctrl-label">周期(秒)</span>
-            <input type="range" id="duration" min="0.5" max="6" step="0.1" value="1.8" />
-            <input type="number" id="durationN" min="0.5" max="6" step="0.1" value="1.8" class="num-input" />
-          </div>
-          <div class="ctrl-row">
-            <span class="ctrl-label">方向</span>
-            <select id="direction">
-              <option value="cw" selected>時計回り</option>
-              <option value="ccw">反時計回り</option>
-            </select>
-          </div>
-        </div>
-      </details>
-    </section>
+  <!-- ③ PNG / APNG -->
+  <details class="accordion-008 acc-color-3" id="acc-image">
+    <summary>③ PNG / APNG ダウンロード</summary>
+    <div class="accordion-body">
+      <div class="menu-btn-row">
+        <button class="menu-btn dl" id="btnPNG">🖼 PNGダウンロード</button>
+        <button class="menu-btn dl" id="btnAPNG">🎞 APNGダウンロード</button>
+      </div>
+      <div class="status-msg" id="imageStatus"></div>
+      <p class="output-note">
+        PNGは現在の見た目を静止画として保存します。APNGは選択中のアニメーションを短いループ画像として保存します。
+      </p>
+    </div>
+  </details>
 
-    <!-- プレビュー・出力 -->
-    <main class="icon-main">
-
-      <details class="icon-acc preview-acc" open>
-        <summary>プレビュー</summary>
-        <div class="icon-acc-body">
-          <div class="preview-card">
-            <div class="preview-stage" id="previewStage" aria-label="SVGプレビュー"></div>
-          </div>
-          <p class="preview-note">※表示は拡大プレビューです。DL時の標準サイズは設定値どおりです。</p>
-        </div>
-      </details>
-
-      <details class="icon-acc" open>
-        <summary>③ SVG / ④ PNG・APNG ダウンロード</summary>
-        <div class="icon-acc-body">
-          <div class="menu-btn-row">
-            <button class="menu-btn primary" id="btnCopy">📋 SVGコードをコピー</button>
-            <button class="menu-btn dl" id="btnSvgDL">💾 SVG DL</button>
-            <button class="menu-btn dl" id="btnPngDL">🖼 PNG DL</button>
-            <button class="menu-btn dl" id="btnApngDL">🎞 APNG DL</button>
-          </div>
-          <div class="status-msg" id="statusMsg"></div>
-          <div class="code-output" id="codeOutput" aria-label="SVGコード出力"></div>
-        </div>
-      </details>
-
-    </main>
-  </div>
 </div>
 
 <script>
 /* =============================================
    31-csv/50-icon/index.html
-   ① 文字入力
-   ② 色・サイズ変更 + 即時プレビュー
-   ③ SVGダウンロード
-   ④ PNG / APNGダウンロード
-
-   完全アウトライン化はこのジェネレーターでは扱わない。
-   SVGをDLして、別工程でアウトライン化する前提。
+   役割：中央iframe側。プレビュー、SVGコード、SVG/PNG/APNG出力。
+   注意：フレーム枠は親ページが担当するため、このファイル内では作らない。
    ============================================= */
 
-const FONT_STACK = '"Noto Sans JP", "Hiragino Sans", "Yu Gothic Medium", "Yu Gothic", "Meiryo", sans-serif';
-let currentSVG = "";
+const DEFAULTS = {
+  size: 120,
+  bgTransparent: false,
+  pageBg: "#eef3f7",
+  tileColor: "#e8edf2",
+  lightShadow: "#ffffff",
+  darkShadow: "#b8c2cc",
+  rounded: 24,
+  shadowOffset: 4,
+  shadowBlur: 8,
 
-const controls = {
-  iconText: document.getElementById("iconText"),
-  iconSize: document.getElementById("iconSize"),
-  iconSizeN: document.getElementById("iconSizeN"),
-  cornerRadius: document.getElementById("cornerRadius"),
-  cornerRadiusN: document.getElementById("cornerRadiusN"),
-  baseColor: document.getElementById("baseColor"),
-  baseColorN: document.getElementById("baseColorN"),
-  lightShadow: document.getElementById("lightShadow"),
-  lightShadowN: document.getElementById("lightShadowN"),
-  darkShadow: document.getElementById("darkShadow"),
-  darkShadowN: document.getElementById("darkShadowN"),
-  shadowOffset: document.getElementById("shadowOffset"),
-  shadowOffsetN: document.getElementById("shadowOffsetN"),
-  shadowBlur: document.getElementById("shadowBlur"),
-  shadowBlurN: document.getElementById("shadowBlurN"),
-  textColor: document.getElementById("textColor"),
-  textColorN: document.getElementById("textColorN"),
-  fontSize: document.getElementById("fontSize"),
-  fontSizeN: document.getElementById("fontSizeN"),
-  fontWeight: document.getElementById("fontWeight"),
-  textY: document.getElementById("textY"),
-  textYN: document.getElementById("textYN"),
-  ringColor: document.getElementById("ringColor"),
-  ringColorN: document.getElementById("ringColorN"),
-  ringRadius: document.getElementById("ringRadius"),
-  ringRadiusN: document.getElementById("ringRadiusN"),
-  ringWidth: document.getElementById("ringWidth"),
-  ringWidthN: document.getElementById("ringWidthN"),
-  arcLength: document.getElementById("arcLength"),
-  arcLengthN: document.getElementById("arcLengthN"),
-  duration: document.getElementById("duration"),
-  durationN: document.getElementById("durationN"),
-  direction: document.getElementById("direction")
+  text: "成功",
+  textColor: "#25633f",
+  fontSize: 30,
+  fontWeight: "800",
+  fontFamily: "\"Noto Sans JP\",\"Hiragino Sans\",\"Yu Gothic\",\"Meiryo\",sans-serif",
+  textX: 60,
+  textY: 62,
+
+  accentColor: "#58c987",
+  accentOpacity: 0.95,
+  glow: 2,
+
+  animationType: "ring-rotate",
+  duration: 1.8,
+  direction: "cw",
+
+  ringRadius: 43,
+  ringWidth: 7,
+  ringDash: 190,
+  ringGap: 75,
+
+  shapeType: "circle",
+  shapeX: 60,
+  shapeY: 60,
+  shapeSize: 74,
+
+  pointX: 88,
+  pointY: 88,
+  pointStartSize: 3,
+  pointEndRadius: 38,
+  pointLineWidth: 7,
+
+  fps: 12,
+  apngSeconds: 1.8
 };
 
-function clamp(v, min, max) {
+let state = {...DEFAULTS};
+let currentSVG = "";
+let isPaused = true;
+
+function esc(s) {
+  return String(s ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;");
+}
+function num(v, fallback=0) {
   const n = Number(v);
-  if (Number.isNaN(n)) return min;
-  return Math.max(min, Math.min(max, n));
+  return Number.isFinite(n) ? n : fallback;
+}
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
 }
 
-function sanitizeHex(value, fallback) {
-  const v = String(value || "").trim();
-  return /^#[0-9a-fA-F]{6}$/.test(v) ? v : fallback;
+function shapePathMarkup(s) {
+  const size = num(s.shapeSize, 74);
+  const x = num(s.shapeX, s.size / 2);
+  const y = num(s.shapeY, s.size / 2);
+  const color = esc(s.accentColor);
+  const op = clamp(num(s.accentOpacity, .95), 0, 1);
+  const half = size / 2;
+  const sw = Math.max(2, Math.round(size / 14));
+  const common = `fill="${color}" fill-opacity="${Math.min(op, 0.18)}" stroke="${color}" stroke-opacity="${op}" stroke-width="${sw}"`;
+
+  if (s.shapeType === "square") {
+    return `<rect x="${x-half}" y="${y-half}" width="${size}" height="${size}" ${common}/>`;
+  }
+  if (s.shapeType === "round-square") {
+    return `<rect x="${x-half}" y="${y-half}" width="${size}" height="${size}" rx="${Math.max(4, size*.18)}" ${common}/>`;
+  }
+  if (s.shapeType === "diamond") {
+    return `<path d="M ${x},${y-half} L ${x+half},${y} L ${x},${y+half} L ${x-half},${y} Z" ${common}/>`;
+  }
+  if (s.shapeType === "hexagon") {
+    const pts = [];
+    for (let i=0; i<6; i++) {
+      const a = (-90 + i*60) * Math.PI / 180;
+      pts.push(`${x + half*Math.cos(a)},${y + half*Math.sin(a)}`);
+    }
+    return `<polygon points="${pts.join(" ")}" ${common}/>`;
+  }
+  if (s.shapeType === "star") {
+    const pts = [];
+    for (let i=0; i<10; i++) {
+      const r = i % 2 === 0 ? half : half * .45;
+      const a = (-90 + i*36) * Math.PI / 180;
+      pts.push(`${x + r*Math.cos(a)},${y + r*Math.sin(a)}`);
+    }
+    return `<polygon points="${pts.join(" ")}" ${common}/>`;
+  }
+  if (s.shapeType === "check") {
+    const checkSw = Math.max(7, size * .16);
+    return `<path d="M ${x-half*.55},${y+half*.02} L ${x-half*.16},${y+half*.39} L ${x+half*.58},${y-half*.42}" fill="none" stroke="${color}" stroke-opacity="${op}" stroke-width="${checkSw}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
+  if (s.shapeType === "heart") {
+    const sc = size / 100;
+    const d = [
+      `M ${x},${y+30*sc}`,
+      `C ${x-52*sc},${y-5*sc} ${x-42*sc},${y-42*sc} ${x-18*sc},${y-42*sc}`,
+      `C ${x-4*sc},${y-42*sc} ${x},${y-30*sc} ${x},${y-24*sc}`,
+      `C ${x},${y-30*sc} ${x+4*sc},${y-42*sc} ${x+18*sc},${y-42*sc}`,
+      `C ${x+42*sc},${y-42*sc} ${x+52*sc},${y-5*sc} ${x},${y+30*sc}`,
+      "Z"
+    ].join(" ");
+    return `<path d="${d}" ${common}/>`;
+  }
+  return `<circle cx="${x}" cy="${y}" r="${half}" ${common}/>`;
 }
 
-function escapeXml(value) {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+function buildCenterPop(s, progress=0, animated=true) {
+  const x = num(s.shapeX, s.size / 2);
+  const y = num(s.shapeY, s.size / 2);
+  const shape = shapePathMarkup(s);
+  if (animated) {
+    return `<g transform-origin="${x}px ${y}px">
+      ${shape}
+      <animateTransform attributeName="transform" type="scale" values="0.04;1;1" keyTimes="0;0.55;1" dur="${num(s.duration,1.8)}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.25;1;1" keyTimes="0;0.55;1" dur="${num(s.duration,1.8)}s" repeatCount="indefinite"/>
+    </g>`;
+  }
+  const p = progress < .55 ? progress / .55 : 1;
+  const scale = 0.04 + p * 0.96;
+  return `<g transform="translate(${x} ${y}) scale(${scale}) translate(${-x} ${-y})">${shape}</g>`;
 }
 
-function getState() {
-  const size = clamp(controls.iconSize.value, 80, 512);
-  return {
-    text: controls.iconText.value.trim() || "成功",
-    size,
-    cornerRadius: clamp(controls.cornerRadius.value, 0, Math.floor(size / 2)),
-    baseColor: sanitizeHex(controls.baseColor.value, "#e8edf2"),
-    lightShadow: sanitizeHex(controls.lightShadow.value, "#ffffff"),
-    darkShadow: sanitizeHex(controls.darkShadow.value, "#b8c2cc"),
-    shadowOffset: clamp(controls.shadowOffset.value, 0, 12),
-    shadowBlur: clamp(controls.shadowBlur.value, 0, 18),
-    textColor: sanitizeHex(controls.textColor.value, "#25633f"),
-    fontSize: clamp(controls.fontSize.value, 14, 48),
-    fontWeight: controls.fontWeight.value,
-    textY: clamp(controls.textY.value, -18, 18),
-    ringColor: sanitizeHex(controls.ringColor.value, "#58c987"),
-    ringRadius: clamp(controls.ringRadius.value, 22, 55),
-    ringWidth: clamp(controls.ringWidth.value, 2, 14),
-    arcLength: clamp(controls.arcLength.value, 90, 340),
-    duration: clamp(controls.duration.value, 0.5, 6),
-    direction: controls.direction.value
-  };
+function buildPointCircle(s, progress=0, animated=true) {
+  const color = esc(s.accentColor);
+  const op = clamp(num(s.accentOpacity, .95), 0, 1);
+  const dur = num(s.duration, 1.8);
+  const px = num(s.pointX, 88);
+  const py = num(s.pointY, 88);
+  const start = num(s.pointStartSize, 3);
+  const end = num(s.pointEndRadius, 38);
+  const sw = num(s.pointLineWidth, 7);
+
+  if (animated) {
+    return `<circle cx="${px}" cy="${py}" r="${start}" fill="none" stroke="${color}" stroke-opacity="${op}" stroke-width="${sw}">
+      <animate attributeName="r" values="${start};${end};${end}" keyTimes="0;0.58;1" dur="${dur}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.25;1;1" keyTimes="0;0.58;1" dur="${dur}s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="${px}" cy="${py}" r="${start}" fill="${color}" fill-opacity="${op}">
+      <animate attributeName="opacity" values="1;0;0" keyTimes="0;0.35;1" dur="${dur}s" repeatCount="indefinite"/>
+    </circle>`;
+  }
+
+  const p = progress < .58 ? progress / .58 : 1;
+  const r = start + (end - start) * p;
+  const dotOpacity = progress < .35 ? 1 - progress / .35 : 0;
+  return `<circle cx="${px}" cy="${py}" r="${r}" fill="none" stroke="${color}" stroke-opacity="${op}" stroke-width="${sw}"/>
+  <circle cx="${px}" cy="${py}" r="${start}" fill="${color}" fill-opacity="${dotOpacity}"/>`;
 }
 
-function polar(cx, cy, r, deg) {
-  const rad = (deg - 90) * Math.PI / 180;
-  return {
-    x: cx + r * Math.cos(rad),
-    y: cy + r * Math.sin(rad)
-  };
+function buildRingRotate(s, progress=0, animated=true) {
+  const cx = s.size / 2;
+  const cy = s.size / 2;
+  const color = esc(s.accentColor);
+  const op = clamp(num(s.accentOpacity, .95), 0, 1);
+  const dur = num(s.duration, 1.8);
+  const dir = s.direction === "ccw" ? -1 : 1;
+  const radius = num(s.ringRadius, 43);
+  const width = num(s.ringWidth, 7);
+  const dash = num(s.ringDash, 190);
+  const gap = num(s.ringGap, 75);
+
+  const ring = `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="${color}" stroke-opacity="${Math.min(op, .18)}" stroke-width="${width}"/>
+  <circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="${color}" stroke-opacity="${op}" stroke-width="${width}" stroke-linecap="round" stroke-dasharray="${dash} ${gap}" transform="rotate(-90 ${cx} ${cy})"/>`;
+
+  if (animated) {
+    return `<g transform-origin="${cx}px ${cy}px">
+      ${ring}
+      <animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="${dir*360} ${cx} ${cy}" dur="${dur}s" repeatCount="indefinite"/>
+    </g>`;
+  }
+  return `<g transform="rotate(${dir * 360 * progress} ${cx} ${cy})">${ring}</g>`;
 }
 
-function arcPath(cx, cy, r, startDeg, endDeg) {
-  const start = polar(cx, cy, r, startDeg);
-  const end = polar(cx, cy, r, endDeg);
-  const largeArc = Math.abs(endDeg - startDeg) > 180 ? 1 : 0;
-  const sweep = endDeg >= startDeg ? 1 : 0;
-  return `M ${start.x.toFixed(3)} ${start.y.toFixed(3)} A ${r} ${r} 0 ${largeArc} ${sweep} ${end.x.toFixed(3)} ${end.y.toFixed(3)}`;
+function buildAnimationMarkup(s, progress=0, animated=true) {
+  if (s.animationType === "center-pop") return buildCenterPop(s, progress, animated);
+  if (s.animationType === "point-circle") return buildPointCircle(s, progress, animated);
+  return buildRingRotate(s, progress, animated);
 }
 
-function buildSVGText(state, options = {}) {
-  const size = state.size;
-  const cx = size / 2;
-  const cy = size / 2;
-  const pad = Math.max(6, Math.round(size * 0.067));
-  const innerSize = size - pad * 2;
-  const filterPad = Math.max(24, state.shadowBlur * 4 + state.shadowOffset * 4);
-  const arcStart = -state.arcLength / 2;
-  const arcEnd = state.arcLength / 2;
-  const rotateBase = Number(options.frameAngle || 0);
-  const rotateTo = state.direction === "ccw" ? -360 : 360;
-  const animated = options.animated !== false;
-  const text = escapeXml(state.text);
-  const ringPath = arcPath(cx, cy, state.ringRadius, arcStart, arcEnd);
+function buildSVGText(rawState, opt={}) {
+  const s = {...DEFAULTS, ...rawState};
+  const size = clamp(num(s.size, 120), 40, 512);
+  s.size = size;
+  const animated = opt.animated ?? true;
+  const progress = opt.progress ?? 0;
+  const tilePad = Math.max(6, Math.round(size * 0.08));
+  const tileSize = size - tilePad * 2;
 
-  const ringAnimate = animated
-    ? `<animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="${rotateTo} ${cx} ${cy}" dur="${state.duration}s" repeatCount="indefinite"/>`
-    : "";
+  const bg = s.bgTransparent ? "" : `<rect width="${size}" height="${size}" fill="${esc(s.pageBg)}"/>`;
+
+  const defs = `<filter id="neuShadow" x="-40%" y="-40%" width="180%" height="180%">
+    <feDropShadow dx="${-num(s.shadowOffset,4)}" dy="${-num(s.shadowOffset,4)}" stdDeviation="${num(s.shadowBlur,8)}" flood-color="${esc(s.lightShadow)}" flood-opacity="0.9"/>
+    <feDropShadow dx="${num(s.shadowOffset,4)}" dy="${num(s.shadowOffset,4)}" stdDeviation="${num(s.shadowBlur,8)}" flood-color="${esc(s.darkShadow)}" flood-opacity="0.75"/>
+  </filter>
+  <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur stdDeviation="${num(s.glow,2)}" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>`;
+
+  const anim = buildAnimationMarkup(s, progress, animated);
+  const text = `<text x="${num(s.textX, size/2)}" y="${num(s.textY, size/2)}"
+    text-anchor="middle" dominant-baseline="middle"
+    fill="${esc(s.textColor)}"
+    font-size="${num(s.fontSize,30)}"
+    font-weight="${esc(s.fontWeight)}"
+    font-family="${esc(s.fontFamily)}"
+    letter-spacing="0.02em">${esc(s.text)}</text>`;
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
   <defs>
-    <filter id="softShadow" x="-${filterPad}%" y="-${filterPad}%" width="${100 + filterPad * 2}%" height="${100 + filterPad * 2}%">
-      <feDropShadow dx="${state.shadowOffset}" dy="${state.shadowOffset}" stdDeviation="${state.shadowBlur}" flood-color="${state.darkShadow}" flood-opacity="0.72"/>
-      <feDropShadow dx="-${state.shadowOffset}" dy="-${state.shadowOffset}" stdDeviation="${state.shadowBlur}" flood-color="${state.lightShadow}" flood-opacity="0.95"/>
-    </filter>
-    <filter id="innerGlow" x="-25%" y="-25%" width="150%" height="150%">
-      <feGaussianBlur stdDeviation="1.2" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
+    ${defs}
   </defs>
-
-  <rect x="${pad}" y="${pad}" width="${innerSize}" height="${innerSize}" rx="${state.cornerRadius}" fill="${state.baseColor}" filter="url(#softShadow)"/>
-  <path d="M ${pad + 7} ${pad + 12} Q ${pad + 12} ${pad + 7} ${pad + 22} ${pad + 7} H ${size - pad - 22}" fill="none" stroke="${state.lightShadow}" stroke-width="2" stroke-linecap="round" opacity="0.78"/>
-  <circle cx="${cx}" cy="${cy}" r="${state.ringRadius}" fill="none" stroke="${state.darkShadow}" stroke-width="${Math.max(1, state.ringWidth - 2)}" opacity="0.22"/>
-  <g transform="rotate(${rotateBase} ${cx} ${cy})">
-    <path d="${ringPath}" fill="none" stroke="${state.ringColor}" stroke-width="${state.ringWidth}" stroke-linecap="round" filter="url(#innerGlow)"/>
-    <circle cx="${cx}" cy="${cy - state.ringRadius}" r="${Math.max(1.2, state.ringWidth * 0.28).toFixed(2)}" fill="${state.ringColor}" opacity="0.72"/>
-    ${ringAnimate}
+  ${bg}
+  <rect x="${tilePad}" y="${tilePad}" width="${tileSize}" height="${tileSize}" rx="${num(s.rounded,24)}" fill="${esc(s.tileColor)}" filter="url(#neuShadow)"/>
+  <g filter="url(#softGlow)">
+    ${anim}
   </g>
-  <text x="${cx}" y="${cy + state.textY}" text-anchor="middle" dominant-baseline="middle" font-family="${FONT_STACK}" font-size="${state.fontSize}" font-weight="${state.fontWeight}" fill="${state.textColor}" paint-order="stroke fill" stroke="${state.baseColor}" stroke-width="0.6">${text}</text>
+  ${text}
 </svg>`;
 }
 
-function updatePreview() {
-  const state = getState();
-  currentSVG = buildSVGText(state, { animated: true });
-  document.getElementById("previewStage").innerHTML = currentSVG;
+function render() {
+  currentSVG = buildSVGText(state, {animated: !isPaused, progress: 0.72});
+  document.getElementById("previewWrap").innerHTML = currentSVG;
   document.getElementById("codeOutput").textContent = currentSVG;
+  document.getElementById("previewMeta").textContent = `${state.size} × ${state.size} / ${state.animationType}`;
+  applyPause();
 }
 
-function showStatus(type, msg) {
-  const el = document.getElementById("statusMsg");
+function applyPause() {
+  const svg = document.querySelector("#previewWrap svg");
+  if (svg) {
+    if (isPaused && svg.pauseAnimations) svg.pauseAnimations();
+    if (!isPaused && svg.unpauseAnimations) svg.unpauseAnimations();
+  }
+  document.getElementById("previewHint").classList.toggle("visible", isPaused);
+}
+
+window.addEventListener("message", e => {
+  const msg = e.data;
+  if (!msg) return;
+
+  if (msg.type === "icon-update") {
+    state = {...DEFAULTS, ...msg.state};
+    render();
+  }
+  if (msg.type === "icon-pause") {
+    isPaused = true;
+    render();
+  }
+  if (msg.type === "icon-resume") {
+    isPaused = false;
+    render();
+  }
+});
+
+function showStatus(target, type, msg) {
+  const el = document.getElementById(target);
   el.textContent = msg;
-  el.className = "status-msg show " + type;
+  el.className = `status-msg show ${type}`;
 }
-
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
+  const a = Object.assign(document.createElement("a"), { href: url, download: filename });
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 800);
+}
+function safeFileName(ext) {
+  const raw = (state.text || "icon").replace(/[\\/:*?"<>|\s]+/g, "_").slice(0, 24);
+  return `${raw || "icon"}_${state.animationType}.${ext}`;
 }
 
+document.getElementById("btnCopy").addEventListener("click", () => {
+  if (!currentSVG) render();
+  navigator.clipboard.writeText(currentSVG)
+    .then(() => showStatus("codeStatus", "ok", "SVGコードをコピーしました"))
+    .catch(() => showStatus("codeStatus", "err", "コピー失敗。手動でコピーしてください"));
+});
+
+document.getElementById("btnSVG").addEventListener("click", () => {
+  if (!currentSVG) render();
+  downloadBlob(new Blob([currentSVG], {type:"image/svg+xml;charset=utf-8"}), safeFileName("svg"));
+  showStatus("codeStatus", "ok", "SVGをダウンロードしました");
+});
+
 async function svgToCanvas(svgText, size) {
-  const blob = new Blob([svgText], { type: "image/svg+xml;charset=utf-8" });
+  const blob = new Blob([svgText], {type:"image/svg+xml;charset=utf-8"});
   const url = URL.createObjectURL(blob);
   const img = new Image();
-  img.decoding = "async";
-  img.src = url;
-  await img.decode();
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext("2d");
+
+  await new Promise((resolve, reject) => {
+    img.onload = resolve;
+    img.onerror = reject;
+    img.src = url;
+  });
   ctx.clearRect(0, 0, size, size);
   ctx.drawImage(img, 0, 0, size, size);
   URL.revokeObjectURL(url);
   return canvas;
 }
-
-async function downloadPNG() {
-  const state = getState();
-  const svgText = buildSVGText(state, { animated: false, frameAngle: 0 });
-  const canvas = await svgToCanvas(svgText, state.size);
-  canvas.toBlob(blob => {
-    if (!blob) { showStatus("err", "PNG生成に失敗しました"); return; }
-    downloadBlob(blob, "icon.png");
-    showStatus("ok", "PNGをダウンロードしました");
-  }, "image/png");
+function canvasToBlob(canvas, type="image/png") {
+  return new Promise(resolve => canvas.toBlob(resolve, type));
 }
 
-// =============================================
-//  APNG最小エンコーダ（無圧縮zlib）
-//  外部ライブラリなし。120px程度の小型アイコン向け。
-// =============================================
-const PNG_SIGNATURE = new Uint8Array([137,80,78,71,13,10,26,10]);
+document.getElementById("btnPNG").addEventListener("click", async () => {
+  try {
+    const size = clamp(num(state.size, 120), 40, 512);
+    const svg = buildSVGText(state, {animated:false, progress:.72});
+    const canvas = await svgToCanvas(svg, size);
+    const blob = await canvasToBlob(canvas, "image/png");
+    downloadBlob(blob, safeFileName("png"));
+    showStatus("imageStatus", "ok", "PNGをダウンロードしました");
+  } catch (err) {
+    console.error(err);
+    showStatus("imageStatus", "err", "PNG作成に失敗しました");
+  }
+});
 
-function u32be(n) {
-  return new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);
-}
-function u16be(n) {
-  return new Uint8Array([(n >>> 8) & 255, n & 255]);
-}
-function u16le(n) {
-  return new Uint8Array([n & 255, (n >>> 8) & 255]);
-}
-function concatArrays(arrays) {
-  const len = arrays.reduce((sum, a) => sum + a.length, 0);
-  const out = new Uint8Array(len);
-  let offset = 0;
-  arrays.forEach(a => { out.set(a, offset); offset += a.length; });
-  return out;
-}
-function asciiBytes(str) {
-  return new TextEncoder().encode(str);
-}
+/* =============================================
+   APNG生成：PNGフレームをAPNGチャンクへ組み立て
+   ============================================= */
+const PNG_SIG = new Uint8Array([137,80,78,71,13,10,26,10]);
 
-let crcTable = null;
-function makeCrcTable() {
+function makeCRCTable() {
   const table = new Uint32Array(256);
-  for (let n = 0; n < 256; n++) {
+  for (let n=0; n<256; n++) {
     let c = n;
-    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+    for (let k=0; k<8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
     table[n] = c >>> 0;
   }
   return table;
 }
+const CRC_TABLE = makeCRCTable();
+
 function crc32(bytes) {
-  if (!crcTable) crcTable = makeCrcTable();
   let c = 0xffffffff;
-  for (let i = 0; i < bytes.length; i++) c = crcTable[(c ^ bytes[i]) & 255] ^ (c >>> 8);
+  for (let i=0; i<bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
   return (c ^ 0xffffffff) >>> 0;
 }
-function chunk(type, data) {
-  const typeBytes = asciiBytes(type);
-  const crcInput = concatArrays([typeBytes, data]);
-  return concatArrays([u32be(data.length), typeBytes, data, u32be(crc32(crcInput))]);
+function u32(n) {
+  return new Uint8Array([(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255]);
 }
-function adler32(bytes) {
-  let a = 1, b = 0;
-  for (let i = 0; i < bytes.length; i++) {
-    a = (a + bytes[i]) % 65521;
-    b = (b + a) % 65521;
-  }
-  return ((b << 16) | a) >>> 0;
+function writeU32(arr, off, n) {
+  arr[off]=(n>>>24)&255; arr[off+1]=(n>>>16)&255; arr[off+2]=(n>>>8)&255; arr[off+3]=n&255;
 }
-function zlibStore(bytes) {
-  const parts = [new Uint8Array([0x78, 0x01])];
-  let offset = 0;
-  while (offset < bytes.length) {
-    const len = Math.min(65535, bytes.length - offset);
-    const final = (offset + len) >= bytes.length ? 1 : 0;
-    const header = concatArrays([
-      new Uint8Array([final]),
-      u16le(len),
-      u16le((~len) & 0xffff)
-    ]);
-    parts.push(header, bytes.slice(offset, offset + len));
-    offset += len;
-  }
-  parts.push(u32be(adler32(bytes)));
-  return concatArrays(parts);
+function writeU16(arr, off, n) {
+  arr[off]=(n>>>8)&255; arr[off+1]=n&255;
 }
-function rgbaToPngScanlines(imageData, width, height) {
-  const raw = new Uint8Array((width * 4 + 1) * height);
-  const rgba = imageData.data;
-  let o = 0, r = 0;
-  for (let y = 0; y < height; y++) {
-    raw[o++] = 0; // filter type 0
-    raw.set(rgba.subarray(r, r + width * 4), o);
-    o += width * 4;
-    r += width * 4;
-  }
-  return raw;
+function ascii(s) {
+  return new Uint8Array([...s].map(ch => ch.charCodeAt(0)));
 }
-function encodeAPNG(frames, width, height, delayMs) {
-  let seq = 0;
+function concatBytes(parts) {
+  const len = parts.reduce((a,b)=>a+b.length,0);
+  const out = new Uint8Array(len);
+  let o = 0;
+  for (const p of parts) { out.set(p, o); o += p.length; }
+  return out;
+}
+function makeChunk(type, data) {
+  const t = ascii(type);
+  const body = concatBytes([t, data]);
+  return concatBytes([u32(data.length), body, u32(crc32(body))]);
+}
+function parsePNG(buf) {
+  const bytes = new Uint8Array(buf);
   const chunks = [];
-  const ihdr = concatArrays([
-    u32be(width), u32be(height),
-    new Uint8Array([8, 6, 0, 0, 0]) // 8bit RGBA
-  ]);
-  chunks.push(PNG_SIGNATURE);
-  chunks.push(chunk("IHDR", ihdr));
-  chunks.push(chunk("acTL", concatArrays([u32be(frames.length), u32be(0)])));
+  let off = 8;
+  while (off < bytes.length) {
+    const len = (bytes[off]<<24) | (bytes[off+1]<<16) | (bytes[off+2]<<8) | bytes[off+3];
+    const type = String.fromCharCode(bytes[off+4], bytes[off+5], bytes[off+6], bytes[off+7]);
+    const data = bytes.slice(off+8, off+8+len);
+    chunks.push({type, data});
+    off += 12 + len;
+    if (type === "IEND") break;
+  }
+  return chunks;
+}
+function makeFCTL(seq, width, height, delayNum, delayDen) {
+  const d = new Uint8Array(26);
+  writeU32(d,0,seq);
+  writeU32(d,4,width);
+  writeU32(d,8,height);
+  writeU32(d,12,0);
+  writeU32(d,16,0);
+  writeU16(d,20,delayNum);
+  writeU16(d,22,delayDen);
+  d[24]=1; // dispose_op: background
+  d[25]=0; // blend_op: source
+  return d;
+}
+function makeFDAT(seq, idatData) {
+  const d = new Uint8Array(4 + idatData.length);
+  writeU32(d,0,seq);
+  d.set(idatData,4);
+  return d;
+}
+async function pngFrameAt(progress) {
+  const size = clamp(num(state.size, 120), 40, 512);
+  const svg = buildSVGText(state, {animated:false, progress});
+  const canvas = await svgToCanvas(svg, size);
+  const blob = await canvasToBlob(canvas, "image/png");
+  return await blob.arrayBuffer();
+}
+async function buildAPNG() {
+  const size = clamp(num(state.size, 120), 40, 512);
+  const fps = clamp(num(state.fps, 12), 4, 24);
+  const seconds = clamp(num(state.apngSeconds || state.duration, state.duration), 0.5, 4);
+  const frameCount = Math.max(4, Math.round(fps * seconds));
+  const delayNum = Math.max(1, Math.round(1000 / fps));
+  const delayDen = 1000;
 
-  frames.forEach((frame, i) => {
-    const delayNum = Math.max(1, Math.round(delayMs));
-    const fctl = concatArrays([
-      u32be(seq++),
-      u32be(width), u32be(height),
-      u32be(0), u32be(0),
-      u16be(delayNum), u16be(1000),
-      new Uint8Array([0, 0]) // dispose=none, blend=source
-    ]);
-    chunks.push(chunk("fcTL", fctl));
+  const frames = [];
+  for (let i=0; i<frameCount; i++) {
+    const progress = i / frameCount;
+    const buf = await pngFrameAt(progress);
+    frames.push(parsePNG(buf));
+  }
 
-    const raw = rgbaToPngScanlines(frame, width, height);
-    const zdat = zlibStore(raw);
-    if (i === 0) {
-      chunks.push(chunk("IDAT", zdat));
+  const ihdr = frames[0].find(c => c.type === "IHDR").data;
+  const parts = [
+    PNG_SIG,
+    makeChunk("IHDR", ihdr),
+    makeChunk("acTL", concatBytes([u32(frameCount), u32(0)]))
+  ];
+
+  let seq = 0;
+  frames.forEach((chunks, frameIndex) => {
+    const idats = chunks.filter(c => c.type === "IDAT").map(c => c.data);
+    parts.push(makeChunk("fcTL", makeFCTL(seq++, size, size, delayNum, delayDen)));
+    if (frameIndex === 0) {
+      idats.forEach(data => parts.push(makeChunk("IDAT", data)));
     } else {
-      chunks.push(chunk("fdAT", concatArrays([u32be(seq++), zdat])));
+      idats.forEach(data => parts.push(makeChunk("fdAT", makeFDAT(seq++, data))));
     }
   });
 
-  chunks.push(chunk("IEND", new Uint8Array()));
-  return new Blob([concatArrays(chunks)], { type: "image/apng" });
+  parts.push(makeChunk("IEND", new Uint8Array()));
+  return new Blob([concatBytes(parts)], {type:"image/png"});
 }
 
-async function downloadAPNG() {
-  const state = getState();
-  const frames = [];
-  const frameCount = 24;
-  const delayMs = (state.duration * 1000) / frameCount;
-  const dir = state.direction === "ccw" ? -1 : 1;
-
-  showStatus("work", "APNG生成中です…");
-
-  for (let i = 0; i < frameCount; i++) {
-    const angle = dir * (360 * i / frameCount);
-    const svgText = buildSVGText(state, { animated: false, frameAngle: angle });
-    const canvas = await svgToCanvas(svgText, state.size);
-    const ctx = canvas.getContext("2d");
-    frames.push(ctx.getImageData(0, 0, state.size, state.size));
+document.getElementById("btnAPNG").addEventListener("click", async () => {
+  try {
+    showStatus("imageStatus", "ok", "APNGを作成中です…");
+    const blob = await buildAPNG();
+    downloadBlob(blob, safeFileName("apng.png"));
+    showStatus("imageStatus", "ok", "APNGをダウンロードしました");
+  } catch (err) {
+    console.error(err);
+    showStatus("imageStatus", "err", "APNG作成に失敗しました");
   }
+});
 
-  const blob = encodeAPNG(frames, state.size, state.size, delayMs);
-  downloadBlob(blob, "icon.apng");
-  showStatus("ok", "APNGをダウンロードしました");
+function openAccordion(id) {
+  const el = document.getElementById(id);
+  if (el) { el.setAttribute("open",""); el.scrollIntoView({behavior:"smooth",block:"start"}); }
 }
 
-function bindPair(rangeId, numberId) {
-  const rng = document.getElementById(rangeId);
-  const num = document.getElementById(numberId);
-  if (!rng || !num) return;
-  rng.addEventListener("input", () => {
-    num.value = rng.value;
-    updatePreview();
-  });
-  num.addEventListener("change", () => {
-    const min = Number(num.min), max = Number(num.max);
-    const v = clamp(num.value, min, max);
-    num.value = v;
-    rng.value = v;
-    updatePreview();
-  });
-}
-
-function bindColorPair(pickerId, textId) {
-  const picker = document.getElementById(pickerId);
-  const text = document.getElementById(textId);
-  if (!picker || !text) return;
-  picker.addEventListener("input", () => {
-    text.value = picker.value;
-    updatePreview();
-  });
-  text.addEventListener("change", () => {
-    const v = text.value.trim();
-    if (/^#[0-9a-fA-F]{6}$/.test(v)) picker.value = v;
-    else text.value = picker.value;
-    updatePreview();
-  });
-}
-
-bindPair("iconSize", "iconSizeN");
-bindPair("cornerRadius", "cornerRadiusN");
-bindPair("shadowOffset", "shadowOffsetN");
-bindPair("shadowBlur", "shadowBlurN");
-bindPair("fontSize", "fontSizeN");
-bindPair("textY", "textYN");
-bindPair("ringRadius", "ringRadiusN");
-bindPair("ringWidth", "ringWidthN");
-bindPair("arcLength", "arcLengthN");
-bindPair("duration", "durationN");
-bindColorPair("baseColor", "baseColorN");
-bindColorPair("lightShadow", "lightShadowN");
-bindColorPair("darkShadow", "darkShadowN");
-bindColorPair("textColor", "textColorN");
-bindColorPair("ringColor", "ringColorN");
-
-["iconText", "fontWeight", "direction"].forEach(id => {
-  document.getElementById(id).addEventListener("input", updatePreview);
-  document.getElementById(id).addEventListener("change", updatePreview);
+// 中央だけ単独で開いた場合の初期表示
+window.addEventListener("load", () => {
+  setTimeout(() => render(), 100);
 });
-
-document.getElementById("btnCopy").addEventListener("click", () => {
-  navigator.clipboard.writeText(currentSVG)
-    .then(() => showStatus("ok", "SVGコードをコピーしました"))
-    .catch(() => showStatus("err", "コピーに失敗しました。コード欄から手動コピーしてください"));
-});
-
-document.getElementById("btnSvgDL").addEventListener("click", () => {
-  downloadBlob(new Blob([currentSVG], { type: "image/svg+xml;charset=utf-8" }), "icon.svg");
-  showStatus("ok", "SVGをダウンロードしました");
-});
-
-document.getElementById("btnPngDL").addEventListener("click", () => {
-  downloadPNG().catch(err => {
-    console.error(err);
-    showStatus("err", "PNG生成に失敗しました");
-  });
-});
-
-document.getElementById("btnApngDL").addEventListener("click", () => {
-  downloadAPNG().catch(err => {
-    console.error(err);
-    showStatus("err", "APNG生成に失敗しました");
-  });
-});
-
-updatePreview();
 </script>
 </body>
 </html>
