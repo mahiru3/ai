@@ -3,21 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>アイコンSVGジェネレーター①</title>
+  <title>アイコンSVGジェネレーター</title>
   <link rel="stylesheet" href="../../01-css/00-style.css" />
   <link rel="stylesheet" href="../../01-css/31-csv-50-icon.css" />
 </head>
 <body>
 <div class="page-wrap icon-page">
 
-  <h1 class="page-title">✅ アイコンSVGジェネレーター</h1>
+  <h1 class="page-title">✅ アイコンSVGジェネレーター2</h1>
   <p class="page-subtitle">左パネルで調整 → リアルタイムプレビュー。SVG / PNG / APNG をダウンロードできます。</p>
 
-  <!-- ① プレビュー -->
   <details class="accordion-008 acc-color-1" id="acc-preview" open>
     <summary>① プレビュー</summary>
     <div class="accordion-body">
-      <div class="preview-hint visible" id="previewHint">⏸ 調整モード中 — 左パネルの「▶ プレビュー開始」でアニメーション確認</div>
+      <div class="mode-bar center-mode-bar">
+        <button class="mode-btn mode-adjust active" id="btnAdjustCenter">⏸ 調整モード</button>
+        <button class="mode-btn mode-preview" id="btnPreviewCenter">▶ プレビュー開始</button>
+      </div>
+
+      <div class="preview-hint visible" id="previewHint">⏸ 調整モード中 — アニメーションは停止表示です</div>
       <div class="preview-area">
         <div class="icon-preview-stage">
           <div class="svg-preview-wrap" id="previewWrap">
@@ -29,7 +33,6 @@
     </div>
   </details>
 
-  <!-- ② SVGコード -->
   <details class="accordion-008 acc-color-2" id="acc-code">
     <summary>② SVGコード・SVGダウンロード</summary>
     <div class="accordion-body">
@@ -42,7 +45,6 @@
     </div>
   </details>
 
-  <!-- ③ PNG / APNG -->
   <details class="accordion-008 acc-color-3" id="acc-image">
     <summary>③ PNG / APNG ダウンロード</summary>
     <div class="accordion-body">
@@ -52,7 +54,7 @@
       </div>
       <div class="status-msg" id="imageStatus"></div>
       <p class="output-note">
-        PNGは現在の見た目を静止画として保存します。APNGは選択中のアニメーションを短いループ画像として保存します。
+        PNGは停止時の見た目を保存します。APNGは選択中のアニメーションを短いループ画像として保存します。
       </p>
     </div>
   </details>
@@ -63,7 +65,7 @@
 /* =============================================
    31-csv/50-icon/index.html
    役割：中央iframe側。プレビュー、SVGコード、SVG/PNG/APNG出力。
-   注意：フレーム枠は親ページが担当するため、このファイル内では作らない。
+   フレーム枠は親ページが担当するため、このファイルでは作らない。
    ============================================= */
 
 const DEFAULTS = {
@@ -80,23 +82,32 @@ const DEFAULTS = {
   text: "成功",
   textColor: "#25633f",
   fontSize: 30,
-  fontWeight: "800",
+  fontWeight: 800,
   fontFamily: "\"Noto Sans JP\",\"Hiragino Sans\",\"Yu Gothic\",\"Meiryo\",sans-serif",
   textX: 60,
   textY: 62,
+
+  markType: "circle",
+  markX: 60,
+  markY: 60,
+  markSize: 78,
+  markStrokeWidth: 7,
+  markColor: "#58c987",
+  markFillOpacity: 0.12,
+  markStrokeOpacity: 0.62,
 
   accentColor: "#58c987",
   accentOpacity: 0.95,
   glow: 2,
 
-  animationType: "ring-rotate",
-  duration: 1.8,
+  animationType: "ring-draw",
+  duration: 1.4,
+  holdSeconds: 0.8,
   direction: "cw",
 
   ringRadius: 43,
   ringWidth: 7,
-  ringDash: 190,
-  ringGap: 75,
+  ringStartAngle: -90,
 
   shapeType: "circle",
   shapeX: 60,
@@ -105,12 +116,11 @@ const DEFAULTS = {
 
   pointX: 88,
   pointY: 88,
-  pointStartSize: 3,
-  pointEndRadius: 38,
+  pointEndRadius: 43,
   pointLineWidth: 7,
 
   fps: 12,
-  apngSeconds: 1.8
+  apngSeconds: 2.2
 };
 
 let state = {...DEFAULTS};
@@ -131,27 +141,55 @@ function num(v, fallback=0) {
 function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v));
 }
+function animTotal(s) {
+  return Math.max(0.1, num(s.duration, 1.4) + Math.max(0, num(s.holdSeconds, 0.8)));
+}
+function growRatio(s) {
+  const total = animTotal(s);
+  return clamp(num(s.duration, 1.4) / total, 0.02, 0.98);
+}
+function progressToGrow(s, progress) {
+  const gr = growRatio(s);
+  return progress <= gr ? progress / gr : 1;
+}
+function polar(cx, cy, r, angleDeg) {
+  const a = angleDeg * Math.PI / 180;
+  return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+}
+function pointAngle(cx, cy, x, y) {
+  return Math.atan2(y - cy, x - cx) * 180 / Math.PI;
+}
 
-function shapePathMarkup(s) {
-  const size = num(s.shapeSize, 74);
-  const x = num(s.shapeX, s.size / 2);
-  const y = num(s.shapeY, s.size / 2);
-  const color = esc(s.accentColor);
-  const op = clamp(num(s.accentOpacity, .95), 0, 1);
+function basicShapeMarkup(opt) {
+  const type = opt.type || "circle";
+  const x = num(opt.x, 60);
+  const y = num(opt.y, 60);
+  const size = num(opt.size, 74);
   const half = size / 2;
-  const sw = Math.max(2, Math.round(size / 14));
-  const common = `fill="${color}" fill-opacity="${Math.min(op, 0.18)}" stroke="${color}" stroke-opacity="${op}" stroke-width="${sw}"`;
+  const color = esc(opt.color || "#58c987");
+  const fillOpacity = clamp(num(opt.fillOpacity, 0.12), 0, 1);
+  const strokeOpacity = clamp(num(opt.strokeOpacity, 0.62), 0, 1);
+  const sw = Math.max(0, num(opt.strokeWidth, 7));
+  const common = `fill="${color}" fill-opacity="${fillOpacity}" stroke="${color}" stroke-opacity="${strokeOpacity}" stroke-width="${sw}"`;
 
-  if (s.shapeType === "square") {
+  if (type === "square") {
     return `<rect x="${x-half}" y="${y-half}" width="${size}" height="${size}" ${common}/>`;
   }
-  if (s.shapeType === "round-square") {
+  if (type === "round-square") {
     return `<rect x="${x-half}" y="${y-half}" width="${size}" height="${size}" rx="${Math.max(4, size*.18)}" ${common}/>`;
   }
-  if (s.shapeType === "diamond") {
+  if (type === "triangle") {
+    const pts = [
+      `${x},${y-half}`,
+      `${x+half*.9},${y+half*.72}`,
+      `${x-half*.9},${y+half*.72}`
+    ].join(" ");
+    return `<polygon points="${pts}" ${common}/>`;
+  }
+  if (type === "diamond") {
     return `<path d="M ${x},${y-half} L ${x+half},${y} L ${x},${y+half} L ${x-half},${y} Z" ${common}/>`;
   }
-  if (s.shapeType === "hexagon") {
+  if (type === "hexagon") {
     const pts = [];
     for (let i=0; i<6; i++) {
       const a = (-90 + i*60) * Math.PI / 180;
@@ -159,7 +197,7 @@ function shapePathMarkup(s) {
     }
     return `<polygon points="${pts.join(" ")}" ${common}/>`;
   }
-  if (s.shapeType === "star") {
+  if (type === "star") {
     const pts = [];
     for (let i=0; i<10; i++) {
       const r = i % 2 === 0 ? half : half * .45;
@@ -168,11 +206,18 @@ function shapePathMarkup(s) {
     }
     return `<polygon points="${pts.join(" ")}" ${common}/>`;
   }
-  if (s.shapeType === "check") {
-    const checkSw = Math.max(7, size * .16);
-    return `<path d="M ${x-half*.55},${y+half*.02} L ${x-half*.16},${y+half*.39} L ${x+half*.58},${y-half*.42}" fill="none" stroke="${color}" stroke-opacity="${op}" stroke-width="${checkSw}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  if (type === "check") {
+    const checkSw = Math.max(4, size * .14);
+    return `<path d="M ${x-half*.55},${y+half*.02} L ${x-half*.16},${y+half*.39} L ${x+half*.58},${y-half*.42}" fill="none" stroke="${color}" stroke-opacity="${strokeOpacity}" stroke-width="${checkSw}" stroke-linecap="round" stroke-linejoin="round"/>`;
   }
-  if (s.shapeType === "heart") {
+  if (type === "cross") {
+    const crossSw = Math.max(4, size * .14);
+    return `<g stroke="${color}" stroke-opacity="${strokeOpacity}" stroke-width="${crossSw}" stroke-linecap="round">
+      <path d="M ${x-half*.45},${y-half*.45} L ${x+half*.45},${y+half*.45}"/>
+      <path d="M ${x+half*.45},${y-half*.45} L ${x-half*.45},${y+half*.45}"/>
+    </g>`;
+  }
+  if (type === "heart") {
     const sc = size / 100;
     const d = [
       `M ${x},${y+30*sc}`,
@@ -187,77 +232,89 @@ function shapePathMarkup(s) {
   return `<circle cx="${x}" cy="${y}" r="${half}" ${common}/>`;
 }
 
+function buildBackgroundMark(s) {
+  return basicShapeMarkup({
+    type: s.markType,
+    x: s.markX,
+    y: s.markY,
+    size: s.markSize,
+    strokeWidth: s.markStrokeWidth,
+    color: s.markColor,
+    fillOpacity: s.markFillOpacity,
+    strokeOpacity: s.markStrokeOpacity
+  });
+}
+
 function buildCenterPop(s, progress=0, animated=true) {
   const x = num(s.shapeX, s.size / 2);
   const y = num(s.shapeY, s.size / 2);
-  const shape = shapePathMarkup(s);
+  const shape = basicShapeMarkup({
+    type: s.shapeType,
+    x: s.shapeX,
+    y: s.shapeY,
+    size: s.shapeSize,
+    strokeWidth: Math.max(2, num(s.shapeSize, 74) / 12),
+    color: s.accentColor,
+    fillOpacity: 0.16,
+    strokeOpacity: s.accentOpacity
+  });
+  const total = animTotal(s);
+  const kt = growRatio(s).toFixed(3);
+
   if (animated) {
     return `<g transform-origin="${x}px ${y}px">
       ${shape}
-      <animateTransform attributeName="transform" type="scale" values="0.04;1;1" keyTimes="0;0.55;1" dur="${num(s.duration,1.8)}s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.25;1;1" keyTimes="0;0.55;1" dur="${num(s.duration,1.8)}s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="scale" values="0.04;1;1" keyTimes="0;${kt};1" dur="${total}s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.25;1;1" keyTimes="0;${kt};1" dur="${total}s" repeatCount="indefinite"/>
     </g>`;
   }
-  const p = progress < .55 ? progress / .55 : 1;
+
+  const p = progressToGrow(s, progress);
   const scale = 0.04 + p * 0.96;
   return `<g transform="translate(${x} ${y}) scale(${scale}) translate(${-x} ${-y})">${shape}</g>`;
 }
 
-function buildPointCircle(s, progress=0, animated=true) {
-  const color = esc(s.accentColor);
-  const op = clamp(num(s.accentOpacity, .95), 0, 1);
-  const dur = num(s.duration, 1.8);
-  const px = num(s.pointX, 88);
-  const py = num(s.pointY, 88);
-  const start = num(s.pointStartSize, 3);
-  const end = num(s.pointEndRadius, 38);
-  const sw = num(s.pointLineWidth, 7);
-
-  if (animated) {
-    return `<circle cx="${px}" cy="${py}" r="${start}" fill="none" stroke="${color}" stroke-opacity="${op}" stroke-width="${sw}">
-      <animate attributeName="r" values="${start};${end};${end}" keyTimes="0;0.58;1" dur="${dur}s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.25;1;1" keyTimes="0;0.58;1" dur="${dur}s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="${px}" cy="${py}" r="${start}" fill="${color}" fill-opacity="${op}">
-      <animate attributeName="opacity" values="1;0;0" keyTimes="0;0.35;1" dur="${dur}s" repeatCount="indefinite"/>
-    </circle>`;
-  }
-
-  const p = progress < .58 ? progress / .58 : 1;
-  const r = start + (end - start) * p;
-  const dotOpacity = progress < .35 ? 1 - progress / .35 : 0;
-  return `<circle cx="${px}" cy="${py}" r="${r}" fill="none" stroke="${color}" stroke-opacity="${op}" stroke-width="${sw}"/>
-  <circle cx="${px}" cy="${py}" r="${start}" fill="${color}" fill-opacity="${dotOpacity}"/>`;
-}
-
-function buildRingRotate(s, progress=0, animated=true) {
+function buildRingDraw(s, progress=0, animated=true, startAngle=null, radius=null, width=null) {
   const cx = s.size / 2;
   const cy = s.size / 2;
+  const r = num(radius ?? s.ringRadius, 43);
+  const w = num(width ?? s.ringWidth, 7);
   const color = esc(s.accentColor);
   const op = clamp(num(s.accentOpacity, .95), 0, 1);
-  const dur = num(s.duration, 1.8);
-  const dir = s.direction === "ccw" ? -1 : 1;
-  const radius = num(s.ringRadius, 43);
-  const width = num(s.ringWidth, 7);
-  const dash = num(s.ringDash, 190);
-  const gap = num(s.ringGap, 75);
-
-  const ring = `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="${color}" stroke-opacity="${Math.min(op, .18)}" stroke-width="${width}"/>
-  <circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="${color}" stroke-opacity="${op}" stroke-width="${width}" stroke-linecap="round" stroke-dasharray="${dash} ${gap}" transform="rotate(-90 ${cx} ${cy})"/>`;
+  const total = animTotal(s);
+  const kt = growRatio(s).toFixed(3);
+  const circumference = Math.max(1, 2 * Math.PI * r);
+  const angle = startAngle ?? num(s.ringStartAngle, -90);
+  const dirScale = s.direction === "ccw" ? `translate(${cx} 0) scale(-1 1) translate(${-cx} 0)` : "";
 
   if (animated) {
-    return `<g transform-origin="${cx}px ${cy}px">
-      ${ring}
-      <animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="${dir*360} ${cx} ${cy}" dur="${dur}s" repeatCount="indefinite"/>
+    return `<g transform="rotate(${angle} ${cx} ${cy}) ${dirScale}">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-opacity="${Math.min(op,.18)}" stroke-width="${w}"/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-opacity="${op}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}">
+        <animate attributeName="stroke-dashoffset" values="${circumference};0;0" keyTimes="0;${kt};1" dur="${total}s" repeatCount="indefinite"/>
+      </circle>
     </g>`;
   }
-  return `<g transform="rotate(${dir * 360 * progress} ${cx} ${cy})">${ring}</g>`;
+
+  const p = progressToGrow(s, progress);
+  const dashOffset = circumference * (1 - p);
+  return `<g transform="rotate(${angle} ${cx} ${cy}) ${dirScale}">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-opacity="${Math.min(op,.18)}" stroke-width="${w}"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-opacity="${op}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${dashOffset}"/>
+  </g>`;
+}
+
+function buildPointCircle(s, progress=0, animated=true) {
+  const cx = s.size / 2;
+  const cy = s.size / 2;
+  const startAngle = pointAngle(cx, cy, num(s.pointX, 88), num(s.pointY, 88));
+  return buildRingDraw(s, progress, animated, startAngle, s.pointEndRadius, s.pointLineWidth);
 }
 
 function buildAnimationMarkup(s, progress=0, animated=true) {
   if (s.animationType === "center-pop") return buildCenterPop(s, progress, animated);
   if (s.animationType === "point-circle") return buildPointCircle(s, progress, animated);
-  return buildRingRotate(s, progress, animated);
+  return buildRingDraw(s, progress, animated);
 }
 
 function buildSVGText(rawState, opt={}) {
@@ -280,6 +337,7 @@ function buildSVGText(rawState, opt={}) {
     <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
   </filter>`;
 
+  const mark = buildBackgroundMark(s);
   const anim = buildAnimationMarkup(s, progress, animated);
   const text = `<text x="${num(s.textX, size/2)}" y="${num(s.textY, size/2)}"
     text-anchor="middle" dominant-baseline="middle"
@@ -296,9 +354,8 @@ function buildSVGText(rawState, opt={}) {
   </defs>
   ${bg}
   <rect x="${tilePad}" y="${tilePad}" width="${tileSize}" height="${tileSize}" rx="${num(s.rounded,24)}" fill="${esc(s.tileColor)}" filter="url(#neuShadow)"/>
-  <g filter="url(#softGlow)">
-    ${anim}
-  </g>
+  <g class="background-mark">${mark}</g>
+  <g class="effect-animation" filter="url(#softGlow)">${anim}</g>
   ${text}
 </svg>`;
 }
@@ -311,6 +368,16 @@ function render() {
   applyPause();
 }
 
+function setMode(paused, notifyLeft=true) {
+  isPaused = paused;
+  document.getElementById("btnAdjustCenter").classList.toggle("active", isPaused);
+  document.getElementById("btnPreviewCenter").classList.toggle("active", !isPaused);
+  render();
+  if (notifyLeft && parent && parent.frames && parent.frames["left"]) {
+    parent.frames["left"].postMessage({type: isPaused ? "icon-mode-adjust" : "icon-mode-preview"}, "*");
+  }
+}
+
 function applyPause() {
   const svg = document.querySelector("#previewWrap svg");
   if (svg) {
@@ -318,6 +385,8 @@ function applyPause() {
     if (!isPaused && svg.unpauseAnimations) svg.unpauseAnimations();
   }
   document.getElementById("previewHint").classList.toggle("visible", isPaused);
+  document.getElementById("btnAdjustCenter").classList.toggle("active", isPaused);
+  document.getElementById("btnPreviewCenter").classList.toggle("active", !isPaused);
 }
 
 window.addEventListener("message", e => {
@@ -337,6 +406,9 @@ window.addEventListener("message", e => {
     render();
   }
 });
+
+document.getElementById("btnAdjustCenter").addEventListener("click", () => setMode(true, true));
+document.getElementById("btnPreviewCenter").addEventListener("click", () => setMode(false, true));
 
 function showStatus(target, type, msg) {
   const el = document.getElementById(target);
@@ -474,8 +546,8 @@ function makeFCTL(seq, width, height, delayNum, delayDen) {
   writeU32(d,16,0);
   writeU16(d,20,delayNum);
   writeU16(d,22,delayDen);
-  d[24]=1; // dispose_op: background
-  d[25]=0; // blend_op: source
+  d[24]=1;
+  d[25]=0;
   return d;
 }
 function makeFDAT(seq, idatData) {
@@ -494,7 +566,7 @@ async function pngFrameAt(progress) {
 async function buildAPNG() {
   const size = clamp(num(state.size, 120), 40, 512);
   const fps = clamp(num(state.fps, 12), 4, 24);
-  const seconds = clamp(num(state.apngSeconds || state.duration, state.duration), 0.5, 4);
+  const seconds = clamp(num(state.apngSeconds || animTotal(state), animTotal(state)), 0.5, 6);
   const frameCount = Math.max(4, Math.round(fps * seconds));
   const delayNum = Math.max(1, Math.round(1000 / fps));
   const delayDen = 1000;
@@ -545,7 +617,6 @@ function openAccordion(id) {
   if (el) { el.setAttribute("open",""); el.scrollIntoView({behavior:"smooth",block:"start"}); }
 }
 
-// 中央だけ単独で開いた場合の初期表示
 window.addEventListener("load", () => {
   setTimeout(() => render(), 100);
 });
