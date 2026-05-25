@@ -1,1 +1,519 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>アイコンSVG ナビ</title>
+  <link rel="stylesheet" href="../../01-css/00-style.css" />
+  <link rel="stylesheet" href="../../01-css/31-csv-50-icon.css" />
+</head>
+<body>
+<div class="navi-wrap icon-navi">
 
+  <div class="navi-tool-title">✅ アイコンSVGジェネレーター</div>
+
+  <!-- ▶ 調整 / プレビュー トグル -->
+  <div class="mode-bar">
+    <button class="mode-btn mode-adjust active" id="btnAdjust">⏸ 調整モード</button>
+    <button class="mode-btn mode-preview" id="btnPreview">▶ プレビュー開始</button>
+  </div>
+
+  <!-- ① 文字・基本 -->
+  <details class="navi-acc navi-acc-1" open>
+    <summary>① 文字・基本</summary>
+    <div class="navi-acc-body">
+
+      <div class="ctrl-section-title">表示文字</div>
+      <div class="ctrl-row vertical">
+        <span class="ctrl-label">文字</span>
+        <input type="text" id="text" value="成功" class="wide-input" maxlength="8" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">アイコンサイズ</span>
+        <input type="range" id="size" min="80" max="240" step="10" value="120" />
+        <input type="number" id="sizeN" min="80" max="240" step="10" value="120" class="num-input" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">文字サイズ</span>
+        <input type="range" id="fontSize" min="12" max="72" step="1" value="30" />
+        <input type="number" id="fontSizeN" min="12" max="72" step="1" value="30" class="num-input" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">太さ</span>
+        <select id="fontWeight" class="select-input">
+          <option value="500">500</option>
+          <option value="700">700</option>
+          <option value="800" selected>800</option>
+          <option value="900">900</option>
+        </select>
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">文字色</span>
+        <input type="color" id="textColor" value="#25633f" />
+        <input type="text" id="textColorN" value="#25633f" class="hex-input" maxlength="7" />
+      </div>
+
+      <div class="ctrl-section-title">文字位置</div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">X</span>
+        <input type="range" id="textX" min="0" max="240" step="1" value="60" />
+        <input type="number" id="textXN" min="0" max="240" step="1" value="60" class="num-input" />
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">Y</span>
+        <input type="range" id="textY" min="0" max="240" step="1" value="62" />
+        <input type="number" id="textYN" min="0" max="240" step="1" value="62" class="num-input" />
+      </div>
+
+    </div>
+  </details>
+
+  <!-- ② 背景 -->
+  <details class="navi-acc navi-acc-2" open>
+    <summary>② 背景・ニューモーフィズム</summary>
+    <div class="navi-acc-body">
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">背景色</span>
+        <input type="color" id="pageBg" value="#eef3f7" />
+        <input type="text" id="pageBgN" value="#eef3f7" class="hex-input" maxlength="7" />
+        <label class="trans-label"><input type="checkbox" id="bgTransparent" /> 透明</label>
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">本体色</span>
+        <input type="color" id="tileColor" value="#e8edf2" />
+        <input type="text" id="tileColorN" value="#e8edf2" class="hex-input" maxlength="7" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">明るい影</span>
+        <input type="color" id="lightShadow" value="#ffffff" />
+        <input type="text" id="lightShadowN" value="#ffffff" class="hex-input" maxlength="7" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">暗い影</span>
+        <input type="color" id="darkShadow" value="#b8c2cc" />
+        <input type="text" id="darkShadowN" value="#b8c2cc" class="hex-input" maxlength="7" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">角丸</span>
+        <input type="range" id="rounded" min="0" max="50" step="1" value="24" />
+        <input type="number" id="roundedN" min="0" max="50" step="1" value="24" class="num-input" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">影位置</span>
+        <input type="range" id="shadowOffset" min="0" max="12" step="1" value="4" />
+        <input type="number" id="shadowOffsetN" min="0" max="12" step="1" value="4" class="num-input" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">影ぼかし</span>
+        <input type="range" id="shadowBlur" min="0" max="24" step="1" value="8" />
+        <input type="number" id="shadowBlurN" min="0" max="24" step="1" value="8" class="num-input" />
+      </div>
+
+    </div>
+  </details>
+
+  <!-- ③ 図形・アニメ -->
+  <details class="navi-acc navi-acc-3" open>
+    <summary>③ 図形・アニメーション</summary>
+    <div class="navi-acc-body">
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">効果色</span>
+        <input type="color" id="accentColor" value="#58c987" />
+        <input type="text" id="accentColorN" value="#58c987" class="hex-input" maxlength="7" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">光量</span>
+        <input type="range" id="glow" min="0" max="8" step="0.5" value="2" />
+        <input type="number" id="glowN" min="0" max="8" step="0.5" value="2" class="num-input" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">種類</span>
+        <select id="animationType" class="select-input">
+          <option value="ring-rotate" selected>リング回転</option>
+          <option value="center-pop">中央点 → 図形</option>
+          <option value="point-circle">指定点 → 円</option>
+        </select>
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">速度 秒</span>
+        <input type="range" id="duration" min="0.5" max="4" step="0.1" value="1.8" />
+        <input type="number" id="durationN" min="0.5" max="4" step="0.1" value="1.8" class="num-input" />
+      </div>
+
+      <div class="ctrl-row panel-ring">
+        <span class="ctrl-label">方向</span>
+        <select id="direction" class="select-input">
+          <option value="cw" selected>時計回り</option>
+          <option value="ccw">反時計回り</option>
+        </select>
+      </div>
+
+      <div class="anim-panel panel-ring" data-panel="ring-rotate">
+        <div class="ctrl-section-title">リング回転</div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">半径</span>
+          <input type="range" id="ringRadius" min="10" max="110" step="1" value="43" />
+          <input type="number" id="ringRadiusN" min="10" max="110" step="1" value="43" class="num-input" />
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">線幅</span>
+          <input type="range" id="ringWidth" min="1" max="24" step="1" value="7" />
+          <input type="number" id="ringWidthN" min="1" max="24" step="1" value="7" class="num-input" />
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">実線長</span>
+          <input type="range" id="ringDash" min="10" max="360" step="5" value="190" />
+          <input type="number" id="ringDashN" min="10" max="360" step="5" value="190" class="num-input" />
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">すき間</span>
+          <input type="range" id="ringGap" min="0" max="240" step="5" value="75" />
+          <input type="number" id="ringGapN" min="0" max="240" step="5" value="75" class="num-input" />
+        </div>
+      </div>
+
+      <div class="anim-panel panel-shape" data-panel="center-pop">
+        <div class="ctrl-section-title">中央点 → 図形</div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">図形</span>
+          <select id="shapeType" class="select-input">
+            <option value="circle" selected>円</option>
+            <option value="square">四角</option>
+            <option value="round-square">角丸四角</option>
+            <option value="diamond">ひし形</option>
+            <option value="hexagon">六角形</option>
+            <option value="star">星</option>
+            <option value="check">チェック</option>
+            <option value="heart">ハート</option>
+          </select>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">図形X</span>
+          <input type="range" id="shapeX" min="0" max="240" step="1" value="60" />
+          <input type="number" id="shapeXN" min="0" max="240" step="1" value="60" class="num-input" />
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">図形Y</span>
+          <input type="range" id="shapeY" min="0" max="240" step="1" value="60" />
+          <input type="number" id="shapeYN" min="0" max="240" step="1" value="60" class="num-input" />
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">図形サイズ</span>
+          <input type="range" id="shapeSize" min="6" max="180" step="1" value="74" />
+          <input type="number" id="shapeSizeN" min="6" max="180" step="1" value="74" class="num-input" />
+        </div>
+      </div>
+
+      <div class="anim-panel panel-point" data-panel="point-circle">
+        <div class="ctrl-section-title">指定点 → 円</div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">開始X</span>
+          <input type="range" id="pointX" min="0" max="240" step="1" value="88" />
+          <input type="number" id="pointXN" min="0" max="240" step="1" value="88" class="num-input" />
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">開始Y</span>
+          <input type="range" id="pointY" min="0" max="240" step="1" value="88" />
+          <input type="number" id="pointYN" min="0" max="240" step="1" value="88" class="num-input" />
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">点サイズ</span>
+          <input type="range" id="pointStartSize" min="1" max="20" step="1" value="3" />
+          <input type="number" id="pointStartSizeN" min="1" max="20" step="1" value="3" class="num-input" />
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">円半径</span>
+          <input type="range" id="pointEndRadius" min="4" max="110" step="1" value="38" />
+          <input type="number" id="pointEndRadiusN" min="4" max="110" step="1" value="38" class="num-input" />
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">円線幅</span>
+          <input type="range" id="pointLineWidth" min="1" max="24" step="1" value="7" />
+          <input type="number" id="pointLineWidthN" min="1" max="24" step="1" value="7" class="num-input" />
+        </div>
+      </div>
+
+    </div>
+  </details>
+
+  <!-- ④ 出力設定 -->
+  <details class="navi-acc navi-acc-4">
+    <summary>④ 出力</summary>
+    <div class="navi-acc-body">
+      <div class="ctrl-row">
+        <span class="ctrl-label">APNG fps</span>
+        <input type="range" id="fps" min="4" max="24" step="1" value="12" />
+        <input type="number" id="fpsN" min="4" max="24" step="1" value="12" class="num-input" />
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">APNG秒</span>
+        <input type="range" id="apngSeconds" min="0.5" max="4" step="0.1" value="1.8" />
+        <input type="number" id="apngSecondsN" min="0.5" max="4" step="0.1" value="1.8" class="num-input" />
+      </div>
+      <a class="navi-link" href="index.html" target="center" onclick="openAccInCenter('acc-image')">▶ PNG / APNG出力を開く</a>
+      <p class="navi-note">※完全アウトライン化はこのジェネレーターでは扱いません。</p>
+    </div>
+  </details>
+
+</div>
+
+<script>
+/* =============================================
+   31-csv/50-icon/navi.htm
+   役割：左iframe側。設定値を中央iframeの index.html へ送る。
+   注意：フレーム枠は親ページが担当するため、このファイル内では作らない。
+   ============================================= */
+
+const DEFAULTS = {
+  size: 120,
+  bgTransparent: false,
+  pageBg: "#eef3f7",
+  tileColor: "#e8edf2",
+  lightShadow: "#ffffff",
+  darkShadow: "#b8c2cc",
+  rounded: 24,
+  shadowOffset: 4,
+  shadowBlur: 8,
+
+  text: "成功",
+  textColor: "#25633f",
+  fontSize: 30,
+  fontWeight: "800",
+  fontFamily: "\"Noto Sans JP\",\"Hiragino Sans\",\"Yu Gothic\",\"Meiryo\",sans-serif",
+  textX: 60,
+  textY: 62,
+
+  accentColor: "#58c987",
+  accentOpacity: 0.95,
+  glow: 2,
+
+  animationType: "ring-rotate",
+  duration: 1.8,
+  direction: "cw",
+
+  ringRadius: 43,
+  ringWidth: 7,
+  ringDash: 190,
+  ringGap: 75,
+
+  shapeType: "circle",
+  shapeX: 60,
+  shapeY: 60,
+  shapeSize: 74,
+
+  pointX: 88,
+  pointY: 88,
+  pointStartSize: 3,
+  pointEndRadius: 38,
+  pointLineWidth: 7,
+
+  fps: 12,
+  apngSeconds: 1.8
+};
+
+let state = {...DEFAULTS};
+let isPreviewing = false;
+
+function getCenter() {
+  return parent && parent.frames && parent.frames["center"] ? parent.frames["center"] : null;
+}
+function sendUpdate() {
+  const center = getCenter();
+  if (!center) return;
+  center.postMessage({ type: "icon-update", state }, "*");
+}
+function sendPause() {
+  const center = getCenter();
+  if (center) center.postMessage({ type: "icon-pause" }, "*");
+}
+function sendResume() {
+  const center = getCenter();
+  if (center) center.postMessage({ type: "icon-resume" }, "*");
+}
+function onChange(updateFn) {
+  updateFn();
+  sendUpdate();
+}
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, Number.isFinite(v) ? v : min));
+}
+function syncCoordinateMax() {
+  const size = Number(state.size) || 120;
+  ["textX","textY","shapeX","shapeY","pointX","pointY"].forEach(id => {
+    const range = document.getElementById(id);
+    const num = document.getElementById(id + "N");
+    if (range) range.max = size;
+    if (num) num.max = size;
+  });
+}
+function bindPair(rangeId, numberId, key) {
+  const rng = document.getElementById(rangeId);
+  const num = document.getElementById(numberId);
+  if (!rng || !num) return;
+
+  rng.addEventListener("input", () => {
+    const v = Number(rng.value);
+    num.value = v;
+    onChange(() => {
+      state[key] = v;
+      if (key === "size") syncCoordinateMax();
+    });
+  });
+  num.addEventListener("change", () => {
+    const v = clamp(Number(num.value), Number(num.min), Number(num.max));
+    num.value = v;
+    rng.value = v;
+    onChange(() => {
+      state[key] = v;
+      if (key === "size") syncCoordinateMax();
+    });
+  });
+}
+function bindColorPair(pickerId, textId, key) {
+  const picker = document.getElementById(pickerId);
+  const text = document.getElementById(textId);
+  if (!picker || !text) return;
+
+  picker.addEventListener("input", () => {
+    text.value = picker.value;
+    onChange(() => { state[key] = picker.value; });
+  });
+  text.addEventListener("change", () => {
+    const v = text.value.trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+      picker.value = v;
+      onChange(() => { state[key] = v; });
+    } else {
+      text.value = picker.value;
+    }
+  });
+}
+function bindSelect(id, key, after) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener("change", () => {
+    onChange(() => {
+      state[key] = el.value;
+      if (after) after();
+    });
+  });
+}
+function bindText(id, key) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener("input", () => {
+    onChange(() => { state[key] = el.value; });
+  });
+}
+function updatePanelVisibility() {
+  const type = state.animationType;
+  document.querySelectorAll(".anim-panel").forEach(panel => {
+    panel.classList.toggle("hidden", panel.dataset.panel !== type);
+  });
+  document.querySelectorAll(".panel-ring").forEach(el => {
+    el.classList.toggle("hidden", type !== "ring-rotate");
+  });
+  document.querySelectorAll(".panel-shape").forEach(el => {
+    el.classList.toggle("hidden", type !== "center-pop");
+  });
+  document.querySelectorAll(".panel-point").forEach(el => {
+    el.classList.toggle("hidden", type !== "point-circle");
+  });
+}
+
+document.getElementById("btnAdjust").addEventListener("click", () => {
+  isPreviewing = false;
+  document.getElementById("btnAdjust").classList.add("active");
+  document.getElementById("btnPreview").classList.remove("active");
+  sendPause();
+});
+document.getElementById("btnPreview").addEventListener("click", () => {
+  isPreviewing = true;
+  document.getElementById("btnPreview").classList.add("active");
+  document.getElementById("btnAdjust").classList.remove("active");
+  sendResume();
+});
+
+bindText("text", "text");
+bindPair("size", "sizeN", "size");
+bindPair("fontSize", "fontSizeN", "fontSize");
+bindSelect("fontWeight", "fontWeight");
+bindColorPair("textColor", "textColorN", "textColor");
+bindPair("textX", "textXN", "textX");
+bindPair("textY", "textYN", "textY");
+
+bindColorPair("pageBg", "pageBgN", "pageBg");
+bindColorPair("tileColor", "tileColorN", "tileColor");
+bindColorPair("lightShadow", "lightShadowN", "lightShadow");
+bindColorPair("darkShadow", "darkShadowN", "darkShadow");
+bindPair("rounded", "roundedN", "rounded");
+bindPair("shadowOffset", "shadowOffsetN", "shadowOffset");
+bindPair("shadowBlur", "shadowBlurN", "shadowBlur");
+
+bindColorPair("accentColor", "accentColorN", "accentColor");
+bindPair("glow", "glowN", "glow");
+bindSelect("animationType", "animationType", updatePanelVisibility);
+bindPair("duration", "durationN", "duration");
+bindSelect("direction", "direction");
+
+bindPair("ringRadius", "ringRadiusN", "ringRadius");
+bindPair("ringWidth", "ringWidthN", "ringWidth");
+bindPair("ringDash", "ringDashN", "ringDash");
+bindPair("ringGap", "ringGapN", "ringGap");
+
+bindSelect("shapeType", "shapeType");
+bindPair("shapeX", "shapeXN", "shapeX");
+bindPair("shapeY", "shapeYN", "shapeY");
+bindPair("shapeSize", "shapeSizeN", "shapeSize");
+
+bindPair("pointX", "pointXN", "pointX");
+bindPair("pointY", "pointYN", "pointY");
+bindPair("pointStartSize", "pointStartSizeN", "pointStartSize");
+bindPair("pointEndRadius", "pointEndRadiusN", "pointEndRadius");
+bindPair("pointLineWidth", "pointLineWidthN", "pointLineWidth");
+
+bindPair("fps", "fpsN", "fps");
+bindPair("apngSeconds", "apngSecondsN", "apngSeconds");
+
+document.getElementById("bgTransparent").addEventListener("change", function() {
+  onChange(() => {
+    state.bgTransparent = this.checked;
+  });
+});
+
+function openAccInCenter(accId) {
+  const center = getCenter();
+  if (!center) return;
+  setTimeout(() => {
+    try {
+      if (center.openAccordion) center.openAccordion(accId);
+    } catch(e) {}
+  }, 250);
+}
+
+window.addEventListener("load", () => {
+  syncCoordinateMax();
+  updatePanelVisibility();
+  setTimeout(() => {
+    sendUpdate();
+    sendPause();
+  }, 300);
+});
+</script>
+</body>
+</html>
