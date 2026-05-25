@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>アイコンSVGジェネレーター3</title>
+  <title>アイコンSVGジェネレーター</title>
   <link rel="stylesheet" href="../../01-css/00-style.css" />
   <link rel="stylesheet" href="../../01-css/31-csv-50-icon.css" />
 </head>
 <body>
 <div class="page-wrap icon-page">
 
-  <h1 class="page-title">✅ アイコンSVGジェネレーター</h1>
+  <h1 class="page-title">✅ アイコンSVGジェネレーター1</h1>
   <p class="page-subtitle">左パネルで調整 → リアルタイムプレビュー。SVG / PNG / APNG をダウンロードできます。</p>
 
   <details class="accordion-008 acc-color-1" id="acc-preview" open>
@@ -39,14 +39,26 @@
       <div class="menu-btn-row">
         <button class="menu-btn primary" id="btnCopy">📋 SVGコードをコピー</button>
         <button class="menu-btn dl" id="btnSVG">💾 .svgダウンロード</button>
+        <button class="menu-btn primary" id="btnCopyCSS">📋 CSS全文をコピー</button>
       </div>
       <div class="status-msg" id="codeStatus"></div>
       <pre class="code-output" id="codeOutput">← 左パネルで設定するとここに反映されます</pre>
     </div>
   </details>
 
+  <details class="accordion-008 acc-color-4" id="acc-css">
+    <summary>③ CSS全文コピー用</summary>
+    <div class="accordion-body">
+      <div class="menu-btn-row">
+        <button class="menu-btn primary" id="btnCopyCSS2">📋 CSS全文をコピー</button>
+      </div>
+      <div class="status-msg" id="cssStatus"></div>
+      <pre class="code-output" id="cssOutput"></pre>
+    </div>
+  </details>
+
   <details class="accordion-008 acc-color-3" id="acc-image">
-    <summary>③ PNG / APNG ダウンロード</summary>
+    <summary>④ PNG / APNG ダウンロード</summary>
     <div class="accordion-body">
       <div class="menu-btn-row">
         <button class="menu-btn dl" id="btnPNG">🖼 PNGダウンロード</button>
@@ -68,6 +80,246 @@
    フレーム枠は親ページが担当するため、このファイルでは作らない。
    ============================================= */
 
+const CSS_TEXT = `/* =============================================
+   31-csv-50-icon.css
+   対象：
+   - 31-csv/50-icon/index.html
+   - 31-csv/50-icon/navi.htm
+   ============================================= */
+
+/* ここから中央プレビュー */
+.icon-page .preview-area {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.center-mode-bar {
+  margin: 0 auto 12px;
+  max-width: 420px;
+}
+
+.icon-preview-stage {
+  width: min(100%, 380px);
+  min-height: 270px;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  border-radius: 18px;
+  background: #eef3f7;
+  box-shadow:
+    inset 8px 8px 18px rgba(176, 190, 203, 0.35),
+    inset -8px -8px 18px rgba(255, 255, 255, 0.9);
+}
+
+.svg-preview-wrap {
+  display: grid;
+  place-items: center;
+  min-width: 160px;
+  min-height: 160px;
+}
+
+.svg-preview-wrap svg {
+  width: min(240px, 80vw);
+  height: auto;
+  image-rendering: auto;
+}
+
+.preview-empty {
+  color: #77818c;
+  font-size: 14px;
+  text-align: center;
+}
+
+.preview-hint {
+  display: none;
+  width: fit-content;
+  margin: 0 auto 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #fff6d8;
+  color: #6e5300;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.preview-hint.visible {
+  display: block;
+}
+
+.preview-meta {
+  color: #66717d;
+  font-size: 12px;
+  text-align: center;
+}
+
+.code-output {
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 360px;
+  overflow: auto;
+  padding: 12px;
+  border-radius: 10px;
+  background: #18202a;
+  color: #e9f3ff;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.output-note {
+  margin: 10px 0 0;
+  color: #66717d;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ここから左ナビ */
+.icon-navi .main-text-box {
+  padding: 10px;
+  border: 2px solid #58c987;
+  border-radius: 14px;
+  background: #eefbf3;
+  box-shadow: 0 3px 10px rgba(37, 99, 63, .12);
+  margin-bottom: 12px;
+}
+
+.icon-navi .main-text-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 900;
+  color: #225c35;
+}
+
+.icon-navi .main-text-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 2px solid #8ed9a9;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fff;
+  color: #173623;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.icon-navi .wide-input,
+.icon-navi .select-input,
+.icon-navi .hex-input,
+.icon-navi .num-input {
+  border: 1px solid #c7d1dc;
+  border-radius: 8px;
+  padding: 6px 8px;
+  background: #fff;
+  color: #25313c;
+}
+
+.icon-navi .select-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.icon-navi .ctrl-section-title {
+  margin: 14px 0 8px;
+  padding-left: 8px;
+  border-left: 4px solid #58c987;
+  font-weight: 800;
+  color: #32404d;
+}
+
+.icon-navi .anim-panel {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.55);
+  border: 1px solid rgba(120, 140, 160, .22);
+}
+
+.icon-navi .hidden {
+  display: none !important;
+}
+
+.mini-action-btn {
+  width: 100%;
+  margin: 8px 0 2px;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: #46586b;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* ここからボタン・状態表示補助 */
+.menu-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.menu-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.menu-btn.primary {
+  background: #25633f;
+  color: #fff;
+}
+
+.menu-btn.dl {
+  background: #2d5f9a;
+  color: #fff;
+}
+
+.status-msg {
+  display: none;
+  margin: 10px 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.status-msg.show {
+  display: block;
+}
+
+.status-msg.ok {
+  background: #e5f8eb;
+  color: #225c35;
+}
+
+.status-msg.err {
+  background: #ffe8e8;
+  color: #8d1f1f;
+}
+
+
+/* ここから文字効果UI */
+.icon-navi .effect-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #f7fbff;
+  border: 1px solid #c7d8e8;
+  font-weight: 900;
+  color: #2f4051;
+}
+
+.icon-navi .effect-check input {
+  transform: scale(1.15);
+}
+`;
+
 const DEFAULTS = {
   size: 120,
   bgTransparent: false,
@@ -83,7 +335,8 @@ const DEFAULTS = {
   textColor: "#25633f",
   fontSize: 30,
   fontWeight: 800,
-  fontFamily: "\"Noto Sans JP\",\"Hiragino Sans\",\"Yu Gothic\",\"Meiryo\",sans-serif",
+  fontFamily: "\"Yu Gothic\",\"Meiryo\",sans-serif",
+  customFontFamily: "",
   textX: 60,
   textY: 62,
   textOutline: false,
@@ -334,7 +587,8 @@ function buildTextMarkup(s) {
   const y = num(s.textY, s.size / 2);
   const fontSize = num(s.fontSize, 30);
   const weight = esc(s.fontWeight);
-  const family = esc(s.fontFamily);
+  const rawFamily = String(s.customFontFamily || "").trim() || s.fontFamily;
+  const family = esc(rawFamily);
   const text = esc(s.text);
   const fill = esc(s.textColor);
   const outline = s.textOutline
@@ -477,6 +731,15 @@ document.getElementById("btnSVG").addEventListener("click", () => {
   downloadBlob(new Blob([currentSVG], {type:"image/svg+xml;charset=utf-8"}), safeFileName("svg"));
   showStatus("codeStatus", "ok", "SVGをダウンロードしました");
 });
+
+function copyCSS(targetStatus="cssStatus") {
+  navigator.clipboard.writeText(CSS_TEXT)
+    .then(() => showStatus(targetStatus, "ok", "CSS全文をコピーしました"))
+    .catch(() => showStatus(targetStatus, "err", "CSSコピー失敗。手動でコピーしてください"));
+}
+
+document.getElementById("btnCopyCSS").addEventListener("click", () => copyCSS("codeStatus"));
+document.getElementById("btnCopyCSS2").addEventListener("click", () => copyCSS("cssStatus"));
 
 async function svgToCanvas(svgText, size) {
   const blob = new Blob([svgText], {type:"image/svg+xml;charset=utf-8"});
@@ -655,6 +918,7 @@ function openAccordion(id) {
 }
 
 window.addEventListener("load", () => {
+  document.getElementById("cssOutput").textContent = CSS_TEXT;
   setTimeout(() => render(), 100);
 });
 </script>
