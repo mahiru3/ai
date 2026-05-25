@@ -3,59 +3,314 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>アイコンSVGジェネレーター</title>
+  <title>アイコンSVG ナビ</title>
   <link rel="stylesheet" href="../../01-css/00-style.css" />
   <link rel="stylesheet" href="../../01-css/31-csv-50-icon.css" />
 </head>
 <body>
-<div class="page-wrap icon-page">
+<div class="navi-wrap icon-navi">
 
-  <h1 class="page-title">✅ アイコンSVGジェネレーター</h1>
-  <p class="page-subtitle">左パネルで調整 → リアルタイムプレビュー。SVG / PNG / APNG をダウンロードできます。</p>
+  <div class="navi-tool-title">✅ アイコンSVGジェネレーター</div>
 
-  <details class="accordion-008 acc-color-1" id="acc-preview" open>
-    <summary>① プレビュー</summary>
-    <div class="accordion-body">
-      <div class="mode-bar center-mode-bar">
-        <button class="mode-btn mode-adjust active" id="btnAdjustCenter">⏸ 調整モード</button>
-        <button class="mode-btn mode-preview" id="btnPreviewCenter">▶ プレビュー開始</button>
+  <div class="mode-bar">
+    <button class="mode-btn mode-adjust active" id="btnAdjust">⏸ 調整モード</button>
+    <button class="mode-btn mode-preview" id="btnPreview">▶ プレビュー開始</button>
+  </div>
+
+  <details class="navi-acc navi-acc-1" open>
+    <summary>① 表示文字</summary>
+    <div class="navi-acc-body">
+      <div class="main-text-box">
+        <label for="text" class="main-text-label">表示文字</label>
+        <input type="text" id="text" value="成功" class="main-text-input" maxlength="12" />
       </div>
 
-      <div class="preview-hint visible" id="previewHint">⏸ 調整モード中 — アニメーションは停止表示です</div>
-      <div class="preview-area">
-        <div class="icon-preview-stage">
-          <div class="svg-preview-wrap" id="previewWrap">
-            <div class="preview-empty">左パネルで設定してください</div>
-          </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">アイコンサイズ</span>
+        <input type="range" id="size" min="80" max="240" step="10" value="120" />
+        <input type="number" id="sizeN" min="80" max="240" step="10" value="120" class="num-input" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">文字サイズ</span>
+        <input type="range" id="fontSize" min="8" max="300" step="1" value="30" />
+        <input type="number" id="fontSizeN" min="1" step="1" value="30" class="num-input" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">太さ</span>
+        <input type="range" id="fontWeight" min="100" max="1000" step="50" value="800" />
+        <input type="number" id="fontWeightN" min="100" max="1000" step="50" value="800" class="num-input" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">文字色</span>
+        <input type="color" id="textColor" value="#25633f" />
+        <input type="text" id="textColorN" value="#25633f" class="hex-input" maxlength="7" />
+      </div>
+
+      <div class="ctrl-section-title">文字位置</div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">X</span>
+        <input type="range" id="textX" min="-240" max="480" step="1" value="60" />
+        <input type="number" id="textXN" min="-999" max="999" step="1" value="60" class="num-input" />
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">Y</span>
+        <input type="range" id="textY" min="-240" max="480" step="1" value="62" />
+        <input type="number" id="textYN" min="-999" max="999" step="1" value="62" class="num-input" />
+      </div>
+      <button class="mini-action-btn" id="btnResetTextPos" type="button">↺ 文字位置を中央に戻す</button>
+    </div>
+  </details>
+
+  <details class="navi-acc navi-acc-2">
+    <summary>② 背景</summary>
+    <div class="navi-acc-body">
+      <div class="ctrl-row">
+        <span class="ctrl-label">背景色</span>
+        <input type="color" id="pageBg" value="#eef3f7" />
+        <input type="text" id="pageBgN" value="#eef3f7" class="hex-input" maxlength="7" />
+        <label class="trans-label"><input type="checkbox" id="bgTransparent" /> 透明</label>
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">本体色</span>
+        <input type="color" id="tileColor" value="#e8edf2" />
+        <input type="text" id="tileColorN" value="#e8edf2" class="hex-input" maxlength="7" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">明るい影</span>
+        <input type="color" id="lightShadow" value="#ffffff" />
+        <input type="text" id="lightShadowN" value="#ffffff" class="hex-input" maxlength="7" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">暗い影</span>
+        <input type="color" id="darkShadow" value="#b8c2cc" />
+        <input type="text" id="darkShadowN" value="#b8c2cc" class="hex-input" maxlength="7" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">角丸</span>
+        <input type="range" id="rounded" min="0" max="80" step="1" value="24" />
+        <input type="number" id="roundedN" min="0" max="80" step="1" value="24" class="num-input" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">影位置</span>
+        <input type="range" id="shadowOffset" min="0" max="20" step="1" value="4" />
+        <input type="number" id="shadowOffsetN" min="0" max="20" step="1" value="4" class="num-input" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">影ぼかし</span>
+        <input type="range" id="shadowBlur" min="0" max="36" step="1" value="8" />
+        <input type="number" id="shadowBlurN" min="0" max="36" step="1" value="8" class="num-input" />
+      </div>
+    </div>
+  </details>
+
+  <details class="navi-acc navi-acc-3">
+    <summary>③ 背景文字</summary>
+    <div class="navi-acc-body">
+      <div class="ctrl-row">
+        <span class="ctrl-label">図形</span>
+        <select id="markType" class="select-input">
+          <option value="circle" selected>○ 円</option>
+          <option value="square">□ 四角</option>
+          <option value="round-square">▢ 角丸四角</option>
+          <option value="triangle">△ 三角</option>
+          <option value="diamond">◇ ひし形</option>
+          <option value="hexagon">⬡ 六角形</option>
+          <option value="star">★ 星</option>
+          <option value="check">✓ チェック</option>
+          <option value="cross">× クロス</option>
+          <option value="heart">♡ ハート</option>
+        </select>
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">色</span>
+        <input type="color" id="markColor" value="#58c987" />
+        <input type="text" id="markColorN" value="#58c987" class="hex-input" maxlength="7" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">サイズ</span>
+        <input type="range" id="markSize" min="0" max="240" step="1" value="78" />
+        <input type="number" id="markSizeN" min="0" max="999" step="1" value="78" class="num-input" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">線幅</span>
+        <input type="range" id="markStrokeWidth" min="0" max="40" step="1" value="7" />
+        <input type="number" id="markStrokeWidthN" min="0" max="99" step="1" value="7" class="num-input" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">塗り透明度</span>
+        <input type="range" id="markFillOpacity" min="0" max="1" step="0.01" value="0.12" />
+        <input type="number" id="markFillOpacityN" min="0" max="1" step="0.01" value="0.12" class="num-input" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">線透明度</span>
+        <input type="range" id="markStrokeOpacity" min="0" max="1" step="0.01" value="0.62" />
+        <input type="number" id="markStrokeOpacityN" min="0" max="1" step="0.01" value="0.62" class="num-input" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">X</span>
+        <input type="range" id="markX" min="-240" max="480" step="1" value="60" />
+        <input type="number" id="markXN" min="-999" max="999" step="1" value="60" class="num-input" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">Y</span>
+        <input type="range" id="markY" min="-240" max="480" step="1" value="60" />
+        <input type="number" id="markYN" min="-999" max="999" step="1" value="60" class="num-input" />
+      </div>
+
+      <button class="mini-action-btn" id="btnResetMarkPos" type="button">↺ 背景文字を中央に戻す</button>
+    </div>
+  </details>
+
+  <details class="navi-acc navi-acc-4" open>
+    <summary>④ アニメーション</summary>
+    <div class="navi-acc-body">
+      <div class="ctrl-row">
+        <span class="ctrl-label">効果色</span>
+        <input type="color" id="accentColor" value="#58c987" />
+        <input type="text" id="accentColorN" value="#58c987" class="hex-input" maxlength="7" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">光量</span>
+        <input type="range" id="glow" min="0" max="8" step="0.5" value="2" />
+        <input type="number" id="glowN" min="0" max="8" step="0.5" value="2" class="num-input" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">種類</span>
+        <select id="animationType" class="select-input">
+          <option value="ring-draw" selected>円を描く</option>
+          <option value="center-pop">中央点 → 図形</option>
+          <option value="point-circle">指定点 → 円描画</option>
+        </select>
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">描画秒</span>
+        <input type="range" id="duration" min="0.2" max="6" step="0.1" value="1.4" />
+        <input type="number" id="durationN" min="0.2" max="20" step="0.1" value="1.4" class="num-input" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">静止秒</span>
+        <input type="range" id="holdSeconds" min="0" max="6" step="0.1" value="0.8" />
+        <input type="number" id="holdSecondsN" min="0" max="20" step="0.1" value="0.8" class="num-input" />
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">方向</span>
+        <select id="direction" class="select-input">
+          <option value="cw" selected>時計回り</option>
+          <option value="ccw">反時計回り</option>
+        </select>
+      </div>
+
+      <div class="anim-panel panel-ring" data-panel="ring-draw">
+        <div class="ctrl-section-title">円を描く</div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">半径</span>
+          <input type="range" id="ringRadius" min="4" max="120" step="1" value="43" />
+          <input type="number" id="ringRadiusN" min="4" max="999" step="1" value="43" class="num-input" />
         </div>
-        <div class="preview-meta" id="previewMeta">120 × 120 / SVG</div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">線幅</span>
+          <input type="range" id="ringWidth" min="1" max="40" step="1" value="7" />
+          <input type="number" id="ringWidthN" min="1" max="99" step="1" value="7" class="num-input" />
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">開始角度</span>
+          <input type="range" id="ringStartAngle" min="-180" max="180" step="1" value="-90" />
+          <input type="number" id="ringStartAngleN" min="-360" max="360" step="1" value="-90" class="num-input" />
+        </div>
       </div>
-    </div>
-  </details>
 
-  <details class="accordion-008 acc-color-2" id="acc-code">
-    <summary>② SVGコード・SVGダウンロード</summary>
-    <div class="accordion-body">
-      <div class="menu-btn-row">
-        <button class="menu-btn primary" id="btnCopy">📋 SVGコードをコピー</button>
-        <button class="menu-btn dl" id="btnSVG">💾 .svgダウンロード</button>
+      <div class="anim-panel panel-shape" data-panel="center-pop">
+        <div class="ctrl-section-title">中央点 → 図形</div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">図形</span>
+          <select id="shapeType" class="select-input">
+            <option value="circle" selected>円</option>
+            <option value="square">四角</option>
+            <option value="round-square">角丸四角</option>
+            <option value="triangle">三角</option>
+            <option value="diamond">ひし形</option>
+            <option value="hexagon">六角形</option>
+            <option value="star">星</option>
+            <option value="check">チェック</option>
+            <option value="heart">ハート</option>
+          </select>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">図形X</span>
+          <input type="range" id="shapeX" min="-240" max="480" step="1" value="60" />
+          <input type="number" id="shapeXN" min="-999" max="999" step="1" value="60" class="num-input" />
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">図形Y</span>
+          <input type="range" id="shapeY" min="-240" max="480" step="1" value="60" />
+          <input type="number" id="shapeYN" min="-999" max="999" step="1" value="60" class="num-input" />
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">図形サイズ</span>
+          <input type="range" id="shapeSize" min="1" max="240" step="1" value="74" />
+          <input type="number" id="shapeSizeN" min="1" max="999" step="1" value="74" class="num-input" />
+        </div>
       </div>
-      <div class="status-msg" id="codeStatus"></div>
-      <pre class="code-output" id="codeOutput">← 左パネルで設定するとここに反映されます</pre>
-    </div>
-  </details>
 
-  <details class="accordion-008 acc-color-3" id="acc-image">
-    <summary>③ PNG / APNG ダウンロード</summary>
-    <div class="accordion-body">
-      <div class="menu-btn-row">
-        <button class="menu-btn dl" id="btnPNG">🖼 PNGダウンロード</button>
-        <button class="menu-btn dl" id="btnAPNG">🎞 APNGダウンロード</button>
+      <div class="anim-panel panel-point" data-panel="point-circle">
+        <div class="ctrl-section-title">指定点 → 円描画</div>
+        <p class="navi-hint">指定点は「円周のどこから描き始めるか」を決めます。</p>
+        <div class="ctrl-row">
+          <span class="ctrl-label">開始点X</span>
+          <input type="range" id="pointX" min="-240" max="480" step="1" value="88" />
+          <input type="number" id="pointXN" min="-999" max="999" step="1" value="88" class="num-input" />
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">開始点Y</span>
+          <input type="range" id="pointY" min="-240" max="480" step="1" value="88" />
+          <input type="number" id="pointYN" min="-999" max="999" step="1" value="88" class="num-input" />
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">円半径</span>
+          <input type="range" id="pointEndRadius" min="4" max="120" step="1" value="43" />
+          <input type="number" id="pointEndRadiusN" min="4" max="999" step="1" value="43" class="num-input" />
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">円線幅</span>
+          <input type="range" id="pointLineWidth" min="1" max="40" step="1" value="7" />
+          <input type="number" id="pointLineWidthN" min="1" max="99" step="1" value="7" class="num-input" />
+        </div>
       </div>
-      <div class="status-msg" id="imageStatus"></div>
-      <p class="output-note">
-        PNGは停止時の見た目を保存します。APNGは選択中のアニメーションを短いループ画像として保存します。
-      </p>
+
+      <div class="ctrl-section-title">APNG</div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">fps</span>
+        <input type="range" id="fps" min="4" max="24" step="1" value="12" />
+        <input type="number" id="fpsN" min="4" max="24" step="1" value="12" class="num-input" />
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">APNG秒</span>
+        <input type="range" id="apngSeconds" min="0.5" max="6" step="0.1" value="2.2" />
+        <input type="number" id="apngSecondsN" min="0.5" max="20" step="0.1" value="2.2" class="num-input" />
+      </div>
+
+      <a class="navi-link" href="index.html" target="center" onclick="openAccInCenter('acc-image')">▶ PNG / APNG出力を開く</a>
     </div>
   </details>
 
@@ -63,9 +318,8 @@
 
 <script>
 /* =============================================
-   31-csv/50-icon/index.html
-   役割：中央iframe側。プレビュー、SVGコード、SVG/PNG/APNG出力。
-   フレーム枠は親ページが担当するため、このファイルでは作らない。
+   31-csv/50-icon/navi.htm
+   役割：左iframe側。設定値を中央iframeの index.html へ送る。
    ============================================= */
 
 const DEFAULTS = {
@@ -124,501 +378,191 @@ const DEFAULTS = {
 };
 
 let state = {...DEFAULTS};
-let currentSVG = "";
-let isPaused = true;
 
-function esc(s) {
-  return String(s ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;");
+function getCenter() {
+  return parent && parent.frames && parent.frames["center"] ? parent.frames["center"] : null;
 }
-function num(v, fallback=0) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : fallback;
+function sendUpdate() {
+  const center = getCenter();
+  if (!center) return;
+  center.postMessage({ type: "icon-update", state }, "*");
+}
+function sendPause() {
+  const center = getCenter();
+  if (center) center.postMessage({ type: "icon-pause" }, "*");
+  setModeButtons(true);
+}
+function sendResume() {
+  const center = getCenter();
+  if (center) center.postMessage({ type: "icon-resume" }, "*");
+  setModeButtons(false);
+}
+function setModeButtons(paused) {
+  document.getElementById("btnAdjust").classList.toggle("active", paused);
+  document.getElementById("btnPreview").classList.toggle("active", !paused);
+}
+function onChange(updateFn) {
+  updateFn();
+  sendUpdate();
 }
 function clamp(v, min, max) {
-  return Math.max(min, Math.min(max, v));
+  return Math.max(min, Math.min(max, Number.isFinite(v) ? v : min));
 }
-function animTotal(s) {
-  return Math.max(0.1, num(s.duration, 1.4) + Math.max(0, num(s.holdSeconds, 0.8)));
+function setInputValue(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.value = value;
 }
-function growRatio(s) {
-  const total = animTotal(s);
-  return clamp(num(s.duration, 1.4) / total, 0.02, 0.98);
+function resetToCenter(keys) {
+  const c = Number(state.size) / 2;
+  keys.forEach(key => {
+    state[key] = c;
+    setInputValue(key, c);
+    setInputValue(key + "N", c);
+  });
+  sendUpdate();
 }
-function progressToGrow(s, progress) {
-  const gr = growRatio(s);
-  return progress <= gr ? progress / gr : 1;
-}
-function polar(cx, cy, r, angleDeg) {
-  const a = angleDeg * Math.PI / 180;
-  return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
-}
-function pointAngle(cx, cy, x, y) {
-  return Math.atan2(y - cy, x - cx) * 180 / Math.PI;
-}
+function bindPair(rangeId, numberId, key) {
+  const rng = document.getElementById(rangeId);
+  const num = document.getElementById(numberId);
+  if (!rng || !num) return;
 
-function basicShapeMarkup(opt) {
-  const type = opt.type || "circle";
-  const x = num(opt.x, 60);
-  const y = num(opt.y, 60);
-  const size = num(opt.size, 74);
-  const half = size / 2;
-  const color = esc(opt.color || "#58c987");
-  const fillOpacity = clamp(num(opt.fillOpacity, 0.12), 0, 1);
-  const strokeOpacity = clamp(num(opt.strokeOpacity, 0.62), 0, 1);
-  const sw = Math.max(0, num(opt.strokeWidth, 7));
-  const common = `fill="${color}" fill-opacity="${fillOpacity}" stroke="${color}" stroke-opacity="${strokeOpacity}" stroke-width="${sw}"`;
-
-  if (type === "square") {
-    return `<rect x="${x-half}" y="${y-half}" width="${size}" height="${size}" ${common}/>`;
-  }
-  if (type === "round-square") {
-    return `<rect x="${x-half}" y="${y-half}" width="${size}" height="${size}" rx="${Math.max(4, size*.18)}" ${common}/>`;
-  }
-  if (type === "triangle") {
-    const pts = [
-      `${x},${y-half}`,
-      `${x+half*.9},${y+half*.72}`,
-      `${x-half*.9},${y+half*.72}`
-    ].join(" ");
-    return `<polygon points="${pts}" ${common}/>`;
-  }
-  if (type === "diamond") {
-    return `<path d="M ${x},${y-half} L ${x+half},${y} L ${x},${y+half} L ${x-half},${y} Z" ${common}/>`;
-  }
-  if (type === "hexagon") {
-    const pts = [];
-    for (let i=0; i<6; i++) {
-      const a = (-90 + i*60) * Math.PI / 180;
-      pts.push(`${x + half*Math.cos(a)},${y + half*Math.sin(a)}`);
-    }
-    return `<polygon points="${pts.join(" ")}" ${common}/>`;
-  }
-  if (type === "star") {
-    const pts = [];
-    for (let i=0; i<10; i++) {
-      const r = i % 2 === 0 ? half : half * .45;
-      const a = (-90 + i*36) * Math.PI / 180;
-      pts.push(`${x + r*Math.cos(a)},${y + r*Math.sin(a)}`);
-    }
-    return `<polygon points="${pts.join(" ")}" ${common}/>`;
-  }
-  if (type === "check") {
-    const checkSw = Math.max(4, size * .14);
-    return `<path d="M ${x-half*.55},${y+half*.02} L ${x-half*.16},${y+half*.39} L ${x+half*.58},${y-half*.42}" fill="none" stroke="${color}" stroke-opacity="${strokeOpacity}" stroke-width="${checkSw}" stroke-linecap="round" stroke-linejoin="round"/>`;
-  }
-  if (type === "cross") {
-    const crossSw = Math.max(4, size * .14);
-    return `<g stroke="${color}" stroke-opacity="${strokeOpacity}" stroke-width="${crossSw}" stroke-linecap="round">
-      <path d="M ${x-half*.45},${y-half*.45} L ${x+half*.45},${y+half*.45}"/>
-      <path d="M ${x+half*.45},${y-half*.45} L ${x-half*.45},${y+half*.45}"/>
-    </g>`;
-  }
-  if (type === "heart") {
-    const sc = size / 100;
-    const d = [
-      `M ${x},${y+30*sc}`,
-      `C ${x-52*sc},${y-5*sc} ${x-42*sc},${y-42*sc} ${x-18*sc},${y-42*sc}`,
-      `C ${x-4*sc},${y-42*sc} ${x},${y-30*sc} ${x},${y-24*sc}`,
-      `C ${x},${y-30*sc} ${x+4*sc},${y-42*sc} ${x+18*sc},${y-42*sc}`,
-      `C ${x+42*sc},${y-42*sc} ${x+52*sc},${y-5*sc} ${x},${y+30*sc}`,
-      "Z"
-    ].join(" ");
-    return `<path d="${d}" ${common}/>`;
-  }
-  return `<circle cx="${x}" cy="${y}" r="${half}" ${common}/>`;
-}
-
-function buildBackgroundMark(s) {
-  return basicShapeMarkup({
-    type: s.markType,
-    x: s.markX,
-    y: s.markY,
-    size: s.markSize,
-    strokeWidth: s.markStrokeWidth,
-    color: s.markColor,
-    fillOpacity: s.markFillOpacity,
-    strokeOpacity: s.markStrokeOpacity
+  rng.addEventListener("input", () => {
+    const v = Number(rng.value);
+    num.value = v;
+    onChange(() => { state[key] = v; });
+  });
+  num.addEventListener("change", () => {
+    const min = num.min === "" ? -999999 : Number(num.min);
+    const max = num.max === "" ? 999999 : Number(num.max);
+    const v = clamp(Number(num.value), min, max);
+    num.value = v;
+    if (Number(rng.min) <= v && v <= Number(rng.max)) rng.value = v;
+    onChange(() => { state[key] = v; });
   });
 }
+function bindColorPair(pickerId, textId, key) {
+  const picker = document.getElementById(pickerId);
+  const text = document.getElementById(textId);
+  if (!picker || !text) return;
 
-function buildCenterPop(s, progress=0, animated=true) {
-  const x = num(s.shapeX, s.size / 2);
-  const y = num(s.shapeY, s.size / 2);
-  const shape = basicShapeMarkup({
-    type: s.shapeType,
-    x: s.shapeX,
-    y: s.shapeY,
-    size: s.shapeSize,
-    strokeWidth: Math.max(2, num(s.shapeSize, 74) / 12),
-    color: s.accentColor,
-    fillOpacity: 0.16,
-    strokeOpacity: s.accentOpacity
+  picker.addEventListener("input", () => {
+    text.value = picker.value;
+    onChange(() => { state[key] = picker.value; });
   });
-  const total = animTotal(s);
-  const kt = growRatio(s).toFixed(3);
-
-  if (animated) {
-    return `<g transform-origin="${x}px ${y}px">
-      ${shape}
-      <animateTransform attributeName="transform" type="scale" values="0.04;1;1" keyTimes="0;${kt};1" dur="${total}s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.25;1;1" keyTimes="0;${kt};1" dur="${total}s" repeatCount="indefinite"/>
-    </g>`;
-  }
-
-  const p = progressToGrow(s, progress);
-  const scale = 0.04 + p * 0.96;
-  return `<g transform="translate(${x} ${y}) scale(${scale}) translate(${-x} ${-y})">${shape}</g>`;
+  text.addEventListener("change", () => {
+    const v = text.value.trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+      picker.value = v;
+      onChange(() => { state[key] = v; });
+    } else {
+      text.value = picker.value;
+    }
+  });
+}
+function bindSelect(id, key, after) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener("change", () => {
+    onChange(() => {
+      state[key] = el.value;
+      if (after) after();
+    });
+  });
+}
+function bindText(id, key) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener("input", () => {
+    onChange(() => { state[key] = el.value; });
+  });
+}
+function updatePanelVisibility() {
+  const type = state.animationType;
+  document.querySelectorAll(".anim-panel").forEach(panel => {
+    panel.classList.toggle("hidden", panel.dataset.panel !== type);
+  });
+}
+function openAccInCenter(accId) {
+  const center = getCenter();
+  if (!center) return;
+  setTimeout(() => {
+    try {
+      if (center.openAccordion) center.openAccordion(accId);
+    } catch(e) {}
+  }, 250);
 }
 
-function buildRingDraw(s, progress=0, animated=true, startAngle=null, radius=null, width=null) {
-  const cx = s.size / 2;
-  const cy = s.size / 2;
-  const r = num(radius ?? s.ringRadius, 43);
-  const w = num(width ?? s.ringWidth, 7);
-  const color = esc(s.accentColor);
-  const op = clamp(num(s.accentOpacity, .95), 0, 1);
-  const total = animTotal(s);
-  const kt = growRatio(s).toFixed(3);
-  const circumference = Math.max(1, 2 * Math.PI * r);
-  const angle = startAngle ?? num(s.ringStartAngle, -90);
-  const dirScale = s.direction === "ccw" ? `translate(${cx} 0) scale(-1 1) translate(${-cx} 0)` : "";
+document.getElementById("btnAdjust").addEventListener("click", sendPause);
+document.getElementById("btnPreview").addEventListener("click", sendResume);
+document.getElementById("btnResetTextPos").addEventListener("click", () => resetToCenter(["textX", "textY"]));
+document.getElementById("btnResetMarkPos").addEventListener("click", () => resetToCenter(["markX", "markY"]));
 
-  if (animated) {
-    return `<g transform="rotate(${angle} ${cx} ${cy}) ${dirScale}">
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-opacity="${Math.min(op,.18)}" stroke-width="${w}"/>
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-opacity="${op}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}">
-        <animate attributeName="stroke-dashoffset" values="${circumference};0;0" keyTimes="0;${kt};1" dur="${total}s" repeatCount="indefinite"/>
-      </circle>
-    </g>`;
-  }
+bindText("text", "text");
+bindPair("size", "sizeN", "size");
+bindPair("fontSize", "fontSizeN", "fontSize");
+bindPair("fontWeight", "fontWeightN", "fontWeight");
+bindColorPair("textColor", "textColorN", "textColor");
+bindPair("textX", "textXN", "textX");
+bindPair("textY", "textYN", "textY");
 
-  const p = progressToGrow(s, progress);
-  const dashOffset = circumference * (1 - p);
-  return `<g transform="rotate(${angle} ${cx} ${cy}) ${dirScale}">
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-opacity="${Math.min(op,.18)}" stroke-width="${w}"/>
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-opacity="${op}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${dashOffset}"/>
-  </g>`;
-}
+bindColorPair("pageBg", "pageBgN", "pageBg");
+bindColorPair("tileColor", "tileColorN", "tileColor");
+bindColorPair("lightShadow", "lightShadowN", "lightShadow");
+bindColorPair("darkShadow", "darkShadowN", "darkShadow");
+bindPair("rounded", "roundedN", "rounded");
+bindPair("shadowOffset", "shadowOffsetN", "shadowOffset");
+bindPair("shadowBlur", "shadowBlurN", "shadowBlur");
 
-function buildPointCircle(s, progress=0, animated=true) {
-  const cx = s.size / 2;
-  const cy = s.size / 2;
-  const startAngle = pointAngle(cx, cy, num(s.pointX, 88), num(s.pointY, 88));
-  return buildRingDraw(s, progress, animated, startAngle, s.pointEndRadius, s.pointLineWidth);
-}
+bindSelect("markType", "markType");
+bindColorPair("markColor", "markColorN", "markColor");
+bindPair("markSize", "markSizeN", "markSize");
+bindPair("markStrokeWidth", "markStrokeWidthN", "markStrokeWidth");
+bindPair("markFillOpacity", "markFillOpacityN", "markFillOpacity");
+bindPair("markStrokeOpacity", "markStrokeOpacityN", "markStrokeOpacity");
+bindPair("markX", "markXN", "markX");
+bindPair("markY", "markYN", "markY");
 
-function buildAnimationMarkup(s, progress=0, animated=true) {
-  if (s.animationType === "center-pop") return buildCenterPop(s, progress, animated);
-  if (s.animationType === "point-circle") return buildPointCircle(s, progress, animated);
-  return buildRingDraw(s, progress, animated);
-}
+bindColorPair("accentColor", "accentColorN", "accentColor");
+bindPair("glow", "glowN", "glow");
+bindSelect("animationType", "animationType", updatePanelVisibility);
+bindPair("duration", "durationN", "duration");
+bindPair("holdSeconds", "holdSecondsN", "holdSeconds");
+bindSelect("direction", "direction");
 
-function buildSVGText(rawState, opt={}) {
-  const s = {...DEFAULTS, ...rawState};
-  const size = clamp(num(s.size, 120), 40, 512);
-  s.size = size;
-  const animated = opt.animated ?? true;
-  const progress = opt.progress ?? 0;
-  const tilePad = Math.max(6, Math.round(size * 0.08));
-  const tileSize = size - tilePad * 2;
+bindPair("ringRadius", "ringRadiusN", "ringRadius");
+bindPair("ringWidth", "ringWidthN", "ringWidth");
+bindPair("ringStartAngle", "ringStartAngleN", "ringStartAngle");
 
-  const bg = s.bgTransparent ? "" : `<rect width="${size}" height="${size}" fill="${esc(s.pageBg)}"/>`;
+bindSelect("shapeType", "shapeType");
+bindPair("shapeX", "shapeXN", "shapeX");
+bindPair("shapeY", "shapeYN", "shapeY");
+bindPair("shapeSize", "shapeSizeN", "shapeSize");
 
-  const defs = `<filter id="neuShadow" x="-40%" y="-40%" width="180%" height="180%">
-    <feDropShadow dx="${-num(s.shadowOffset,4)}" dy="${-num(s.shadowOffset,4)}" stdDeviation="${num(s.shadowBlur,8)}" flood-color="${esc(s.lightShadow)}" flood-opacity="0.9"/>
-    <feDropShadow dx="${num(s.shadowOffset,4)}" dy="${num(s.shadowOffset,4)}" stdDeviation="${num(s.shadowBlur,8)}" flood-color="${esc(s.darkShadow)}" flood-opacity="0.75"/>
-  </filter>
-  <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
-    <feGaussianBlur stdDeviation="${num(s.glow,2)}" result="b"/>
-    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-  </filter>`;
+bindPair("pointX", "pointXN", "pointX");
+bindPair("pointY", "pointYN", "pointY");
+bindPair("pointEndRadius", "pointEndRadiusN", "pointEndRadius");
+bindPair("pointLineWidth", "pointLineWidthN", "pointLineWidth");
 
-  const mark = buildBackgroundMark(s);
-  const anim = buildAnimationMarkup(s, progress, animated);
-  const text = `<text x="${num(s.textX, size/2)}" y="${num(s.textY, size/2)}"
-    text-anchor="middle" dominant-baseline="middle"
-    fill="${esc(s.textColor)}"
-    font-size="${num(s.fontSize,30)}"
-    font-weight="${esc(s.fontWeight)}"
-    font-family="${esc(s.fontFamily)}"
-    letter-spacing="0.02em">${esc(s.text)}</text>`;
+bindPair("fps", "fpsN", "fps");
+bindPair("apngSeconds", "apngSecondsN", "apngSeconds");
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  <defs>
-    ${defs}
-  </defs>
-  ${bg}
-  <rect x="${tilePad}" y="${tilePad}" width="${tileSize}" height="${tileSize}" rx="${num(s.rounded,24)}" fill="${esc(s.tileColor)}" filter="url(#neuShadow)"/>
-  <g class="background-mark">${mark}</g>
-  <g class="effect-animation" filter="url(#softGlow)">${anim}</g>
-  ${text}
-</svg>`;
-}
-
-function render() {
-  currentSVG = buildSVGText(state, {animated: !isPaused, progress: 0.72});
-  document.getElementById("previewWrap").innerHTML = currentSVG;
-  document.getElementById("codeOutput").textContent = currentSVG;
-  document.getElementById("previewMeta").textContent = `${state.size} × ${state.size} / ${state.animationType}`;
-  applyPause();
-}
-
-function setMode(paused, notifyLeft=true) {
-  isPaused = paused;
-  document.getElementById("btnAdjustCenter").classList.toggle("active", isPaused);
-  document.getElementById("btnPreviewCenter").classList.toggle("active", !isPaused);
-  render();
-  if (notifyLeft && parent && parent.frames && parent.frames["left"]) {
-    parent.frames["left"].postMessage({type: isPaused ? "icon-mode-adjust" : "icon-mode-preview"}, "*");
-  }
-}
-
-function applyPause() {
-  const svg = document.querySelector("#previewWrap svg");
-  if (svg) {
-    if (isPaused && svg.pauseAnimations) svg.pauseAnimations();
-    if (!isPaused && svg.unpauseAnimations) svg.unpauseAnimations();
-  }
-  document.getElementById("previewHint").classList.toggle("visible", isPaused);
-  document.getElementById("btnAdjustCenter").classList.toggle("active", isPaused);
-  document.getElementById("btnPreviewCenter").classList.toggle("active", !isPaused);
-}
+document.getElementById("bgTransparent").addEventListener("change", function() {
+  onChange(() => { state.bgTransparent = this.checked; });
+});
 
 window.addEventListener("message", e => {
   const msg = e.data;
   if (!msg) return;
-
-  if (msg.type === "icon-update") {
-    state = {...DEFAULTS, ...msg.state};
-    render();
-  }
-  if (msg.type === "icon-pause") {
-    isPaused = true;
-    render();
-  }
-  if (msg.type === "icon-resume") {
-    isPaused = false;
-    render();
-  }
+  if (msg.type === "icon-mode-adjust") setModeButtons(true);
+  if (msg.type === "icon-mode-preview") setModeButtons(false);
 });
-
-document.getElementById("btnAdjustCenter").addEventListener("click", () => setMode(true, true));
-document.getElementById("btnPreviewCenter").addEventListener("click", () => setMode(false, true));
-
-function showStatus(target, type, msg) {
-  const el = document.getElementById(target);
-  el.textContent = msg;
-  el.className = `status-msg show ${type}`;
-}
-function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = Object.assign(document.createElement("a"), { href: url, download: filename });
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 800);
-}
-function safeFileName(ext) {
-  const raw = (state.text || "icon").replace(/[\\/:*?"<>|\s]+/g, "_").slice(0, 24);
-  return `${raw || "icon"}_${state.animationType}.${ext}`;
-}
-
-document.getElementById("btnCopy").addEventListener("click", () => {
-  if (!currentSVG) render();
-  navigator.clipboard.writeText(currentSVG)
-    .then(() => showStatus("codeStatus", "ok", "SVGコードをコピーしました"))
-    .catch(() => showStatus("codeStatus", "err", "コピー失敗。手動でコピーしてください"));
-});
-
-document.getElementById("btnSVG").addEventListener("click", () => {
-  if (!currentSVG) render();
-  downloadBlob(new Blob([currentSVG], {type:"image/svg+xml;charset=utf-8"}), safeFileName("svg"));
-  showStatus("codeStatus", "ok", "SVGをダウンロードしました");
-});
-
-async function svgToCanvas(svgText, size) {
-  const blob = new Blob([svgText], {type:"image/svg+xml;charset=utf-8"});
-  const url = URL.createObjectURL(blob);
-  const img = new Image();
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext("2d");
-
-  await new Promise((resolve, reject) => {
-    img.onload = resolve;
-    img.onerror = reject;
-    img.src = url;
-  });
-  ctx.clearRect(0, 0, size, size);
-  ctx.drawImage(img, 0, 0, size, size);
-  URL.revokeObjectURL(url);
-  return canvas;
-}
-function canvasToBlob(canvas, type="image/png") {
-  return new Promise(resolve => canvas.toBlob(resolve, type));
-}
-
-document.getElementById("btnPNG").addEventListener("click", async () => {
-  try {
-    const size = clamp(num(state.size, 120), 40, 512);
-    const svg = buildSVGText(state, {animated:false, progress:.72});
-    const canvas = await svgToCanvas(svg, size);
-    const blob = await canvasToBlob(canvas, "image/png");
-    downloadBlob(blob, safeFileName("png"));
-    showStatus("imageStatus", "ok", "PNGをダウンロードしました");
-  } catch (err) {
-    console.error(err);
-    showStatus("imageStatus", "err", "PNG作成に失敗しました");
-  }
-});
-
-/* =============================================
-   APNG生成：PNGフレームをAPNGチャンクへ組み立て
-   ============================================= */
-const PNG_SIG = new Uint8Array([137,80,78,71,13,10,26,10]);
-
-function makeCRCTable() {
-  const table = new Uint32Array(256);
-  for (let n=0; n<256; n++) {
-    let c = n;
-    for (let k=0; k<8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    table[n] = c >>> 0;
-  }
-  return table;
-}
-const CRC_TABLE = makeCRCTable();
-
-function crc32(bytes) {
-  let c = 0xffffffff;
-  for (let i=0; i<bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
-  return (c ^ 0xffffffff) >>> 0;
-}
-function u32(n) {
-  return new Uint8Array([(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255]);
-}
-function writeU32(arr, off, n) {
-  arr[off]=(n>>>24)&255; arr[off+1]=(n>>>16)&255; arr[off+2]=(n>>>8)&255; arr[off+3]=n&255;
-}
-function writeU16(arr, off, n) {
-  arr[off]=(n>>>8)&255; arr[off+1]=n&255;
-}
-function ascii(s) {
-  return new Uint8Array([...s].map(ch => ch.charCodeAt(0)));
-}
-function concatBytes(parts) {
-  const len = parts.reduce((a,b)=>a+b.length,0);
-  const out = new Uint8Array(len);
-  let o = 0;
-  for (const p of parts) { out.set(p, o); o += p.length; }
-  return out;
-}
-function makeChunk(type, data) {
-  const t = ascii(type);
-  const body = concatBytes([t, data]);
-  return concatBytes([u32(data.length), body, u32(crc32(body))]);
-}
-function parsePNG(buf) {
-  const bytes = new Uint8Array(buf);
-  const chunks = [];
-  let off = 8;
-  while (off < bytes.length) {
-    const len = (bytes[off]<<24) | (bytes[off+1]<<16) | (bytes[off+2]<<8) | bytes[off+3];
-    const type = String.fromCharCode(bytes[off+4], bytes[off+5], bytes[off+6], bytes[off+7]);
-    const data = bytes.slice(off+8, off+8+len);
-    chunks.push({type, data});
-    off += 12 + len;
-    if (type === "IEND") break;
-  }
-  return chunks;
-}
-function makeFCTL(seq, width, height, delayNum, delayDen) {
-  const d = new Uint8Array(26);
-  writeU32(d,0,seq);
-  writeU32(d,4,width);
-  writeU32(d,8,height);
-  writeU32(d,12,0);
-  writeU32(d,16,0);
-  writeU16(d,20,delayNum);
-  writeU16(d,22,delayDen);
-  d[24]=1;
-  d[25]=0;
-  return d;
-}
-function makeFDAT(seq, idatData) {
-  const d = new Uint8Array(4 + idatData.length);
-  writeU32(d,0,seq);
-  d.set(idatData,4);
-  return d;
-}
-async function pngFrameAt(progress) {
-  const size = clamp(num(state.size, 120), 40, 512);
-  const svg = buildSVGText(state, {animated:false, progress});
-  const canvas = await svgToCanvas(svg, size);
-  const blob = await canvasToBlob(canvas, "image/png");
-  return await blob.arrayBuffer();
-}
-async function buildAPNG() {
-  const size = clamp(num(state.size, 120), 40, 512);
-  const fps = clamp(num(state.fps, 12), 4, 24);
-  const seconds = clamp(num(state.apngSeconds || animTotal(state), animTotal(state)), 0.5, 6);
-  const frameCount = Math.max(4, Math.round(fps * seconds));
-  const delayNum = Math.max(1, Math.round(1000 / fps));
-  const delayDen = 1000;
-
-  const frames = [];
-  for (let i=0; i<frameCount; i++) {
-    const progress = i / frameCount;
-    const buf = await pngFrameAt(progress);
-    frames.push(parsePNG(buf));
-  }
-
-  const ihdr = frames[0].find(c => c.type === "IHDR").data;
-  const parts = [
-    PNG_SIG,
-    makeChunk("IHDR", ihdr),
-    makeChunk("acTL", concatBytes([u32(frameCount), u32(0)]))
-  ];
-
-  let seq = 0;
-  frames.forEach((chunks, frameIndex) => {
-    const idats = chunks.filter(c => c.type === "IDAT").map(c => c.data);
-    parts.push(makeChunk("fcTL", makeFCTL(seq++, size, size, delayNum, delayDen)));
-    if (frameIndex === 0) {
-      idats.forEach(data => parts.push(makeChunk("IDAT", data)));
-    } else {
-      idats.forEach(data => parts.push(makeChunk("fdAT", makeFDAT(seq++, data))));
-    }
-  });
-
-  parts.push(makeChunk("IEND", new Uint8Array()));
-  return new Blob([concatBytes(parts)], {type:"image/png"});
-}
-
-document.getElementById("btnAPNG").addEventListener("click", async () => {
-  try {
-    showStatus("imageStatus", "ok", "APNGを作成中です…");
-    const blob = await buildAPNG();
-    downloadBlob(blob, safeFileName("apng.png"));
-    showStatus("imageStatus", "ok", "APNGをダウンロードしました");
-  } catch (err) {
-    console.error(err);
-    showStatus("imageStatus", "err", "APNG作成に失敗しました");
-  }
-});
-
-function openAccordion(id) {
-  const el = document.getElementById(id);
-  if (el) { el.setAttribute("open",""); el.scrollIntoView({behavior:"smooth",block:"start"}); }
-}
 
 window.addEventListener("load", () => {
-  setTimeout(() => render(), 100);
+  updatePanelVisibility();
+  setTimeout(() => {
+    sendUpdate();
+    sendPause();
+  }, 300);
 });
 </script>
 </body>
