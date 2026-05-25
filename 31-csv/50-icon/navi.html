@@ -52,13 +52,37 @@
       <div class="ctrl-row">
         <span class="ctrl-label">フォント</span>
         <select id="fontFamily" class="select-input">
-          <option value="&quot;Noto Sans JP&quot;,&quot;Hiragino Sans&quot;,&quot;Yu Gothic&quot;,&quot;Meiryo&quot;,sans-serif" selected>ゴシック系</option>
-          <option value="&quot;Hiragino Mincho ProN&quot;,&quot;Yu Mincho&quot;,&quot;MS Mincho&quot;,serif">明朝系</option>
-          <option value="&quot;M PLUS Rounded 1c&quot;,&quot;Kosugi Maru&quot;,&quot;Yu Gothic&quot;,sans-serif">丸ゴシック系</option>
-          <option value="Impact,&quot;Arial Black&quot;,&quot;Yu Gothic&quot;,sans-serif">太字インパクト系</option>
-          <option value="&quot;Courier New&quot;,&quot;Consolas&quot;,monospace">等幅系</option>
+          <option value="serif">serif（明朝系）</option>
+          <option value="sans-serif">sans-serif（ゴシック系）</option>
+          <option value="monospace">monospace（等幅）</option>
+          <option value="Georgia,serif">Georgia</option>
+          <option value="&quot;Times New Roman&quot;,serif">Times New Roman</option>
+          <option value="Garamond,serif">Garamond</option>
+          <option value="Palatino,serif">Palatino</option>
+          <option value="Arial,sans-serif">Arial</option>
+          <option value="Verdana,sans-serif">Verdana</option>
+          <option value="Tahoma,sans-serif">Tahoma</option>
+          <option value="&quot;Trebuchet MS&quot;,sans-serif">Trebuchet MS</option>
+          <option value="Impact,&quot;Arial Black&quot;,sans-serif">Impact</option>
+          <option value="&quot;Arial Black&quot;,Arial,sans-serif">Arial Black</option>
+          <option value="&quot;Courier New&quot;,monospace">Courier New</option>
+          <option value="Consolas,monospace">Consolas</option>
+          <option value="&quot;Noto Sans JP&quot;,&quot;Yu Gothic&quot;,&quot;Meiryo&quot;,sans-serif">Noto Sans JP</option>
+          <option value="&quot;Yu Gothic&quot;,&quot;Meiryo&quot;,sans-serif" selected>Yu Gothic</option>
+          <option value="Meiryo,&quot;Yu Gothic&quot;,sans-serif">Meiryo</option>
+          <option value="&quot;Hiragino Sans&quot;,&quot;Yu Gothic&quot;,sans-serif">Hiragino Sans</option>
+          <option value="&quot;Yu Mincho&quot;,&quot;MS Mincho&quot;,serif">Yu Mincho</option>
+          <option value="&quot;MS Gothic&quot;,&quot;Yu Gothic&quot;,sans-serif">MS Gothic</option>
+          <option value="&quot;MS Mincho&quot;,&quot;Yu Mincho&quot;,serif">MS Mincho</option>
         </select>
       </div>
+
+      <div class="ctrl-row vertical">
+        <span class="ctrl-label">任意フォント（空なら上を使用）</span>
+        <input type="text" id="customFontFamily" value="" class="wide-input" placeholder="例：HGS明朝E / Zen Maru Gothic / Shippori Mincho" />
+      </div>
+
+      <p class="navi-hint">※英字フォントは日本語に対応していない場合、日本語部分だけ環境の日本語フォントに置き換わります。</p>
 
       <div class="ctrl-section-title">文字効果</div>
 
@@ -389,6 +413,7 @@
       </div>
 
       <a class="navi-link" href="index.html" target="center" onclick="openAccInCenter('acc-image')">▶ PNG / APNG出力を開く</a>
+      <a class="navi-link" href="index.html" target="center" onclick="openAccInCenter('acc-css')">▶ CSS全文コピー欄を開く</a>
     </div>
   </details>
 
@@ -415,7 +440,8 @@ const DEFAULTS = {
   textColor: "#25633f",
   fontSize: 30,
   fontWeight: 800,
-  fontFamily: "\"Noto Sans JP\",\"Hiragino Sans\",\"Yu Gothic\",\"Meiryo\",sans-serif",
+  fontFamily: "\"Yu Gothic\",\"Meiryo\",sans-serif",
+  customFontFamily: "",
   textX: 60,
   textY: 62,
   textOutline: false,
@@ -602,6 +628,7 @@ bindPair("fontSize", "fontSizeN", "fontSize");
 bindPair("fontWeight", "fontWeightN", "fontWeight");
 bindColorPair("textColor", "textColorN", "textColor");
 bindSelect("fontFamily", "fontFamily");
+bindText("customFontFamily", "customFontFamily");
 
 bindCheckbox("textOutline", "textOutline");
 bindColorPair("textOutlineColor", "textOutlineColorN", "textOutlineColor");
