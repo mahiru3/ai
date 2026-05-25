@@ -1,1 +1,599 @@
 
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>アイコンSVGジェネレーター</title>
+  <link rel="stylesheet" href="../../01-css/00-style.css" />
+  <link rel="stylesheet" href="../../01-css/31-csv/50-icon.css" />
+</head>
+<body>
+<div class="icon-page-wrap">
+
+  <h1 class="page-title">✅ アイコンSVGジェネレーター</h1>
+  <p class="page-subtitle">文字・色・サイズを変更するとリアルタイムでプレビューします。SVG / PNG / APNG をページ内で生成します。</p>
+
+  <div class="icon-layout">
+
+    <!-- ①② 入力・設定 -->
+    <section class="icon-panel icon-controls" aria-label="アイコン設定">
+      <h2 class="panel-title">① 文字入力・② 色/サイズ変更</h2>
+
+      <details class="icon-acc" open>
+        <summary>文字</summary>
+        <div class="icon-acc-body">
+          <label class="ctrl-row wide">
+            <span class="ctrl-label">表示文字</span>
+            <input type="text" id="iconText" value="成功" maxlength="8" />
+          </label>
+          <div class="ctrl-row">
+            <span class="ctrl-label">文字サイズ</span>
+            <input type="range" id="fontSize" min="14" max="48" step="1" value="30" />
+            <input type="number" id="fontSizeN" min="14" max="48" step="1" value="30" class="num-input" />
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">文字太さ</span>
+            <select id="fontWeight">
+              <option value="500">500</option>
+              <option value="700" selected>700</option>
+              <option value="900">900</option>
+            </select>
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">文字色</span>
+            <input type="color" id="textColor" value="#25633f" />
+            <input type="text" id="textColorN" value="#25633f" maxlength="7" class="hex-input" />
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">文字Y位置</span>
+            <input type="range" id="textY" min="-18" max="18" step="1" value="2" />
+            <input type="number" id="textYN" min="-18" max="18" step="1" value="2" class="num-input" />
+          </div>
+        </div>
+      </details>
+
+      <details class="icon-acc" open>
+        <summary>アイコン本体</summary>
+        <div class="icon-acc-body">
+          <div class="ctrl-row">
+            <span class="ctrl-label">サイズ</span>
+            <input type="range" id="iconSize" min="80" max="512" step="4" value="120" />
+            <input type="number" id="iconSizeN" min="80" max="512" step="4" value="120" class="num-input" />
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">角丸</span>
+            <input type="range" id="cornerRadius" min="0" max="44" step="1" value="24" />
+            <input type="number" id="cornerRadiusN" min="0" max="44" step="1" value="24" class="num-input" />
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">ベース色</span>
+            <input type="color" id="baseColor" value="#e8edf2" />
+            <input type="text" id="baseColorN" value="#e8edf2" maxlength="7" class="hex-input" />
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">明るい影</span>
+            <input type="color" id="lightShadow" value="#ffffff" />
+            <input type="text" id="lightShadowN" value="#ffffff" maxlength="7" class="hex-input" />
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">暗い影</span>
+            <input type="color" id="darkShadow" value="#b8c2cc" />
+            <input type="text" id="darkShadowN" value="#b8c2cc" maxlength="7" class="hex-input" />
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">影の強さ</span>
+            <input type="range" id="shadowOffset" min="0" max="12" step="1" value="4" />
+            <input type="number" id="shadowOffsetN" min="0" max="12" step="1" value="4" class="num-input" />
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">影ぼかし</span>
+            <input type="range" id="shadowBlur" min="0" max="18" step="1" value="8" />
+            <input type="number" id="shadowBlurN" min="0" max="18" step="1" value="8" class="num-input" />
+          </div>
+        </div>
+      </details>
+
+      <details class="icon-acc" open>
+        <summary>丸リング・アニメーション</summary>
+        <div class="icon-acc-body">
+          <div class="ctrl-row">
+            <span class="ctrl-label">リング色</span>
+            <input type="color" id="ringColor" value="#58c987" />
+            <input type="text" id="ringColorN" value="#58c987" maxlength="7" class="hex-input" />
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">リング半径</span>
+            <input type="range" id="ringRadius" min="22" max="55" step="1" value="43" />
+            <input type="number" id="ringRadiusN" min="22" max="55" step="1" value="43" class="num-input" />
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">リング太さ</span>
+            <input type="range" id="ringWidth" min="2" max="14" step="1" value="7" />
+            <input type="number" id="ringWidthN" min="2" max="14" step="1" value="7" class="num-input" />
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">円弧の長さ</span>
+            <input type="range" id="arcLength" min="90" max="340" step="5" value="285" />
+            <input type="number" id="arcLengthN" min="90" max="340" step="5" value="285" class="num-input" />
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">周期(秒)</span>
+            <input type="range" id="duration" min="0.5" max="6" step="0.1" value="1.8" />
+            <input type="number" id="durationN" min="0.5" max="6" step="0.1" value="1.8" class="num-input" />
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">方向</span>
+            <select id="direction">
+              <option value="cw" selected>時計回り</option>
+              <option value="ccw">反時計回り</option>
+            </select>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- プレビュー・出力 -->
+    <main class="icon-main">
+
+      <details class="icon-acc preview-acc" open>
+        <summary>プレビュー</summary>
+        <div class="icon-acc-body">
+          <div class="preview-card">
+            <div class="preview-stage" id="previewStage" aria-label="SVGプレビュー"></div>
+          </div>
+          <p class="preview-note">※表示は拡大プレビューです。DL時の標準サイズは設定値どおりです。</p>
+        </div>
+      </details>
+
+      <details class="icon-acc" open>
+        <summary>③ SVG / ④ PNG・APNG ダウンロード</summary>
+        <div class="icon-acc-body">
+          <div class="menu-btn-row">
+            <button class="menu-btn primary" id="btnCopy">📋 SVGコードをコピー</button>
+            <button class="menu-btn dl" id="btnSvgDL">💾 SVG DL</button>
+            <button class="menu-btn dl" id="btnPngDL">🖼 PNG DL</button>
+            <button class="menu-btn dl" id="btnApngDL">🎞 APNG DL</button>
+          </div>
+          <div class="status-msg" id="statusMsg"></div>
+          <div class="code-output" id="codeOutput" aria-label="SVGコード出力"></div>
+        </div>
+      </details>
+
+    </main>
+  </div>
+</div>
+
+<script>
+/* =============================================
+   31-csv/50-icon/index.html
+   ① 文字入力
+   ② 色・サイズ変更 + 即時プレビュー
+   ③ SVGダウンロード
+   ④ PNG / APNGダウンロード
+
+   完全アウトライン化はこのジェネレーターでは扱わない。
+   SVGをDLして、別工程でアウトライン化する前提。
+   ============================================= */
+
+const FONT_STACK = '"Noto Sans JP", "Hiragino Sans", "Yu Gothic Medium", "Yu Gothic", "Meiryo", sans-serif';
+let currentSVG = "";
+
+const controls = {
+  iconText: document.getElementById("iconText"),
+  iconSize: document.getElementById("iconSize"),
+  iconSizeN: document.getElementById("iconSizeN"),
+  cornerRadius: document.getElementById("cornerRadius"),
+  cornerRadiusN: document.getElementById("cornerRadiusN"),
+  baseColor: document.getElementById("baseColor"),
+  baseColorN: document.getElementById("baseColorN"),
+  lightShadow: document.getElementById("lightShadow"),
+  lightShadowN: document.getElementById("lightShadowN"),
+  darkShadow: document.getElementById("darkShadow"),
+  darkShadowN: document.getElementById("darkShadowN"),
+  shadowOffset: document.getElementById("shadowOffset"),
+  shadowOffsetN: document.getElementById("shadowOffsetN"),
+  shadowBlur: document.getElementById("shadowBlur"),
+  shadowBlurN: document.getElementById("shadowBlurN"),
+  textColor: document.getElementById("textColor"),
+  textColorN: document.getElementById("textColorN"),
+  fontSize: document.getElementById("fontSize"),
+  fontSizeN: document.getElementById("fontSizeN"),
+  fontWeight: document.getElementById("fontWeight"),
+  textY: document.getElementById("textY"),
+  textYN: document.getElementById("textYN"),
+  ringColor: document.getElementById("ringColor"),
+  ringColorN: document.getElementById("ringColorN"),
+  ringRadius: document.getElementById("ringRadius"),
+  ringRadiusN: document.getElementById("ringRadiusN"),
+  ringWidth: document.getElementById("ringWidth"),
+  ringWidthN: document.getElementById("ringWidthN"),
+  arcLength: document.getElementById("arcLength"),
+  arcLengthN: document.getElementById("arcLengthN"),
+  duration: document.getElementById("duration"),
+  durationN: document.getElementById("durationN"),
+  direction: document.getElementById("direction")
+};
+
+function clamp(v, min, max) {
+  const n = Number(v);
+  if (Number.isNaN(n)) return min;
+  return Math.max(min, Math.min(max, n));
+}
+
+function sanitizeHex(value, fallback) {
+  const v = String(value || "").trim();
+  return /^#[0-9a-fA-F]{6}$/.test(v) ? v : fallback;
+}
+
+function escapeXml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function getState() {
+  const size = clamp(controls.iconSize.value, 80, 512);
+  return {
+    text: controls.iconText.value.trim() || "成功",
+    size,
+    cornerRadius: clamp(controls.cornerRadius.value, 0, Math.floor(size / 2)),
+    baseColor: sanitizeHex(controls.baseColor.value, "#e8edf2"),
+    lightShadow: sanitizeHex(controls.lightShadow.value, "#ffffff"),
+    darkShadow: sanitizeHex(controls.darkShadow.value, "#b8c2cc"),
+    shadowOffset: clamp(controls.shadowOffset.value, 0, 12),
+    shadowBlur: clamp(controls.shadowBlur.value, 0, 18),
+    textColor: sanitizeHex(controls.textColor.value, "#25633f"),
+    fontSize: clamp(controls.fontSize.value, 14, 48),
+    fontWeight: controls.fontWeight.value,
+    textY: clamp(controls.textY.value, -18, 18),
+    ringColor: sanitizeHex(controls.ringColor.value, "#58c987"),
+    ringRadius: clamp(controls.ringRadius.value, 22, 55),
+    ringWidth: clamp(controls.ringWidth.value, 2, 14),
+    arcLength: clamp(controls.arcLength.value, 90, 340),
+    duration: clamp(controls.duration.value, 0.5, 6),
+    direction: controls.direction.value
+  };
+}
+
+function polar(cx, cy, r, deg) {
+  const rad = (deg - 90) * Math.PI / 180;
+  return {
+    x: cx + r * Math.cos(rad),
+    y: cy + r * Math.sin(rad)
+  };
+}
+
+function arcPath(cx, cy, r, startDeg, endDeg) {
+  const start = polar(cx, cy, r, startDeg);
+  const end = polar(cx, cy, r, endDeg);
+  const largeArc = Math.abs(endDeg - startDeg) > 180 ? 1 : 0;
+  const sweep = endDeg >= startDeg ? 1 : 0;
+  return `M ${start.x.toFixed(3)} ${start.y.toFixed(3)} A ${r} ${r} 0 ${largeArc} ${sweep} ${end.x.toFixed(3)} ${end.y.toFixed(3)}`;
+}
+
+function buildSVGText(state, options = {}) {
+  const size = state.size;
+  const cx = size / 2;
+  const cy = size / 2;
+  const pad = Math.max(6, Math.round(size * 0.067));
+  const innerSize = size - pad * 2;
+  const filterPad = Math.max(24, state.shadowBlur * 4 + state.shadowOffset * 4);
+  const arcStart = -state.arcLength / 2;
+  const arcEnd = state.arcLength / 2;
+  const rotateBase = Number(options.frameAngle || 0);
+  const rotateTo = state.direction === "ccw" ? -360 : 360;
+  const animated = options.animated !== false;
+  const text = escapeXml(state.text);
+  const ringPath = arcPath(cx, cy, state.ringRadius, arcStart, arcEnd);
+
+  const ringAnimate = animated
+    ? `<animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="${rotateTo} ${cx} ${cy}" dur="${state.duration}s" repeatCount="indefinite"/>`
+    : "";
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+  <defs>
+    <filter id="softShadow" x="-${filterPad}%" y="-${filterPad}%" width="${100 + filterPad * 2}%" height="${100 + filterPad * 2}%">
+      <feDropShadow dx="${state.shadowOffset}" dy="${state.shadowOffset}" stdDeviation="${state.shadowBlur}" flood-color="${state.darkShadow}" flood-opacity="0.72"/>
+      <feDropShadow dx="-${state.shadowOffset}" dy="-${state.shadowOffset}" stdDeviation="${state.shadowBlur}" flood-color="${state.lightShadow}" flood-opacity="0.95"/>
+    </filter>
+    <filter id="innerGlow" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="1.2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="${pad}" y="${pad}" width="${innerSize}" height="${innerSize}" rx="${state.cornerRadius}" fill="${state.baseColor}" filter="url(#softShadow)"/>
+  <path d="M ${pad + 7} ${pad + 12} Q ${pad + 12} ${pad + 7} ${pad + 22} ${pad + 7} H ${size - pad - 22}" fill="none" stroke="${state.lightShadow}" stroke-width="2" stroke-linecap="round" opacity="0.78"/>
+  <circle cx="${cx}" cy="${cy}" r="${state.ringRadius}" fill="none" stroke="${state.darkShadow}" stroke-width="${Math.max(1, state.ringWidth - 2)}" opacity="0.22"/>
+  <g transform="rotate(${rotateBase} ${cx} ${cy})">
+    <path d="${ringPath}" fill="none" stroke="${state.ringColor}" stroke-width="${state.ringWidth}" stroke-linecap="round" filter="url(#innerGlow)"/>
+    <circle cx="${cx}" cy="${cy - state.ringRadius}" r="${Math.max(1.2, state.ringWidth * 0.28).toFixed(2)}" fill="${state.ringColor}" opacity="0.72"/>
+    ${ringAnimate}
+  </g>
+  <text x="${cx}" y="${cy + state.textY}" text-anchor="middle" dominant-baseline="middle" font-family="${FONT_STACK}" font-size="${state.fontSize}" font-weight="${state.fontWeight}" fill="${state.textColor}" paint-order="stroke fill" stroke="${state.baseColor}" stroke-width="0.6">${text}</text>
+</svg>`;
+}
+
+function updatePreview() {
+  const state = getState();
+  currentSVG = buildSVGText(state, { animated: true });
+  document.getElementById("previewStage").innerHTML = currentSVG;
+  document.getElementById("codeOutput").textContent = currentSVG;
+}
+
+function showStatus(type, msg) {
+  const el = document.getElementById("statusMsg");
+  el.textContent = msg;
+  el.className = "status-msg show " + type;
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function svgToCanvas(svgText, size) {
+  const blob = new Blob([svgText], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  img.decoding = "async";
+  img.src = url;
+  await img.decode();
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, size, size);
+  ctx.drawImage(img, 0, 0, size, size);
+  URL.revokeObjectURL(url);
+  return canvas;
+}
+
+async function downloadPNG() {
+  const state = getState();
+  const svgText = buildSVGText(state, { animated: false, frameAngle: 0 });
+  const canvas = await svgToCanvas(svgText, state.size);
+  canvas.toBlob(blob => {
+    if (!blob) { showStatus("err", "PNG生成に失敗しました"); return; }
+    downloadBlob(blob, "icon.png");
+    showStatus("ok", "PNGをダウンロードしました");
+  }, "image/png");
+}
+
+// =============================================
+//  APNG最小エンコーダ（無圧縮zlib）
+//  外部ライブラリなし。120px程度の小型アイコン向け。
+// =============================================
+const PNG_SIGNATURE = new Uint8Array([137,80,78,71,13,10,26,10]);
+
+function u32be(n) {
+  return new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);
+}
+function u16be(n) {
+  return new Uint8Array([(n >>> 8) & 255, n & 255]);
+}
+function u16le(n) {
+  return new Uint8Array([n & 255, (n >>> 8) & 255]);
+}
+function concatArrays(arrays) {
+  const len = arrays.reduce((sum, a) => sum + a.length, 0);
+  const out = new Uint8Array(len);
+  let offset = 0;
+  arrays.forEach(a => { out.set(a, offset); offset += a.length; });
+  return out;
+}
+function asciiBytes(str) {
+  return new TextEncoder().encode(str);
+}
+
+let crcTable = null;
+function makeCrcTable() {
+  const table = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+    table[n] = c >>> 0;
+  }
+  return table;
+}
+function crc32(bytes) {
+  if (!crcTable) crcTable = makeCrcTable();
+  let c = 0xffffffff;
+  for (let i = 0; i < bytes.length; i++) c = crcTable[(c ^ bytes[i]) & 255] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+function chunk(type, data) {
+  const typeBytes = asciiBytes(type);
+  const crcInput = concatArrays([typeBytes, data]);
+  return concatArrays([u32be(data.length), typeBytes, data, u32be(crc32(crcInput))]);
+}
+function adler32(bytes) {
+  let a = 1, b = 0;
+  for (let i = 0; i < bytes.length; i++) {
+    a = (a + bytes[i]) % 65521;
+    b = (b + a) % 65521;
+  }
+  return ((b << 16) | a) >>> 0;
+}
+function zlibStore(bytes) {
+  const parts = [new Uint8Array([0x78, 0x01])];
+  let offset = 0;
+  while (offset < bytes.length) {
+    const len = Math.min(65535, bytes.length - offset);
+    const final = (offset + len) >= bytes.length ? 1 : 0;
+    const header = concatArrays([
+      new Uint8Array([final]),
+      u16le(len),
+      u16le((~len) & 0xffff)
+    ]);
+    parts.push(header, bytes.slice(offset, offset + len));
+    offset += len;
+  }
+  parts.push(u32be(adler32(bytes)));
+  return concatArrays(parts);
+}
+function rgbaToPngScanlines(imageData, width, height) {
+  const raw = new Uint8Array((width * 4 + 1) * height);
+  const rgba = imageData.data;
+  let o = 0, r = 0;
+  for (let y = 0; y < height; y++) {
+    raw[o++] = 0; // filter type 0
+    raw.set(rgba.subarray(r, r + width * 4), o);
+    o += width * 4;
+    r += width * 4;
+  }
+  return raw;
+}
+function encodeAPNG(frames, width, height, delayMs) {
+  let seq = 0;
+  const chunks = [];
+  const ihdr = concatArrays([
+    u32be(width), u32be(height),
+    new Uint8Array([8, 6, 0, 0, 0]) // 8bit RGBA
+  ]);
+  chunks.push(PNG_SIGNATURE);
+  chunks.push(chunk("IHDR", ihdr));
+  chunks.push(chunk("acTL", concatArrays([u32be(frames.length), u32be(0)])));
+
+  frames.forEach((frame, i) => {
+    const delayNum = Math.max(1, Math.round(delayMs));
+    const fctl = concatArrays([
+      u32be(seq++),
+      u32be(width), u32be(height),
+      u32be(0), u32be(0),
+      u16be(delayNum), u16be(1000),
+      new Uint8Array([0, 0]) // dispose=none, blend=source
+    ]);
+    chunks.push(chunk("fcTL", fctl));
+
+    const raw = rgbaToPngScanlines(frame, width, height);
+    const zdat = zlibStore(raw);
+    if (i === 0) {
+      chunks.push(chunk("IDAT", zdat));
+    } else {
+      chunks.push(chunk("fdAT", concatArrays([u32be(seq++), zdat])));
+    }
+  });
+
+  chunks.push(chunk("IEND", new Uint8Array()));
+  return new Blob([concatArrays(chunks)], { type: "image/apng" });
+}
+
+async function downloadAPNG() {
+  const state = getState();
+  const frames = [];
+  const frameCount = 24;
+  const delayMs = (state.duration * 1000) / frameCount;
+  const dir = state.direction === "ccw" ? -1 : 1;
+
+  showStatus("work", "APNG生成中です…");
+
+  for (let i = 0; i < frameCount; i++) {
+    const angle = dir * (360 * i / frameCount);
+    const svgText = buildSVGText(state, { animated: false, frameAngle: angle });
+    const canvas = await svgToCanvas(svgText, state.size);
+    const ctx = canvas.getContext("2d");
+    frames.push(ctx.getImageData(0, 0, state.size, state.size));
+  }
+
+  const blob = encodeAPNG(frames, state.size, state.size, delayMs);
+  downloadBlob(blob, "icon.apng");
+  showStatus("ok", "APNGをダウンロードしました");
+}
+
+function bindPair(rangeId, numberId) {
+  const rng = document.getElementById(rangeId);
+  const num = document.getElementById(numberId);
+  if (!rng || !num) return;
+  rng.addEventListener("input", () => {
+    num.value = rng.value;
+    updatePreview();
+  });
+  num.addEventListener("change", () => {
+    const min = Number(num.min), max = Number(num.max);
+    const v = clamp(num.value, min, max);
+    num.value = v;
+    rng.value = v;
+    updatePreview();
+  });
+}
+
+function bindColorPair(pickerId, textId) {
+  const picker = document.getElementById(pickerId);
+  const text = document.getElementById(textId);
+  if (!picker || !text) return;
+  picker.addEventListener("input", () => {
+    text.value = picker.value;
+    updatePreview();
+  });
+  text.addEventListener("change", () => {
+    const v = text.value.trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(v)) picker.value = v;
+    else text.value = picker.value;
+    updatePreview();
+  });
+}
+
+bindPair("iconSize", "iconSizeN");
+bindPair("cornerRadius", "cornerRadiusN");
+bindPair("shadowOffset", "shadowOffsetN");
+bindPair("shadowBlur", "shadowBlurN");
+bindPair("fontSize", "fontSizeN");
+bindPair("textY", "textYN");
+bindPair("ringRadius", "ringRadiusN");
+bindPair("ringWidth", "ringWidthN");
+bindPair("arcLength", "arcLengthN");
+bindPair("duration", "durationN");
+bindColorPair("baseColor", "baseColorN");
+bindColorPair("lightShadow", "lightShadowN");
+bindColorPair("darkShadow", "darkShadowN");
+bindColorPair("textColor", "textColorN");
+bindColorPair("ringColor", "ringColorN");
+
+["iconText", "fontWeight", "direction"].forEach(id => {
+  document.getElementById(id).addEventListener("input", updatePreview);
+  document.getElementById(id).addEventListener("change", updatePreview);
+});
+
+document.getElementById("btnCopy").addEventListener("click", () => {
+  navigator.clipboard.writeText(currentSVG)
+    .then(() => showStatus("ok", "SVGコードをコピーしました"))
+    .catch(() => showStatus("err", "コピーに失敗しました。コード欄から手動コピーしてください"));
+});
+
+document.getElementById("btnSvgDL").addEventListener("click", () => {
+  downloadBlob(new Blob([currentSVG], { type: "image/svg+xml;charset=utf-8" }), "icon.svg");
+  showStatus("ok", "SVGをダウンロードしました");
+});
+
+document.getElementById("btnPngDL").addEventListener("click", () => {
+  downloadPNG().catch(err => {
+    console.error(err);
+    showStatus("err", "PNG生成に失敗しました");
+  });
+});
+
+document.getElementById("btnApngDL").addEventListener("click", () => {
+  downloadAPNG().catch(err => {
+    console.error(err);
+    showStatus("err", "APNG生成に失敗しました");
+  });
+});
+
+updatePreview();
+</script>
+</body>
+</html>
