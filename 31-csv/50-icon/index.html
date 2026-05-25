@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>アイコンSVGジェネレーター</title>
+  <title>アイコンSVGジェネレーター3</title>
   <link rel="stylesheet" href="../../01-css/00-style.css" />
   <link rel="stylesheet" href="../../01-css/31-csv-50-icon.css" />
 </head>
 <body>
 <div class="page-wrap icon-page">
 
-  <h1 class="page-title">✅ アイコンSVGジェネレーター2</h1>
+  <h1 class="page-title">✅ アイコンSVGジェネレーター</h1>
   <p class="page-subtitle">左パネルで調整 → リアルタイムプレビュー。SVG / PNG / APNG をダウンロードできます。</p>
 
   <details class="accordion-008 acc-color-1" id="acc-preview" open>
@@ -86,6 +86,19 @@ const DEFAULTS = {
   fontFamily: "\"Noto Sans JP\",\"Hiragino Sans\",\"Yu Gothic\",\"Meiryo\",sans-serif",
   textX: 60,
   textY: 62,
+  textOutline: false,
+  textOutlineColor: "#ffffff",
+  textOutlineWidth: 2,
+  textShadow: false,
+  textShadowColor: "#6b7b86",
+  textShadowOpacity: 0.45,
+  textShadowDx: 2,
+  textShadowDy: 2,
+  textShadowBlur: 2,
+  textEmboss: false,
+  textEmbossLight: "#ffffff",
+  textEmbossDark: "#8fa0aa",
+  textEmbossOffset: 1,
 
   markType: "circle",
   markX: 60,
@@ -289,7 +302,6 @@ function buildRingDraw(s, progress=0, animated=true, startAngle=null, radius=nul
 
   if (animated) {
     return `<g transform="rotate(${angle} ${cx} ${cy}) ${dirScale}">
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-opacity="${Math.min(op,.18)}" stroke-width="${w}"/>
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-opacity="${op}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}">
         <animate attributeName="stroke-dashoffset" values="${circumference};0;0" keyTimes="0;${kt};1" dur="${total}s" repeatCount="indefinite"/>
       </circle>
@@ -299,7 +311,6 @@ function buildRingDraw(s, progress=0, animated=true, startAngle=null, radius=nul
   const p = progressToGrow(s, progress);
   const dashOffset = circumference * (1 - p);
   return `<g transform="rotate(${angle} ${cx} ${cy}) ${dirScale}">
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-opacity="${Math.min(op,.18)}" stroke-width="${w}"/>
     <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-opacity="${op}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${circumference}" stroke-dashoffset="${dashOffset}"/>
   </g>`;
 }
@@ -315,6 +326,35 @@ function buildAnimationMarkup(s, progress=0, animated=true) {
   if (s.animationType === "center-pop") return buildCenterPop(s, progress, animated);
   if (s.animationType === "point-circle") return buildPointCircle(s, progress, animated);
   return buildRingDraw(s, progress, animated);
+}
+
+
+function buildTextMarkup(s) {
+  const x = num(s.textX, s.size / 2);
+  const y = num(s.textY, s.size / 2);
+  const fontSize = num(s.fontSize, 30);
+  const weight = esc(s.fontWeight);
+  const family = esc(s.fontFamily);
+  const text = esc(s.text);
+  const fill = esc(s.textColor);
+  const outline = s.textOutline
+    ? `stroke="${esc(s.textOutlineColor)}" stroke-width="${num(s.textOutlineWidth,2)}" paint-order="stroke fill"`
+    : `stroke="none"`;
+  const baseAttrs = `text-anchor="middle" dominant-baseline="middle" font-size="${fontSize}" font-weight="${weight}" font-family="${family}" letter-spacing="0.02em"`;
+  const shadowFilter = s.textShadow ? ` filter="url(#textShadowFilter)"` : "";
+  const embossOffset = num(s.textEmbossOffset, 1);
+
+  let emboss = "";
+  if (s.textEmboss) {
+    emboss = `
+    <text x="${x - embossOffset}" y="${y - embossOffset}" ${baseAttrs} fill="${esc(s.textEmbossLight)}" opacity="0.75">${text}</text>
+    <text x="${x + embossOffset}" y="${y + embossOffset}" ${baseAttrs} fill="${esc(s.textEmbossDark)}" opacity="0.55">${text}</text>`;
+  }
+
+  return `<g class="display-text"${shadowFilter}>
+    ${emboss}
+    <text x="${x}" y="${y}" ${baseAttrs} fill="${fill}" ${outline}>${text}</text>
+  </g>`;
 }
 
 function buildSVGText(rawState, opt={}) {
@@ -335,17 +375,14 @@ function buildSVGText(rawState, opt={}) {
   <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
     <feGaussianBlur stdDeviation="${num(s.glow,2)}" result="b"/>
     <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="textShadowFilter" x="-80%" y="-80%" width="260%" height="260%">
+    <feDropShadow dx="${num(s.textShadowDx,2)}" dy="${num(s.textShadowDy,2)}" stdDeviation="${num(s.textShadowBlur,2)}" flood-color="${esc(s.textShadowColor)}" flood-opacity="${clamp(num(s.textShadowOpacity,0.45),0,1)}"/>
   </filter>`;
 
   const mark = buildBackgroundMark(s);
   const anim = buildAnimationMarkup(s, progress, animated);
-  const text = `<text x="${num(s.textX, size/2)}" y="${num(s.textY, size/2)}"
-    text-anchor="middle" dominant-baseline="middle"
-    fill="${esc(s.textColor)}"
-    font-size="${num(s.fontSize,30)}"
-    font-weight="${esc(s.fontWeight)}"
-    font-family="${esc(s.fontFamily)}"
-    letter-spacing="0.02em">${esc(s.text)}</text>`;
+  const text = buildTextMarkup(s);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
