@@ -218,7 +218,6 @@
   color: #8d1f1f;
 }
 
-
 /* ここから文字効果UI */
 .icon-navi .effect-check {
   display: flex;
@@ -235,4 +234,24 @@
 
 .icon-navi .effect-check input {
   transform: scale(1.15);
+}
+
+/* ここからフォント入力補助 */
+.icon-navi .wide-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.icon-navi .ctrl-row.vertical {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.icon-navi .navi-hint {
+  margin: 8px 0 10px;
+  color: #647484;
+  font-size: 12px;
+  line-height: 1.5;
 }
