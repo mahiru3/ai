@@ -14,23 +14,152 @@
   <div class="guide">
     1) いあきゃら貼り付け → <b>解析</b><br>
     &nbsp;&nbsp;&nbsp;statusの並び替え/追加/削除/編集 &amp; name編集<br>
-    2) <b>▶ 実行</b> → 3) <b>📋 コピー</b>
+    2) <b>差分</b> → 3) <b>▶ 実行</b> → 4) <b>📋 コピー</b>
   </div>
 
   <div class="guide-sub">
     status を並び替え／追加／削除／編集し、<br>
-    name を必要なら変更してから ▶ 実行。
+    name と差分ラベルを必要なら変更してから ▶ 実行。
   </div>
 
   <button class="button-29" onclick="call('doParse')">解析</button>
+
+  <div class="face-drop-panel">
+    <div class="face-drop-title">差分</div>
+
+    <div id="faceDropZone" class="face-drop-zone">
+      画像/フォルダを<br>ここにドロップ
+    </div>
+
+    <div class="face-option-group">
+      <div class="face-option-title">ラベル名</div>
+      <label class="face-option-line">
+        <input type="radio" name="faceLabelAtMode" value="plain" checked>
+        @なし
+      </label>
+      <label class="face-option-line">
+        <input type="radio" name="faceLabelAtMode" value="at">
+        @あり
+      </label>
+    </div>
+
+    <div class="face-option-group">
+      <div class="face-option-title">チャットパレット</div>
+      <label class="face-option-line">
+        <input id="faceRegisterCommands" type="checkbox" checked>
+        差分を登録
+      </label>
+    </div>
+
+    <div class="face-file-buttons">
+      <button type="button" class="face-file-button" onclick="document.getElementById('faceFileInput').click()">画像選択</button>
+      <button type="button" class="face-file-button" onclick="document.getElementById('faceDirInput').click()">フォルダ選択</button>
+    </div>
+    <input id="faceFileInput" type="file" accept="image/*" multiple hidden>
+    <input id="faceDirInput" type="file" accept="image/*" multiple webkitdirectory hidden>
+  </div>
+
   <button class="button-29" onclick="call('doRun')">▶ 実行</button>
   <button class="button-29" onclick="call('doCopy')">📋 コピー</button>
 
   <script>
+    function getCenterFrame() {
+      return parent && parent.frames && parent.frames['center'];
+    }
     function call(fn) {
-      const c = parent && parent.frames && parent.frames['center'];
+      const c = getCenterFrame();
       if (c && typeof c[fn] === 'function') c[fn]();
     }
+    function getFaceOptions() {
+      const labelAt = document.querySelector('input[name="faceLabelAtMode"]:checked')?.value === 'at';
+      const registerCommands = document.getElementById('faceRegisterCommands').checked;
+      return { labelAt, registerCommands };
+    }
+    function syncFaceOptions() {
+      const c = getCenterFrame();
+      if (c && typeof c.setFaceOptions === 'function') c.setFaceOptions(getFaceOptions());
+    }
+    function sendFaceFiles(files) {
+      const c = getCenterFrame();
+      syncFaceOptions();
+      if (c && typeof c.addFaceFiles === 'function') c.addFaceFiles(files);
+    }
+    function isImageFile(file) {
+      if (!file || !file.name) return false;
+      if (file.type && file.type.startsWith('image/')) return true;
+      return /\.(png|jpe?g|webp|gif|avif|bmp|svg)$/i.test(file.name);
+    }
+    function readEntry(entry) {
+      return new Promise(resolve => {
+        if (!entry) { resolve([]); return; }
+        if (entry.isFile) {
+          entry.file(file => resolve(isImageFile(file) ? [file] : []), () => resolve([]));
+          return;
+        }
+        if (entry.isDirectory) {
+          const reader = entry.createReader();
+          const results = [];
+          const readBatch = () => {
+            reader.readEntries(async entries => {
+              if (!entries.length) { resolve(results); return; }
+              for (const child of entries) results.push(...await readEntry(child));
+              readBatch();
+            }, () => resolve(results));
+          };
+          readBatch();
+          return;
+        }
+        resolve([]);
+      });
+    }
+    async function collectDroppedFiles(dataTransfer) {
+      const items = Array.from(dataTransfer.items || []);
+      if (!items.length) return Array.from(dataTransfer.files || []).filter(isImageFile);
+      const files = [];
+      for (const item of items) {
+        if (item.kind !== 'file') continue;
+        const entry = typeof item.webkitGetAsEntry === 'function' ? item.webkitGetAsEntry() : null;
+        if (entry) files.push(...await readEntry(entry));
+        else {
+          const file = item.getAsFile();
+          if (isImageFile(file)) files.push(file);
+        }
+      }
+      return files;
+    }
+
+    const faceDropZone = document.getElementById('faceDropZone');
+    const faceFileInput = document.getElementById('faceFileInput');
+    const faceDirInput = document.getElementById('faceDirInput');
+
+    faceDropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      faceDropZone.classList.add('is-dragover');
+    });
+    faceDropZone.addEventListener('dragleave', () => {
+      faceDropZone.classList.remove('is-dragover');
+    });
+    faceDropZone.addEventListener('drop', async e => {
+      e.preventDefault();
+      faceDropZone.classList.remove('is-dragover');
+      const files = await collectDroppedFiles(e.dataTransfer);
+      sendFaceFiles(files);
+    });
+
+    faceFileInput.addEventListener('change', e => {
+      sendFaceFiles(Array.from(e.target.files || []).filter(isImageFile));
+      e.target.value = '';
+    });
+    faceDirInput.addEventListener('change', e => {
+      sendFaceFiles(Array.from(e.target.files || []).filter(isImageFile));
+      e.target.value = '';
+    });
+
+    document.querySelectorAll('input[name="faceLabelAtMode"]').forEach(el => {
+      el.addEventListener('change', syncFaceOptions);
+    });
+    document.getElementById('faceRegisterCommands').addEventListener('change', syncFaceOptions);
+    syncFaceOptions();
   </script>
 
 </body>
