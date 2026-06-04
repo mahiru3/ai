@@ -1,4 +1,4 @@
-* 01-css/21-chat-03-ia.css */
+/* 01-css/21-chat-03-ia.css */
 
 body {
   font: 14px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
@@ -142,6 +142,51 @@ th {
   background: rgba(255,255,255,0.5);
 }
 
+/* ③ 立ち絵・差分一覧 */
+.face-heading {
+  position: relative;
+  border-top: solid 2px #80c8d1;
+  border-bottom: solid 2px #80c8d1;
+  background: #f4f4f4;
+  line-height: 1.4;
+  padding: 0.4em 0.5em 0.4em 0.6em;
+  margin: 1.4em 0 0.5em;
+  font-size: 16px;
+  font-weight: 700;
+}
+.face-heading::before {
+  content: '🖼 FACE';
+  position: absolute;
+  background: #80c8d1;
+  color: #fff;
+  left: 0;
+  bottom: 100%;
+  border-radius: 5px 5px 0 0;
+  padding: 4px 8px 3px;
+  font-size: 0.65em;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.face-note {
+  color: #777;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.face-thumb {
+  display: block;
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  background: #f7f7f7;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+.face-file-name {
+  word-break: break-all;
+}
+
 /* =========================================
    navi.html 用スタイル
 ========================================= */
@@ -162,6 +207,66 @@ th {
   line-height: 1.6;
   margin: 6px 0 14px;
   padding-left: 4px;
+}
+
+/* 差分ドロップ欄 */
+.face-drop-panel {
+  width: 100%;
+  max-width: 220px;
+  margin: 8px auto;
+  box-sizing: border-box;
+  border: 1px solid #c9e4e8;
+  border-radius: 8px;
+  background: #f8fcfd;
+  padding: 8px;
+}
+.face-drop-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 6px;
+}
+.face-drop-zone {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 54px;
+  border: 2px dashed #80c8d1;
+  border-radius: 8px;
+  background: #fff;
+  color: #2589d0;
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+}
+.face-drop-zone.is-dragover {
+  background: #e9f8fb;
+}
+.face-option-group {
+  margin-top: 8px;
+}
+.face-option-title {
+  font-size: 11px;
+  color: #555;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.face-option-line {
+  display: block;
+  font-size: 11px;
+  color: #555;
+  line-height: 1.5;
+}
+.face-file-buttons {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.face-file-button {
+  flex: 1;
+  padding: 5px 4px;
+  border-radius: 6px;
+  font-size: 11px;
 }
 
 /* ボタン29 */
