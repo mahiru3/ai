@@ -53,9 +53,31 @@
   </div>
 
 
+  <!-- 立ち絵差分：navi.htmlから受け取った画像名を編集 -->
+  <div id="faceBox" class="small" style="display:none;margin-top:14px">
+    <div class="face-heading">立ち絵・差分</div>
+    <div class="face-note">
+      画像はココフォリアへ自動登録しません。ファイル名から差分ラベルを作り、必要に応じてチャットパレットへ @差分名 を追加します。
+    </div>
+    <table id="faceTable">
+      <thead>
+        <tr>
+          <th style="width:4.5rem">画像</th>
+          <th>ファイル名</th>
+          <th>ラベル名</th>
+          <th style="width:6rem">操作</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+
 
 <script>
 let _obj = null;
+let _faceItems = [];
+let _faceOptions = { labelAt: false, registerCommands: true };
 
 function fixJSONNewlines(s) {
   let out = "", inStr = false, esc = false;
@@ -232,6 +254,84 @@ function showMsg(text, isErr) {
   msgEl.className = isErr ? "err small" : "ok small";
 }
 
+function isImageFile(file) {
+  if (!file || !file.name) return false;
+  if (file.type && file.type.startsWith("image/")) return true;
+  return /\.(png|jpe?g|webp|gif|avif|bmp|svg)$/i.test(file.name);
+}
+function stripImageExt(fileName) {
+  return String(fileName || "").replace(/\.[^.\/\\]+$/, "");
+}
+function makeFaceLabel(fileName) {
+  const baseName = stripImageExt(fileName).replace(/^@+/, "");
+  return _faceOptions.labelAt ? `@${baseName}` : baseName;
+}
+function normalizeFaceCommand(label) {
+  const clean = String(label || "").trim().replace(/^@+/, "");
+  return clean ? `@${clean}` : "";
+}
+function buildFaceCommands() {
+  if (!_faceOptions.registerCommands) return "";
+  return _faceItems
+    .map(item => normalizeFaceCommand(item.label))
+    .filter(Boolean)
+    .join("\n");
+}
+function appendFaceCommands(commands) {
+  const faceCommands = buildFaceCommands();
+  if (!faceCommands) return commands || "";
+  const base = String(commands || "").replace(/\s+$/, "");
+  return base ? `${base}\n${faceCommands}` : faceCommands;
+}
+function renderFaceTable() {
+  const faceBox = document.getElementById("faceBox");
+  const tbody = document.querySelector("#faceTable tbody");
+  if (!faceBox || !tbody) return;
+  tbody.innerHTML = "";
+  _faceItems.forEach((item, index) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><img class="face-thumb" src="${item.previewUrl}" alt=""></td>
+      <td class="face-file-name"></td>
+      <td><input value="${item.label}" data-role="face-label" style="width:100%"></td>
+      <td><button data-role="face-del" style="padding:4px 8px">削除</button></td>
+    `;
+    tr.querySelector(".face-file-name").textContent = item.fileName;
+    tr.querySelector('[data-role="face-label"]').oninput = e => {
+      _faceItems[index].label = e.target.value;
+    };
+    tr.querySelector('[data-role="face-del"]').onclick = () => {
+      URL.revokeObjectURL(item.previewUrl);
+      _faceItems.splice(index, 1);
+      renderFaceTable();
+    };
+    tbody.appendChild(tr);
+  });
+  faceBox.style.display = _faceItems.length ? "block" : "none";
+}
+
+// navi.htmlの差分欄から呼び出す
+window.setFaceOptions = opts => {
+  if (!opts) return;
+  if (typeof opts.labelAt === "boolean") _faceOptions.labelAt = opts.labelAt;
+  if (typeof opts.registerCommands === "boolean") _faceOptions.registerCommands = opts.registerCommands;
+};
+
+// navi.htmlの差分欄から呼び出す
+window.addFaceFiles = files => {
+  const list = Array.from(files || []).filter(isImageFile);
+  list.forEach(file => {
+    _faceItems.push({
+      file,
+      fileName: file.name,
+      label: makeFaceLabel(file.name),
+      previewUrl: URL.createObjectURL(file)
+    });
+  });
+  renderFaceTable();
+  if (list.length) showMsg(`差分画像 ${list.length}件を追加しました。`, false);
+};
+
 // navi.htmlのボタンからparent.frames['center'].doParse() で呼び出す
 window.doParse = () => {
   showMsg("", false); outputEl.value = "";
@@ -267,7 +367,9 @@ window.doRun = () => {
     _obj.data.name   = nameInput.value;
     _obj.data.status = readStatusTable();
     const out = convertToClipboard(_obj);
-    outputEl.value = JSON.stringify(out);
+    const outForClipboard = JSON.parse(JSON.stringify(out));
+    outForClipboard.data.commands = appendFaceCommands(outForClipboard.data.commands || "");
+    outputEl.value = JSON.stringify(outForClipboard);
     showMsg("変換完了。コピーボタンでクリップボードへ。", false);
   } catch (e) {
     showMsg("変換エラー:\n" + (e && e.message ? e.message : String(e)), true);
