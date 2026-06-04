@@ -68,6 +68,7 @@
     }
     function call(fn) {
       const c = getCenterFrame();
+      if (fn === 'doRun') syncFaceOptions();
       if (c && typeof c[fn] === 'function') c[fn]();
     }
     function getFaceOptions() {
