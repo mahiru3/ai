@@ -57,7 +57,7 @@
   <div id="faceBox" class="small" style="display:none;margin-top:14px">
     <div class="face-heading">立ち絵・差分</div>
     <div class="face-note">
-      画像はココフォリアへ自動登録しません。ファイル名から差分ラベルを作り、必要に応じてチャットパレットへ @差分名 を追加します。
+      画像はココフォリアへ自動登録しません。ファイル名から差分ラベルを作り、立ち絵・差分欄（faces）へ出力します。必要に応じてチャットパレットへ @差分名 も追加します。
     </div>
     <table id="faceTable">
       <thead>
@@ -270,12 +270,33 @@ function normalizeFaceCommand(label) {
   const clean = String(label || "").trim().replace(/^@+/, "");
   return clean ? `@${clean}` : "";
 }
+function syncFaceItemsFromTable() {
+  const rows = [...document.querySelectorAll("#faceTable tbody tr")];
+  if (!rows.length) return;
+  rows.forEach((tr, index) => {
+    const input = tr.querySelector('input[data-role="face-label"]');
+    if (_faceItems[index] && input) _faceItems[index].label = input.value;
+  });
+}
 function buildFaceCommands() {
+  syncFaceItemsFromTable();
   if (!_faceOptions.registerCommands) return "";
   return _faceItems
     .map(item => normalizeFaceCommand(item.label))
     .filter(Boolean)
     .join("\n");
+}
+function buildFacesForClipboard(existingFaces) {
+  syncFaceItemsFromTable();
+  const faces = Array.isArray(existingFaces) ? existingFaces.slice() : [];
+  const existingLabels = new Set(faces.map(face => String(face && face.label != null ? face.label : "")));
+  _faceItems.forEach(item => {
+    const label = String(item.label || "").trim();
+    if (!label || existingLabels.has(label)) return;
+    faces.push({ label, iconUrl: null });
+    existingLabels.add(label);
+  });
+  return faces;
 }
 function appendFaceCommands(commands) {
   const faceCommands = buildFaceCommands();
@@ -364,13 +385,18 @@ window.doParse = () => {
 window.doRun = () => {
   if (!_obj) { showMsg("先に『解析』で読み込んでください。", true); return; }
   try {
+    syncFaceItemsFromTable();
     _obj.data.name   = nameInput.value;
     _obj.data.status = readStatusTable();
     const out = convertToClipboard(_obj);
     const outForClipboard = JSON.parse(JSON.stringify(out));
-    outForClipboard.data.commands = appendFaceCommands(outForClipboard.data.commands || "");
+    const beforeCommands = outForClipboard.data.commands || "";
+    outForClipboard.data.commands = appendFaceCommands(beforeCommands);
+    if (_faceItems.length) outForClipboard.data.faces = buildFacesForClipboard(outForClipboard.data.faces);
     outputEl.value = JSON.stringify(outForClipboard);
-    showMsg("変換完了。コピーボタンでクリップボードへ。", false);
+    const faceCount = _faceOptions.registerCommands ? buildFaceCommands().split("\n").filter(Boolean).length : 0;
+    const faceNote = faceCount ? ` 差分${faceCount}件をチャットパレットへ追加。` : "";
+    showMsg(`変換完了。${faceNote}コピーボタンでクリップボードへ。`, false);
   } catch (e) {
     showMsg("変換エラー:\n" + (e && e.message ? e.message : String(e)), true);
   }
