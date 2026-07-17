@@ -126,6 +126,8 @@
         <input type="text" id="newParamLabel" placeholder="新しいparamsラベル名" class="lap-add-input" onclick="event.stopPropagation()">
         <button type="button" class="lap-add-btn" onclick="event.stopPropagation();addCommonRow('params')">＋ paramsに追加</button>
         <button type="button" class="lap-add-btn lap-add-divider-btn" onclick="event.stopPropagation();addDividerRow()">＋ 区切り行を追加</button>
+        <button type="button" class="lap-add-btn" onclick="event.stopPropagation();setAllGroupsCollapsed(true)" title="すべての見出しを折りたたむ">▶ 全て折りたたむ</button>
+        <button type="button" class="lap-add-btn" onclick="event.stopPropagation();setAllGroupsCollapsed(false)" title="すべての見出しを展開する">▼ 全て展開</button>
         <button type="button" class="lap-del-btn" onclick="event.stopPropagation();deleteSelectedRows('params')">🗑 選択行を削除</button>
       </span>
     </summary>
