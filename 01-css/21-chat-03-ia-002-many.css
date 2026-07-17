@@ -1005,6 +1005,42 @@
   background: #fffbe6 !important;
 }
 
+/* 区切り行：開閉トグルボタン */
+.lap-divider-toggle {
+  flex: 0 0 1.4em;
+  height: 1.4em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #b87800;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 3px;
+  background: #fff4d4;
+  border: 1px solid #f4a000;
+  transition: all .12s;
+}
+.lap-divider-toggle:hover {
+  background: #f4a000;
+  color: #fff;
+}
+.lap-row-divider {
+  cursor: pointer;
+}
+.lap-row-divider-collapsed td {
+  background: #fef3d6 !important;
+}
+.lap-row-divider-collapsed .lap-cell-divider-span {
+  color: #b87800;
+  font-style: normal;
+  font-weight: 600;
+}
+/* 折りたたみ中のグループ配下の行は非表示 */
+.lap-row-group-hidden {
+  display: none;
+}
+
 /* 区切り行追加ボタン */
 .lap-add-divider-btn {
   border-color: #f4a000 !important;
