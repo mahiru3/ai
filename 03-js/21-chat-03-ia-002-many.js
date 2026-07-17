@@ -29,6 +29,93 @@ const STATUS_LABELS = ['HP', 'MP', 'SAN'];
 /* DBはチャパレ側で扱うのでstatus/paramsには入れない */
 const SKIP_LABELS = ['DB'];
 
+/* =========================================
+   いあきゃら読み込み時の params 自動グルーピング
+   - 見出し（区切り行）は開閉可能。グループに該当ラベルが
+     1件もなければ見出し自体を出さない。
+   - ラベル末尾の「（〜）」「(〜)」は照合時のみ無視
+     （例：「こぶし（パンチ）」は「こぶし」として照合）。
+========================================= */
+const PARAM_GROUPS = [
+  {
+    title: '⋆͛‪‪🌎••┈┈ ステータス ┈┈••⋆🌎⋆͛‪‪',
+    labels: ['STR', 'CON', 'POW', 'DEX', 'APP', 'SIZ', 'INT', 'EDU', 'DB']
+  },
+  {
+    title: '⋆͛‪‪⭐••┈┈ よく使いそう┈┈••⋆͛‪‪‪‪⭐',
+    labels: ['アイデア', '幸運', '知識', '目星', '聞き耳', '図書館', '精神分析', '心理学', '人類学', '応急手当', '医学']
+  },
+  {
+    title: '⋆͛‪‪💙‬⋆͛••┈┈ 戦闘系 ┈┈••⋆͛‪‪‪‪💙',
+    labels: ['回避', 'こぶし', 'キック', '組み付き', '頭突き', '投擲', '拳銃', 'サブマシンガン', 'ショットガン', 'マシンガン', 'ライフル', '柳葉刀', 'タクティカルバトン', '小型ナイフ', 'こん棒', '武道', 'マーシャルアーツ']
+  },
+  {
+    title: '⋆͛‪‪💚‬⋆͛••┈┈ 探索&行動 ┈┈••⋆͛‪‪‪‪💚',
+    labels: ['鍵開け', '写真術', '隠す', '隠れる', '忍び歩き', '変装', 'ナビゲート', '追跡', '跳躍', '登攀', '乗馬', '水泳', '運転', '操縦', '機械修理', '重機械操作', '電気修理', '製作']
+  },
+  {
+    title: '⋆͛‪‪💗‬⋆͛••┈┈ 交渉 ┈┈••⋆͛‪‪‪‪💗',
+    labels: ['言いくるめ', '信用', '説得', '値切り', '母国語', '日本語', '英語', '芸術']
+  },
+  {
+    title: '⋆͛‪‪💛‬⋆͛••┈┈ 学術系 ┈┈••⋆͛‪‪‪‪💛',
+    labels: ['コンピューター', '電子工学', '薬学', '化学', '生物学', '物理学', '博物学', '地質学', '天文学', '考古学', '法律', '経理', '歴史', 'オカルト', 'クトゥルフ神話']
+  }
+];
+
+/* 照合用正規化：末尾の（〜）(〜) を除去 */
+function normalizeLabelForGroup(label) {
+  return String(label || '').replace(/[（(][^）)]*[）)]\s*$/, '').trim();
+}
+
+/* paramLabelsOrdered（いあきゃらから抽出した順序）を
+   PARAM_GROUPS の見出しでグルーピングした commonParams 配列に変換する。
+   未分類のラベルは末尾に「その他」見出しでまとめる（取りこぼし防止）。 */
+function buildGroupedParams(paramLabelsOrdered) {
+  const available = new Set(paramLabelsOrdered);
+  const normToActual = {};
+  paramLabelsOrdered.forEach(l => {
+    const norm = normalizeLabelForGroup(l);
+    if (!(norm in normToActual)) normToActual[norm] = l;
+  });
+
+  const used = new Set();
+  const grouped = [];
+
+  PARAM_GROUPS.forEach(group => {
+    const matched = [];
+    group.labels.forEach(glabel => {
+      let actual = null;
+      if (available.has(glabel) && !used.has(glabel)) actual = glabel;
+      else if (normToActual[glabel] && !used.has(normToActual[glabel])) actual = normToActual[glabel];
+      if (actual) {
+        matched.push(actual);
+        used.add(actual);
+      }
+    });
+    if (matched.length === 0) return;
+    grouped.push({ label: group.title, isDivider: true });
+    matched.forEach(l => grouped.push({ label: l }));
+  });
+
+  const rest = paramLabelsOrdered.filter(l => !used.has(l));
+  if (rest.length > 0) {
+    grouped.push({ label: '⋆͛‪‪📦‬⋆͛••┈┈ その他 ┈┈••⋆͛‪‪‪‪📦', isDivider: true });
+    rest.forEach(l => grouped.push({ label: l }));
+  }
+  return grouped;
+}
+
+/* 全グループの開閉をまとめて切り替え */
+function setAllGroupsCollapsed(collapsed) {
+  if (!state.parsed) return;
+  state.commonParams.forEach(item => {
+    if (item.isDivider) item.collapsed = collapsed;
+  });
+  renderTable('params');
+  scheduleTheadHeightUpdate();
+}
+
 /* 値が空・N/A・- などの場合は「適用しない」扱い */
 function isEmptyValue(v) {
   if (v == null) return true;
@@ -304,7 +391,7 @@ function parseIacharaList(list) {
   return {
     charNames,
     commonStatus: orderedStatus.map(l => ({ label: l })),
-    commonParams: paramLabelsOrdered.map(l => ({ label: l })),
+    commonParams: buildGroupedParams(paramLabelsOrdered),
     values,
     charMeta
   };
@@ -481,23 +568,46 @@ function renderTable(kind) {
 
   // tbody（ラベル行）
   const tbody = document.createElement('tbody');
+  let groupCollapsed = false;  // 直前の区切り行が折りたたみ中かどうか
   list.forEach((item, idx) => {
     // 区切り行（params側のみ）
     if (item.isDivider) {
+      // 次の区切り行までの通常行数をカウント（開閉表示用）
+      let groupCount = 0;
+      for (let j = idx + 1; j < list.length; j++) {
+        if (list[j].isDivider) break;
+        groupCount++;
+      }
+      const collapsed = !!item.collapsed;
+
       const tr = document.createElement('tr');
       tr.dataset.label = item.label;
       tr.dataset.divider = '1';
-      tr.className = 'lap-row-divider';
+      tr.className = 'lap-row-divider' + (collapsed ? ' lap-row-divider-collapsed' : '');
+
+      // タイトルクリック（入力欄・ボタン・移動ハンドル以外）で開閉
+      tr.addEventListener('click', (e) => {
+        if (e.target.closest('input, button, .lap-cell-label-handle')) return;
+        item.collapsed = !item.collapsed;
+        renderTable(kind);
+        scheduleTheadHeightUpdate();
+      });
 
       // ラベルセル（編集可能なテキスト、ドラッグ選択対応）
       const tdLabel = document.createElement('td');
       tdLabel.className = 'lap-cell-label lap-cell-divider-label';
       tdLabel.dataset.kind = kind;
       tdLabel.dataset.label = item.label;
-      // ハンドル + テキスト編集入力欄
+      // 開閉トグル + ハンドル + テキスト編集入力欄
       tdLabel.innerHTML = `
-        <span class="lap-cell-label-handle" title="ここを掴んで移動">↕</span><input type="text" class="lap-divider-input" value="${escapeAttr(item.label)}" placeholder="区切り行のテキスト">
+        <button type="button" class="lap-divider-toggle" title="クリックで開閉">${collapsed ? '▶' : '▼'}</button><span class="lap-cell-label-handle" title="ここを掴んで移動">↕</span><input type="text" class="lap-divider-input" value="${escapeAttr(item.label)}" placeholder="区切り行のテキスト">
       `;
+      tdLabel.querySelector('.lap-divider-toggle').onclick = (e) => {
+        e.stopPropagation();
+        item.collapsed = !item.collapsed;
+        renderTable(kind);
+        scheduleTheadHeightUpdate();
+      };
       const dividerInp = tdLabel.querySelector('input');
       dividerInp.oninput = e => {
         // ラベル更新（ID代わりに使っているのでcommonParams側も更新）
@@ -536,15 +646,19 @@ function renderTable(kind) {
       const tdSpan = document.createElement('td');
       tdSpan.className = 'lap-cell-divider-span';
       tdSpan.colSpan = spanColCount;
-      tdSpan.textContent = '— 区切り行（チャパレ転記時にこの位置にテキストが入ります）—';
+      tdSpan.textContent = collapsed
+        ? `▶ 折りたたみ中（${groupCount}件・クリックで展開）`
+        : '— 区切り行（チャパレ転記時にこの位置にテキストが入ります）—';
       tr.appendChild(tdSpan);
 
       tbody.appendChild(tr);
+      groupCollapsed = collapsed;
       return;
     }
 
     const tr = document.createElement('tr');
     tr.dataset.label = item.label;
+    if (groupCollapsed) tr.classList.add('lap-row-group-hidden');
 
     // ラベルセル（ドラッグ選択対象）
     const tdLabel = document.createElement('td');
